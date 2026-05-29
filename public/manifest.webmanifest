@@ -1,0 +1,9 @@
+{
+  "name": "World Cup 2026 Friends Predictor",
+  "short_name": "WC Predictor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#173d2c",
+  "icons": []
+}

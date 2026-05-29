@@ -1,0 +1,27 @@
+{
+  "name": "worldcup2026-predictor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --run build:server && concurrently \"node --watch dist/server/index.js\" \"vite --host 0.0.0.0\"",
+    "build": "tsc -p tsconfig.server.json && vite build",
+    "build:server": "tsc -p tsconfig.server.json",
+    "test": "vitest run",
+    "seed": "node --run build:server && node dist/server/seed-cli.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.20"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  }
+}
