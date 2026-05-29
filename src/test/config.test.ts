@@ -15,11 +15,21 @@ describe('runtime config', () => {
 
   it('requires admin secret in production', () => {
     expect(() => getRuntimeConfig({ APP_ENV: 'production' })).toThrow(/ADMIN_SECRET/);
-    expect(getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret' }).adminSecret).toBe('secret');
+    expect(getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' }).adminSecret).toBe('secret');
+  });
+
+  it('selects postgres and requires DATABASE_URL', () => {
+    expect(getRuntimeConfig({ APP_ENV: 'staging', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' }).databaseMode).toBe('postgres');
+    expect(() => getRuntimeConfig({ APP_ENV: 'staging', DATABASE_MODE: 'postgres' })).toThrow(/DATABASE_URL/);
+  });
+
+  it('refuses production sqlite unless explicitly overridden', () => {
+    expect(() => getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'sqlite' })).toThrow(/Production mode requires/);
+    expect(getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'sqlite', ALLOW_UNSAFE_PRODUCTION_SQLITE: 'true' }).databaseMode).toBe('sqlite');
   });
 
   it('refuses destructive confirmation in production mode', () => {
-    const config = getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret' });
+    const config = getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' });
     expect(() => requireDestructiveConfirmation(config, 'DELETE_LOCAL_DATA')).toThrow(/production/);
   });
 

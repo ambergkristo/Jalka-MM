@@ -161,17 +161,17 @@ Before hosting publicly, replace simple invite-code auth, configure backups, put
 Configuration is read from environment variables:
 
 - `APP_ENV`: `local`, `staging`, or `production`. Defaults to `local`.
-- `DATABASE_MODE`: `sqlite` or `postgres`. This build runs SQLite only; Postgres is documented as the production target and has an adapter boundary in `src/server/databaseAdapter.ts`.
+- `DATABASE_MODE`: `sqlite` or `postgres`. Use `postgres` on Render/Supabase.
 - `SQLITE_DB_PATH` or `WORLDCUP_DB_PATH`: local SQLite file path. Defaults to `data/worldcup2026.sqlite`.
-- `DATABASE_URL`: reserved for managed Postgres/Supabase.
+- `DATABASE_URL`: required when `DATABASE_MODE=postgres`. Use the Supabase pooled Postgres connection string.
 - `ADMIN_SECRET` or `ADMIN_PIN`: admin secret. Required in production. Local mode falls back to the unsafe documented `ADMIN2026`.
 - `PUBLIC_APP_BASE_URL`: public URL shown in status/config contexts.
 - `TOURNAMENT_DATA_MODE`: `seeded`, `partial_official`, or `official`.
 - `ALLOW_DESTRUCTIVE_COMMANDS`: allows destructive local reset commands outside production.
 
-Recommended production database shape is managed Postgres or Supabase with automated backups. SQLite can work for a private URL only if the host provides persistent disk, you test restore procedures, and you run regular backups.
+Recommended production database shape is Supabase Postgres with automated backups. SQLite is local development only for Render Free because Render Free Web Services do not provide reliable persistent app disk for this use case.
 
-## Deployment
+## Render And Supabase Deployment
 
 Build:
 
@@ -185,10 +185,46 @@ npm run build
 Start API:
 
 ```bash
-APP_ENV=production ADMIN_SECRET=replace-me DATABASE_MODE=sqlite SQLITE_DB_PATH=/persistent/worldcup2026.sqlite node dist/server/index.js
+APP_ENV=production ADMIN_SECRET=replace-me DATABASE_MODE=postgres DATABASE_URL=postgres://... node dist/server/index.js
 ```
 
-For a real deployment, host the frontend static files from `dist/client`, host the API as a Node service, and use a persistent database volume or managed database. Do not deploy with the local unsafe admin secret.
+Render Free setup:
+
+- Create a Supabase project.
+- Copy the pooled Postgres connection string from Supabase and use it as `DATABASE_URL`.
+- Create a Render Web Service from `https://github.com/ambergkristo/Jalka-MM`.
+- Build command: `npm install && npm run build`.
+- Start command: `node dist/server/index.js`.
+- Environment variables:
+  - `APP_ENV=production`
+  - `DATABASE_MODE=postgres`
+  - `DATABASE_URL=<Supabase pooled Postgres connection string>`
+  - `ADMIN_SECRET=<strong admin secret>`
+  - `PUBLIC_APP_BASE_URL=<Render URL>`
+  - `TOURNAMENT_DATA_MODE=partial_official`
+
+After setting environment variables, run these from a Render shell or local shell with the same production env vars:
+
+```bash
+npm run db:migrate
+npm run seed:tournament-data
+```
+
+Both commands are idempotent and non-destructive for player predictions/results. `seed:tournament-data` only updates tournament structure tables.
+
+Verify deployment:
+
+- Open `<Render URL>/api/health`.
+- Confirm `databaseMode` is `postgres`.
+- Confirm `databaseConnectivity` is `true`.
+- Confirm `adminSecretConfigured` is `true`.
+- Open the app URL and register a test player.
+- Save match and bonus predictions.
+- Approve the player as admin.
+- Restart/redeploy the Render service.
+- Confirm the player and predictions still exist.
+
+If deployment fails, check Render logs first for missing `ADMIN_SECRET`, missing `DATABASE_URL`, or Supabase connection errors. The health endpoint never returns secret values.
 
 Pre-launch checklist:
 

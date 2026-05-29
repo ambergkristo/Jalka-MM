@@ -13,6 +13,7 @@ export interface RuntimeConfig {
   publicAppBaseUrl: string;
   tournamentDataMode: TournamentDataMode;
   allowDestructiveCommands: boolean;
+  allowUnsafeProductionSqlite: boolean;
 }
 
 const localAdminSecret = 'ADMIN2026';
@@ -22,6 +23,11 @@ export function getRuntimeConfig(env: NodeJS.ProcessEnv = process.env): RuntimeC
   const databaseMode = parseDatabaseMode(env.DATABASE_MODE ?? (env.DATABASE_URL ? 'postgres' : 'sqlite'));
   const adminSecret = env.ADMIN_SECRET ?? env.ADMIN_PIN ?? (appEnv === 'local' ? localAdminSecret : undefined);
   if (appEnv === 'production' && !adminSecret) throw new Error('ADMIN_SECRET is required in production mode');
+  if (databaseMode === 'postgres' && !env.DATABASE_URL) throw new Error('DATABASE_URL is required when DATABASE_MODE=postgres');
+  const allowUnsafeProductionSqlite = env.ALLOW_UNSAFE_PRODUCTION_SQLITE === 'true';
+  if (appEnv === 'production' && databaseMode === 'sqlite' && !allowUnsafeProductionSqlite) {
+    throw new Error('Production mode requires DATABASE_MODE=postgres unless ALLOW_UNSAFE_PRODUCTION_SQLITE=true');
+  }
 
   return {
     appEnv,
@@ -31,7 +37,8 @@ export function getRuntimeConfig(env: NodeJS.ProcessEnv = process.env): RuntimeC
     adminSecret,
     publicAppBaseUrl: env.PUBLIC_APP_BASE_URL ?? 'http://localhost:5174',
     tournamentDataMode: parseTournamentDataMode(env.TOURNAMENT_DATA_MODE ?? 'partial_official'),
-    allowDestructiveCommands: env.ALLOW_DESTRUCTIVE_COMMANDS === 'true' || env.ALLOW_PRODUCTION_RESET === 'true'
+    allowDestructiveCommands: env.ALLOW_DESTRUCTIVE_COMMANDS === 'true' || env.ALLOW_PRODUCTION_RESET === 'true',
+    allowUnsafeProductionSqlite
   };
 }
 
