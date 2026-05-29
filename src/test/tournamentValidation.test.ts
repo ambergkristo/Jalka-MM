@@ -22,7 +22,14 @@ describe('validateTournamentData', () => {
     expect(result.counts.matches).toBe(104);
     expect(result.warnings[0]).toContain('not official');
     expect(result.unresolved.kickoffTimes).toBe(1);
+    expect(result.unresolved.groupStageKickoffMatchIds).toEqual([1]);
     expect(result.riskLevel).toBe('high');
+  });
+
+  it('supports mixed ISO and TBC kickoff data without invalid date output', () => {
+    const result = validateTournamentData({ metadata, teams, groups, matches: matches.map((match, index) => index === 1 ? { ...match, kickoffAt: 'TBC' } : match) });
+    expect(result.valid).toBe(true);
+    expect(result.unresolved.groupStageKickoffMatchIds).toEqual([1, 2]);
   });
 
   it('fails when required metadata is missing', () => {
@@ -66,6 +73,7 @@ describe('validateTournamentData', () => {
     expect(report.valid).toBe(true);
     expect(report.verificationStatus).toBe('partial_official');
     expect(report.unresolvedKickoffTimes).toBe(1);
+    expect(report.unresolvedGroupStageKickoffMatchIds).toEqual([1]);
     expect(report.riskLevel).toBe('medium');
   });
 });

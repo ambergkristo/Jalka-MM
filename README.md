@@ -12,6 +12,8 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Admin bonus-result entry, including multiple tied top scorers.
 - Admin lock/unlock and deadline configuration.
 - Admin player approval screen. Only approved players appear in the official leaderboard.
+- Runtime config boundary for `local`, `staging`, and `production` modes.
+- SQLite backup command and explicit destructive reset guardrails.
 - Real leaderboard calculated from stored predictions, results, and score breakdowns.
 - Participant score detail view with match and bonus explanations.
 - Manual result provider boundary for future live-score integrations.
@@ -28,6 +30,7 @@ npm install
 npm test
 npm run build
 npm run seed:tournament-data
+npm run backup:db
 npm run dev
 ```
 
@@ -42,6 +45,7 @@ Commands:
 - `npm run seed:tournament-data`: safely update teams, groups, and matches without deleting players, predictions, or results
 - `npm run seed:demo`: destructive local reset followed by demo player seeding
 - `npm run reset:dev`: destructive local development wipe
+- `npm run backup:db`: timestamped copy of the local SQLite database into `backups/`
 - `npm run dev`: run API and Vite dev server
 - `npm run validate:tournament-data`: validate tournament JSON source files
 - `npm run audit:tournament-data`: print an operator readiness report for tournament data
@@ -136,13 +140,67 @@ Destructive commands:
 - `npm run seed:demo`: wipes local data, then creates demo players.
 - `npm run reset:dev`: wipes local development data.
 
-Destructive commands are intentionally explicit and refuse production mode unless `ALLOW_PRODUCTION_RESET=true` is set. For real competition use, back up the SQLite database before updates:
+Destructive commands are intentionally explicit, require `--confirm=DELETE_LOCAL_DATA` or `ALLOW_DESTRUCTIVE_COMMANDS=true`, and always refuse `APP_ENV=production`. The package scripts include the confirmation flag only for the clearly named dev commands.
+
+For real competition use, back up the SQLite database before updates:
 
 ```powershell
 Copy-Item .\data\worldcup2026.sqlite ".\data\worldcup2026-backup-$(Get-Date -Format yyyyMMdd-HHmmss).sqlite"
 ```
 
+or run:
+
+```bash
+npm run backup:db
+```
+
 Before hosting publicly, replace simple invite-code auth, configure backups, put the API behind HTTPS, set an explicit deployment database path, and avoid treating local SQLite/demo mode as production-safe.
+
+## Runtime Configuration
+
+Configuration is read from environment variables:
+
+- `APP_ENV`: `local`, `staging`, or `production`. Defaults to `local`.
+- `DATABASE_MODE`: `sqlite` or `postgres`. This build runs SQLite only; Postgres is documented as the production target and has an adapter boundary in `src/server/databaseAdapter.ts`.
+- `SQLITE_DB_PATH` or `WORLDCUP_DB_PATH`: local SQLite file path. Defaults to `data/worldcup2026.sqlite`.
+- `DATABASE_URL`: reserved for managed Postgres/Supabase.
+- `ADMIN_SECRET` or `ADMIN_PIN`: admin secret. Required in production. Local mode falls back to the unsafe documented `ADMIN2026`.
+- `PUBLIC_APP_BASE_URL`: public URL shown in status/config contexts.
+- `TOURNAMENT_DATA_MODE`: `seeded`, `partial_official`, or `official`.
+- `ALLOW_DESTRUCTIVE_COMMANDS`: allows destructive local reset commands outside production.
+
+Recommended production database shape is managed Postgres or Supabase with automated backups. SQLite can work for a private URL only if the host provides persistent disk, you test restore procedures, and you run regular backups.
+
+## Deployment
+
+Build:
+
+```bash
+npm install
+npm run validate:tournament-data
+npm run audit:tournament-data
+npm run build
+```
+
+Start API:
+
+```bash
+APP_ENV=production ADMIN_SECRET=replace-me DATABASE_MODE=sqlite SQLITE_DB_PATH=/persistent/worldcup2026.sqlite node dist/server/index.js
+```
+
+For a real deployment, host the frontend static files from `dist/client`, host the API as a Node service, and use a persistent database volume or managed database. Do not deploy with the local unsafe admin secret.
+
+Pre-launch checklist:
+
+- `APP_ENV` is not accidentally `local` in production.
+- `ADMIN_SECRET` is configured outside source code.
+- Database persistence is confirmed across deploys/restarts.
+- Backup command has been run and restore procedure is understood.
+- `npm run audit:tournament-data` passes and unresolved kickoff times are reviewed.
+- Prediction deadline and lock behavior are configured.
+- Registration and admin approval flow are tested.
+- Public leaderboard includes approved players only.
+- Pending and disabled players are excluded from official ranking.
 
 ## Tournament Data Source
 
@@ -154,7 +212,7 @@ Tournament source files live in `src/data/worldcup2026`:
 - `matches.json`: 104 matches
 - `bracket.json`: knockout slot placeholders
 
-Current `verificationStatus` is `partial_official`. Official group/team data and part of the FIFA-published group-stage fixture list are encoded, while unresolved kickoff timestamps and some fixtures remain marked as TBC/manual/unknown. Do not invite real players until `npm run audit:tournament-data` shows the remaining gaps are acceptable for your operation.
+Current `verificationStatus` is `partial_official`. Official group/team data and part of the FIFA-published group-stage fixture list are encoded, while unresolved kickoff timestamps and some fixtures remain marked as TBC/manual/unknown. Do not invite real players until `npm run audit:tournament-data` shows the remaining gaps are acceptable for your operation. The audit output lists every group-stage match ID still missing kickoff time.
 
 ```bash
 npm run validate:tournament-data

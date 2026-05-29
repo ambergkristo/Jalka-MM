@@ -29,6 +29,7 @@ export function AdminDataStatus({ status }: { status: any }) {
         <dt>Unresolved slots</dt><dd>{validation.unresolved?.teamSlots ?? status.unresolved?.teamSlots ?? 0}</dd>
         <dt>Unresolved dates</dt><dd>{validation.unresolved?.fixtureDates ?? status.unresolved?.fixtureDates ?? 0}</dd>
         <dt>Kickoff times missing</dt><dd>{validation.unresolved?.kickoffTimes ?? status.unresolved?.kickoffTimes ?? 0}</dd>
+        <dt>Kickoff match IDs</dt><dd>{formatIds(validation.unresolved?.groupStageKickoffMatchIds ?? status.unresolved?.groupStageKickoffMatchIds ?? [])}</dd>
         <dt>Risk level</dt><dd>{validation.riskLevel ?? status.riskLevel}</dd>
         <dt>Storage</dt><dd>{status.storage?.database ?? 'Unknown'} · {status.storage?.mode ?? 'local'}</dd>
         <dt>Validation</dt><dd>{validation.valid ? 'passes' : 'fails'}</dd>
@@ -38,6 +39,12 @@ export function AdminDataStatus({ status }: { status: any }) {
       {validation.errors.length > 0 && <div className="error">{validation.errors.join(' ')}</div>}
     </article>
   );
+}
+
+function formatIds(ids: number[]): string {
+  if (!ids.length) return 'none';
+  const shown = ids.slice(0, 16).join(', ');
+  return ids.length > 16 ? `${shown}, +${ids.length - 16} more` : shown;
 }
 
 export function statusLabel(status: string): string {

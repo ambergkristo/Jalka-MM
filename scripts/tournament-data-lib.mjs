@@ -24,7 +24,7 @@ export function validateTournamentData({ metadata, teams, groups, matches }) {
   const matchIds = new Set();
   const groupMatches = matches.filter((match) => match.stage === 'GROUP');
   const knockoutMatches = matches.filter((match) => match.stage !== 'GROUP');
-  const unresolved = { teamSlots: 0, fixtureDates: 0, kickoffTimes: 0, knockoutSlots: 0 };
+  const unresolved = { teamSlots: 0, fixtureDates: 0, kickoffTimes: 0, knockoutSlots: 0, groupStageKickoffMatchIds: [] };
 
   if (!metadata.sourceName) errors.push('metadata.sourceName is required');
   if (!metadata.sourceReference) errors.push('metadata.sourceReference is required');
@@ -61,7 +61,10 @@ export function validateTournamentData({ metadata, teams, groups, matches }) {
     if (!isValidDateOrTbc(match.kickoffAt)) errors.push(`Match ${match.id} has invalid kickoffAt ${match.kickoffAt}`);
     if (match.kickoffAt === 'TBC') {
       unresolved.fixtureDates += 1;
-      if (match.stage === 'GROUP') unresolved.kickoffTimes += 1;
+      if (match.stage === 'GROUP') {
+        unresolved.kickoffTimes += 1;
+        unresolved.groupStageKickoffMatchIds.push(match.id);
+      }
     }
     if (match.stage === 'GROUP' && (!match.homeTeamId || !match.awayTeamId)) unresolved.teamSlots += missingTeamSlots(match);
     if (match.stage !== 'GROUP') {
@@ -95,6 +98,7 @@ export function createAuditReport(data) {
     unresolvedTeamSlots: validation.unresolved.teamSlots,
     unresolvedFixtureDates: validation.unresolved.fixtureDates,
     unresolvedKickoffTimes: validation.unresolved.kickoffTimes,
+    unresolvedGroupStageKickoffMatchIds: validation.unresolved.groupStageKickoffMatchIds,
     unresolvedKnockoutSlots: validation.unresolved.knockoutSlots,
     valid: validation.valid,
     riskLevel: validation.riskLevel,

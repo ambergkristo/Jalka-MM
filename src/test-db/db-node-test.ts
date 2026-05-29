@@ -8,9 +8,9 @@ const { breakdownFor, createPlayer, getLeaderboard, getState, recalculateScores,
 
 describe('stored scoring path', () => {
   beforeEach(() => {
-    seedDemo({ allowDestructive: true });
+    seedDemo({ allowDestructive: true, confirmation: 'DELETE_LOCAL_DATA' });
     resetForTests();
-    seedDemo({ allowDestructive: true });
+    seedDemo({ allowDestructive: true, confirmation: 'DELETE_LOCAL_DATA' });
   });
 
   it('rejects prediction updates when manually locked', () => {
@@ -83,6 +83,15 @@ describe('stored scoring path', () => {
 
   it('refuses destructive reset unless explicitly allowed', () => {
     assert.throws(() => resetDevData(), /Destructive reset refused/);
+  });
+
+  it('refuses destructive reset in production mode', () => {
+    const previous = process.env.APP_ENV;
+    process.env.APP_ENV = 'production';
+    process.env.ADMIN_SECRET = 'production-secret';
+    assert.throws(() => resetDevData({ allowDestructive: true, confirmation: 'DELETE_LOCAL_DATA' }), /production/);
+    if (previous === undefined) delete process.env.APP_ENV; else process.env.APP_ENV = previous;
+    delete process.env.ADMIN_SECRET;
   });
 
   it('creates new players as pending and excludes them from official leaderboard', () => {

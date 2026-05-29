@@ -15,6 +15,7 @@ console.log(`knockoutMatchCount: ${report.knockoutMatchCount}`);
 console.log(`unresolvedTeamSlots: ${report.unresolvedTeamSlots}`);
 console.log(`unresolvedFixtureDates: ${report.unresolvedFixtureDates}`);
 console.log(`unresolvedKickoffTimes: ${report.unresolvedKickoffTimes}`);
+console.log(`unresolvedGroupStageKickoffMatchIds: ${report.unresolvedGroupStageKickoffMatchIds.length ? report.unresolvedGroupStageKickoffMatchIds.join(', ') : 'none'}`);
 console.log(`unresolvedKnockoutSlots: ${report.unresolvedKnockoutSlots}`);
 console.log(`riskLevel: ${report.riskLevel}`);
 console.log(`validation: ${report.valid ? 'passes' : 'fails'}`);

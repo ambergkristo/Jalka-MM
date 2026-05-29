@@ -10,8 +10,9 @@
     "test": "vitest run && tsc -p tsconfig.server.json && node --test dist/test-db/db-node-test.js",
     "seed": "npm run seed:tournament-data",
     "seed:tournament-data": "node --run build:server && node dist/server/seed-cli.js",
-    "seed:demo": "node --run build:server && node dist/server/seed-demo-cli.js",
-    "reset:dev": "node --run build:server && node dist/server/reset-dev-cli.js",
+    "seed:demo": "node --run build:server && node dist/server/seed-demo-cli.js --confirm=DELETE_LOCAL_DATA",
+    "reset:dev": "node --run build:server && node dist/server/reset-dev-cli.js --confirm=DELETE_LOCAL_DATA",
+    "backup:db": "node --run build:server && node dist/server/backup-cli.js",
     "validate:tournament-data": "node scripts/validate-tournament-data.mjs",
     "audit:tournament-data": "node scripts/audit-tournament-data.mjs"
   },

@@ -19,6 +19,7 @@ export interface TournamentValidationResult {
     fixtureDates: number;
     kickoffTimes: number;
     knockoutSlots: number;
+    groupStageKickoffMatchIds: number[];
   };
   riskLevel: 'low' | 'medium' | 'high';
 }
@@ -32,7 +33,7 @@ export function validateTournamentData(input: { metadata: TournamentMetadata; te
   const matchIds = new Set<number>();
   const groupMatches = input.matches.filter((match) => match.stage === 'GROUP');
   const knockoutMatches = input.matches.filter((match) => match.stage !== 'GROUP');
-  const unresolved = { teamSlots: 0, fixtureDates: 0, kickoffTimes: 0, knockoutSlots: 0 };
+  const unresolved = { teamSlots: 0, fixtureDates: 0, kickoffTimes: 0, knockoutSlots: 0, groupStageKickoffMatchIds: [] as number[] };
 
   validateMetadata(input.metadata, errors);
   if (input.metadata.verificationStatus !== 'official') warnings.push(`Tournament data is ${input.metadata.verificationStatus}, not official`);
@@ -64,7 +65,10 @@ export function validateTournamentData(input: { metadata: TournamentMetadata; te
     if (!isValidDateOrTbc(match.kickoffAt)) errors.push(`Match ${match.id} has invalid kickoffAt ${match.kickoffAt}`);
     if (match.kickoffAt === 'TBC') {
       unresolved.fixtureDates += 1;
-      if (match.stage === 'GROUP') unresolved.kickoffTimes += 1;
+      if (match.stage === 'GROUP') {
+        unresolved.kickoffTimes += 1;
+        unresolved.groupStageKickoffMatchIds.push(match.id);
+      }
     }
     if (match.stage === 'GROUP' && (!match.homeTeamId || !match.awayTeamId)) unresolved.teamSlots += missingTeamSlots(match);
     if (match.stage !== 'GROUP') {

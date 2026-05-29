@@ -6,15 +6,20 @@ import { rankParticipants, scoreGroupBonus, scoreKnockoutBonus, scoreMatch, sumP
 import { getTournamentData } from '../domain/tournamentData.js';
 import { validateTournamentData } from '../domain/tournamentValidation.js';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction, MatchResult, ParticipantScore } from '../domain/types.js';
+import { getRuntimeConfig, requireDestructiveConfirmation } from './config.js';
 
-const dbPath = process.env.WORLDCUP_DB_PATH ?? join(process.cwd(), 'data', 'worldcup2026.sqlite');
+const config = getRuntimeConfig();
+if (config.databaseMode !== 'sqlite') {
+  throw new Error('Postgres runtime adapter is planned but not enabled yet. Use DATABASE_MODE=sqlite for this build.');
+}
+const dbPath = config.sqlitePath;
 mkdirSync(dirname(dbPath), { recursive: true });
 export const db = new DatabaseSync(dbPath);
 
 export function migrate(): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, invite_code TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'player', created_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', contact TEXT, admin_note TEXT);
+    CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', contact TEXT, admin_note TEXT, updated_at TEXT, approved_at TEXT);
     CREATE TABLE IF NOT EXISTS competitions (id TEXT PRIMARY KEY, name TEXT NOT NULL, prediction_deadline TEXT NOT NULL, predictions_locked INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT, flag TEXT, group_id TEXT);
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
@@ -33,6 +38,9 @@ export function migrate(): void {
   try { db.exec("ALTER TABLE players ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"); } catch {}
   try { db.exec('ALTER TABLE players ADD COLUMN contact TEXT'); } catch {}
   try { db.exec('ALTER TABLE players ADD COLUMN admin_note TEXT'); } catch {}
+  try { db.exec('ALTER TABLE players ADD COLUMN updated_at TEXT'); } catch {}
+  try { db.exec('ALTER TABLE players ADD COLUMN approved_at TEXT'); } catch {}
+  db.prepare('UPDATE players SET updated_at = COALESCE(updated_at, created_at)').run();
 }
 
 export function seedTournamentData(): void {
@@ -50,16 +58,16 @@ export function seedTournamentData(): void {
   for (const match of createMatches()) db.prepare('INSERT OR REPLACE INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(match.id, match.stage, match.groupId ?? null, match.kickoffAt, match.homeTeamId ?? null, match.awayTeamId ?? null, match.homeSlot, match.awaySlot);
 }
 
-export function seedDemo(options: { allowDestructive?: boolean } = {}): void {
+export function seedDemo(options: { allowDestructive?: boolean; confirmation?: string } = {}): void {
   resetDevData(options);
   seedTournamentData();
   const demo = createPlayer('Demo Player', 'FRIENDS2026');
-  createPlayer('Admin', 'ADMIN2026', 'admin');
-  updatePlayerStatus('admin-admin', 'ADMIN2026', demo.id, 'approved');
+  createPlayer('Admin', getRuntimeConfig().adminSecret ?? 'local-admin-secret-missing', 'admin');
+  updatePlayerStatus('admin-admin', getRuntimeConfig().adminSecret ?? '', demo.id, 'approved');
 }
 
-export function resetDevData(options: { allowDestructive?: boolean } = {}): void {
-  assertDestructiveAllowed(options.allowDestructive);
+export function resetDevData(options: { allowDestructive?: boolean; confirmation?: string } = {}): void {
+  assertDestructiveAllowed(options);
   migrate();
   db.exec(`
     DELETE FROM admin_audit_log;
@@ -84,8 +92,8 @@ export function createPlayer(name: string, inviteCode: string, role = 'player', 
   const now = new Date().toISOString();
   const status = role === 'admin' ? 'approved' : 'pending';
   db.prepare('INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?)').run(id, name, inviteCode, role, now);
-  db.prepare('INSERT OR IGNORE INTO players (id, user_id, display_name, created_at, status, contact, admin_note) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, id, name, now, status, contact || null, null);
-  if (contact) db.prepare('UPDATE players SET contact = ? WHERE id = ?').run(contact, id);
+  db.prepare('INSERT OR IGNORE INTO players (id, user_id, display_name, created_at, status, contact, admin_note, updated_at, approved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(id, id, name, now, status, contact || null, null, now, role === 'admin' ? now : null);
+  if (contact) db.prepare('UPDATE players SET contact = ?, updated_at = ? WHERE id = ?').run(contact, now, id);
   const row = one('SELECT players.status, players.contact, users.role FROM players JOIN users ON users.id = players.user_id WHERE players.id = ?', [id]);
   return { id, name, role: String(row?.role ?? role), status: String(row?.status ?? status), contact: row?.contact ?? contact };
 }
@@ -164,10 +172,15 @@ export function saveBonusResults(actor: string, groups: GroupBonusPrediction[], 
 export function updatePlayerStatus(actorId: string, adminCode: string, playerId: string, status: string, note = '') {
   assertAdmin(actorId, adminCode);
   if (!['pending', 'approved', 'disabled'].includes(status)) throw new Error('Invalid player status');
-  db.prepare("UPDATE players SET status = ?, admin_note = COALESCE(NULLIF(?, ''), admin_note) WHERE id = ?").run(status, note, playerId);
+  const now = new Date().toISOString();
+  db.prepare("UPDATE players SET status = ?, admin_note = COALESCE(NULLIF(?, ''), admin_note), updated_at = ?, approved_at = CASE WHEN ? = 'approved' THEN COALESCE(approved_at, ?) ELSE approved_at END WHERE id = ?").run(status, note, now, status, now, playerId);
   audit(actorId, 'player.status.updated', { playerId, status, note });
   recalculateScores();
   return getState(actorId);
+}
+
+export function verifyAdminAccess(actorId: string, adminCode: string): void {
+  assertAdmin(actorId, adminCode);
 }
 
 export function recalculateScores() {
@@ -238,13 +251,14 @@ export function resetForTests() {
 
 export function getStorageStatus() {
   const isSqlite = dbPath.endsWith('.sqlite');
-  const mode = process.env.WORLDCUP_MODE ?? 'local';
   return {
-    mode,
-    database: isSqlite ? 'SQLite' : 'custom',
+    mode: config.appEnv,
+    database: config.databaseMode === 'sqlite' ? 'SQLite' : 'Postgres-compatible',
     dbPath,
-    productionSafe: mode === 'production' && !isSqlite,
-    warning: isSqlite ? 'Local SQLite storage is suitable for MVP/demo use, but needs backups and hosting hardening before public production use.' : ''
+    publicAppBaseUrl: config.publicAppBaseUrl,
+    tournamentDataMode: config.tournamentDataMode,
+    productionSafe: config.appEnv === 'production' && config.databaseMode !== 'sqlite',
+    warning: config.databaseMode === 'sqlite' ? 'Local SQLite storage is suitable for MVP/demo use, but needs backups and persistent disk before public production use.' : ''
   };
 }
 
@@ -256,27 +270,30 @@ function assertUnlocked() {
 
 function assertAdmin(actorId: string, adminCode: string) {
   const actor = one('SELECT role FROM users WHERE id = ?', [actorId]);
-  if (actor?.role !== 'admin' || adminCode !== 'ADMIN2026') throw new Error('Admin access required');
+  const adminSecret = getRuntimeConfig().adminSecret;
+  if (!adminSecret) throw new Error('Admin secret is not configured');
+  if (actor?.role !== 'admin' || adminCode !== adminSecret) throw new Error('Admin access required');
 }
 
 function getPlayerAdminRows() {
   return all(`
-    SELECT players.id, players.display_name, players.created_at, players.status, players.contact, players.admin_note,
+    SELECT players.id, players.display_name, players.created_at, players.updated_at, players.approved_at, players.status, players.contact, players.admin_note,
       prediction_submissions.submitted_at,
-      COUNT(predictions.match_id) AS prediction_count
+      COUNT(predictions.match_id) AS prediction_count,
+      CASE WHEN bonus_predictions.player_id IS NULL THEN 0 ELSE 1 END AS has_bonus_prediction,
+      COUNT(*) OVER (PARTITION BY lower(players.display_name)) AS duplicate_name_count
     FROM players
     LEFT JOIN prediction_submissions ON prediction_submissions.player_id = players.id
     LEFT JOIN predictions ON predictions.player_id = players.id
+    LEFT JOIN bonus_predictions ON bonus_predictions.player_id = players.id
     GROUP BY players.id
     ORDER BY players.status, players.created_at
   `);
 }
 
-function assertDestructiveAllowed(allowDestructive?: boolean) {
-  if (!allowDestructive) throw new Error('Destructive reset refused. Use reset:dev or seed:demo explicitly.');
-  if (process.env.WORLDCUP_MODE === 'production' && process.env.ALLOW_PRODUCTION_RESET !== 'true') {
-    throw new Error('Destructive reset refused in production mode.');
-  }
+function assertDestructiveAllowed(options: { allowDestructive?: boolean; confirmation?: string }) {
+  if (!options.allowDestructive) throw new Error('Destructive reset refused. Use reset:dev or seed:demo explicitly.');
+  requireDestructiveConfirmation(getRuntimeConfig(), options.confirmation);
 }
 
 function audit(actor: string, action: string, payload: unknown) {

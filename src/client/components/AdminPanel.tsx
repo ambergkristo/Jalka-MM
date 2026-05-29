@@ -40,7 +40,10 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
                 <span>{row.display_name}</span>
                 <span>{row.contact || 'No contact'}</span>
                 <span>{row.prediction_count}/104</span>
+                <span>{row.has_bonus_prediction ? 'Bonus saved' : 'Bonus missing'}</span>
                 <span>{row.submitted_at ? new Date(row.submitted_at).toLocaleString() : 'Not submitted'}</span>
+                <span>{row.updated_at ? `Updated ${new Date(row.updated_at).toLocaleDateString()}` : 'No update'}</span>
+                {Number(row.duplicate_name_count) > 1 && <span>Duplicate name</span>}
                 <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'approved'))}>Approve</button>
                 <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'disabled'))}>Disable</button>
               </article>
@@ -54,15 +57,15 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
           {state.matches.map((item: Match) => <option key={item.id} value={item.id}>#{item.id} {item.homeSlot} v {item.awaySlot}</option>)}
         </select>
         {match && <MatchCard match={match} teamsById={teamsById} value={result} disabled={false} onChange={setResult} />}
-        <button onClick={() => run(saveResult(player.name, result))}>Save result</button>
+        <button onClick={() => run(saveResult(player.id, adminCode, result))}>Save result</button>
       </div>
       <div className="panel">
         <h2>Deadline controls</h2>
         <label>Prediction deadline<input type="datetime-local" value={deadlineValue} onChange={(event) => setDeadlineValue(event.target.value)} /></label>
-        <button onClick={() => run(setDeadline(player.name, new Date(deadlineValue).toISOString()))}>Save deadline</button>
-        <button onClick={() => run(setLock(player.name, true))}>Lock predictions</button>
-        <button onClick={() => run(setLock(player.name, false))}>Unlock predictions</button>
-        <button onClick={() => run(recalculate())}>Recalculate all scores</button>
+        <button onClick={() => run(setDeadline(player.id, adminCode, new Date(deadlineValue).toISOString()))}>Save deadline</button>
+        <button onClick={() => run(setLock(player.id, adminCode, true))}>Lock predictions</button>
+        <button onClick={() => run(setLock(player.id, adminCode, false))}>Unlock predictions</button>
+        <button onClick={() => run(recalculate(player.id, adminCode))}>Recalculate all scores</button>
       </div>
       <div className="panel wide">
         <h2>Bonus results</h2>
@@ -86,7 +89,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
         <label>World Cup winner<TeamSelect disabled={false} teams={state.teams} value={bonus.knockout.championTeamId} onChange={(championTeamId) => updateKnockout({ championTeamId })} /></label>
         <label>Top scorer result<input value={bonus.knockout.topScorer} onChange={(event) => updateKnockout({ topScorer: event.target.value })} placeholder="Primary top scorer" /></label>
         <label>Tied top scorers<textarea value={bonus.knockout.topScorersText ?? ''} onChange={(event) => updateKnockout({ topScorersText: event.target.value })} placeholder="One per line or comma separated" /></label>
-        <button onClick={() => run(saveBonusResults(player.name, bonus.groups, { ...bonus.knockout, topScorers: splitTopScorers(bonus.knockout.topScorersText || bonus.knockout.topScorer) }))}>Save bonus results</button>
+        <button onClick={() => run(saveBonusResults(player.id, adminCode, bonus.groups, { ...bonus.knockout, topScorers: splitTopScorers(bonus.knockout.topScorersText || bonus.knockout.topScorer) }))}>Save bonus results</button>
       </div>
     </section>
   );
