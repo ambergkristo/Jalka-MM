@@ -1,10 +1,13 @@
 {
-  "sourceName": "Internal seeded placeholder data",
-  "sourceReference": "src/data/worldcup2026/*.json",
-  "sourceRetrievedAt": "2026-05-29T11:17:19.490Z",
-  "verificationStatus": "seeded",
+  "sourceName": "FIFA.com World Cup 2026 schedule and group articles",
+  "sourceReference": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-teams-stadiums",
+  "sourceRetrievedAt": "2026-05-29T14:23:23.812Z",
+  "verificationStatus": "partial_official",
+  "verifiedBy": "Codex manual RM5 encoding from official FIFA source snippets",
   "notes": [
-    "This dataset is intentionally neutral and must not be treated as official World Cup 2026 fixtures.",
-    "Replace these JSON files with verified official tournament data before live competition use."
+    "Official group/team data is encoded from FIFA-published World Cup 2026 group and schedule material available on 2026-05-29.",
+    "The first 24 group-stage fixtures visible in the official schedule source are encoded with teams and venues, but kickoff timestamps remain TBC because the static source text used here did not expose full verified kickoff times.",
+    "Remaining group-stage pairings, full kickoff timestamps, and later knockout scheduling must be verified against the downloadable official schedule before real competition use.",
+    "Knockout slots are bracket labels and remain unresolved until tournament results are known."
   ]
 }

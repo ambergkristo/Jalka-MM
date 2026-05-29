@@ -1,5 +1,5 @@
-import { recalculateScores, seedDemo } from './db.js';
+import { recalculateScores, seedTournamentData } from './db.js';
 
-seedDemo();
+seedTournamentData();
 recalculateScores();
-console.log('Seeded World Cup 2026 demo data.');
+console.log('Seeded tournament structure data without deleting players or predictions.');

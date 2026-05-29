@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, Match, MatchPrediction, Team } from '../../domain/types.js';
-import { recalculate, saveBonusResults, saveResult, setDeadline, setLock } from '../api.js';
+import { recalculate, saveBonusResults, saveResult, setDeadline, setLock, updatePlayerStatus } from '../api.js';
 import { readBonusDraft, splitTopScorers } from './bonusDraft.js';
 import { TeamSelect } from './BonusPredictionPanel.js';
 import { AdminDataStatus } from './DataStatus.js';
@@ -14,6 +14,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
   const [deadlineValue, setDeadlineValue] = useState(toLocalDateTime(state.competition.prediction_deadline));
   const groupIds = state.groups.map((group: any) => String(group.id));
   const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds));
+  const [adminCode, setAdminCode] = useState('');
 
   const updateGroup = (groupId: string, patch: Partial<GroupBonusPrediction>) => {
     setBonus((current) => ({ ...current, groups: current.groups.map((group) => group.groupId === groupId ? { ...group, ...patch } : group) }));
@@ -28,6 +29,25 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
   return (
     <section className="admin-grid">
       <AdminDataStatus status={state.tournamentDataStatus} />
+      <div className="panel wide">
+        <h2>Player approvals</h2>
+        <label>Admin code<input type="password" value={adminCode} onChange={(event) => setAdminCode(event.target.value)} placeholder="Admin PIN" /></label>
+        {['pending', 'approved', 'disabled'].map((status) => (
+          <div className="admin-group" key={status}>
+            <h3>{status}</h3>
+            {(state.playerAdmin ?? []).filter((row: any) => row.status === status).map((row: any) => (
+              <article className="leader-row" key={row.id}>
+                <span>{row.display_name}</span>
+                <span>{row.contact || 'No contact'}</span>
+                <span>{row.prediction_count}/104</span>
+                <span>{row.submitted_at ? new Date(row.submitted_at).toLocaleString() : 'Not submitted'}</span>
+                <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'approved'))}>Approve</button>
+                <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'disabled'))}>Disable</button>
+              </article>
+            ))}
+          </div>
+        ))}
+      </div>
       <div className="panel">
         <h2>Match result</h2>
         <select value={matchId} onChange={(event) => { const next = Number(event.target.value); setMatchId(next); setResult({ matchId: next, homeGoals: 0, awayGoals: 0 }); }}>

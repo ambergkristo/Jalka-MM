@@ -1,386 +1,386 @@
 [
   {
     "id": "A1",
-    "code": "A1",
-    "name": "Group A Team 1",
-    "flag": "◇",
+    "code": "MEX",
+    "name": "Mexico",
+    "flag": "????",
     "groupId": "A",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "A2",
-    "code": "A2",
-    "name": "Group A Team 2",
-    "flag": "◇",
+    "code": "RSA",
+    "name": "South Africa",
+    "flag": "????",
     "groupId": "A",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "A3",
-    "code": "A3",
-    "name": "Group A Team 3",
-    "flag": "◇",
+    "code": "KOR",
+    "name": "Korea Republic",
+    "flag": "????",
     "groupId": "A",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "A4",
-    "code": "A4",
-    "name": "Group A Team 4",
-    "flag": "◇",
+    "code": "CZE",
+    "name": "Czechia",
+    "flag": "????",
     "groupId": "A",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "B1",
-    "code": "B1",
-    "name": "Group B Team 1",
-    "flag": "◇",
+    "code": "CAN",
+    "name": "Canada",
+    "flag": "????",
     "groupId": "B",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "B2",
-    "code": "B2",
-    "name": "Group B Team 2",
-    "flag": "◇",
+    "code": "BIH",
+    "name": "Bosnia and Herzegovina",
+    "flag": "????",
     "groupId": "B",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "B3",
-    "code": "B3",
-    "name": "Group B Team 3",
-    "flag": "◇",
+    "code": "QAT",
+    "name": "Qatar",
+    "flag": "????",
     "groupId": "B",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "B4",
-    "code": "B4",
-    "name": "Group B Team 4",
-    "flag": "◇",
+    "code": "SUI",
+    "name": "Switzerland",
+    "flag": "????",
     "groupId": "B",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "C1",
-    "code": "C1",
-    "name": "Group C Team 1",
-    "flag": "◇",
+    "code": "BRA",
+    "name": "Brazil",
+    "flag": "????",
     "groupId": "C",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "C2",
-    "code": "C2",
-    "name": "Group C Team 2",
-    "flag": "◇",
+    "code": "MAR",
+    "name": "Morocco",
+    "flag": "????",
     "groupId": "C",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "C3",
-    "code": "C3",
-    "name": "Group C Team 3",
-    "flag": "◇",
+    "code": "HAI",
+    "name": "Haiti",
+    "flag": "????",
     "groupId": "C",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "C4",
-    "code": "C4",
-    "name": "Group C Team 4",
-    "flag": "◇",
+    "code": "SCO",
+    "name": "Scotland",
+    "flag": "??",
     "groupId": "C",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "D1",
-    "code": "D1",
-    "name": "Group D Team 1",
-    "flag": "◇",
+    "code": "USA",
+    "name": "USA",
+    "flag": "????",
     "groupId": "D",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "D2",
-    "code": "D2",
-    "name": "Group D Team 2",
-    "flag": "◇",
+    "code": "PAR",
+    "name": "Paraguay",
+    "flag": "????",
     "groupId": "D",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "D3",
-    "code": "D3",
-    "name": "Group D Team 3",
-    "flag": "◇",
+    "code": "AUS",
+    "name": "Australia",
+    "flag": "????",
     "groupId": "D",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "D4",
-    "code": "D4",
-    "name": "Group D Team 4",
-    "flag": "◇",
+    "code": "TUR",
+    "name": "T?rkiye",
+    "flag": "????",
     "groupId": "D",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "E1",
-    "code": "E1",
-    "name": "Group E Team 1",
-    "flag": "◇",
+    "code": "GER",
+    "name": "Germany",
+    "flag": "????",
     "groupId": "E",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "E2",
-    "code": "E2",
-    "name": "Group E Team 2",
-    "flag": "◇",
+    "code": "CUW",
+    "name": "Cura?ao",
+    "flag": "????",
     "groupId": "E",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "E3",
-    "code": "E3",
-    "name": "Group E Team 3",
-    "flag": "◇",
+    "code": "CIV",
+    "name": "C?te d?Ivoire",
+    "flag": "????",
     "groupId": "E",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "E4",
-    "code": "E4",
-    "name": "Group E Team 4",
-    "flag": "◇",
+    "code": "ECU",
+    "name": "Ecuador",
+    "flag": "????",
     "groupId": "E",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "F1",
-    "code": "F1",
-    "name": "Group F Team 1",
-    "flag": "◇",
+    "code": "NED",
+    "name": "Netherlands",
+    "flag": "????",
     "groupId": "F",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "F2",
-    "code": "F2",
-    "name": "Group F Team 2",
-    "flag": "◇",
+    "code": "JPN",
+    "name": "Japan",
+    "flag": "????",
     "groupId": "F",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "F3",
-    "code": "F3",
-    "name": "Group F Team 3",
-    "flag": "◇",
+    "code": "TUN",
+    "name": "Tunisia",
+    "flag": "????",
     "groupId": "F",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "F4",
-    "code": "F4",
-    "name": "Group F Team 4",
-    "flag": "◇",
+    "code": "SWE",
+    "name": "Sweden",
+    "flag": "????",
     "groupId": "F",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "G1",
-    "code": "G1",
-    "name": "Group G Team 1",
-    "flag": "◇",
+    "code": "BEL",
+    "name": "Belgium",
+    "flag": "????",
     "groupId": "G",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "G2",
-    "code": "G2",
-    "name": "Group G Team 2",
-    "flag": "◇",
+    "code": "EGY",
+    "name": "Egypt",
+    "flag": "????",
     "groupId": "G",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "G3",
-    "code": "G3",
-    "name": "Group G Team 3",
-    "flag": "◇",
+    "code": "IRN",
+    "name": "IR Iran",
+    "flag": "????",
     "groupId": "G",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "G4",
-    "code": "G4",
-    "name": "Group G Team 4",
-    "flag": "◇",
+    "code": "NZL",
+    "name": "New Zealand",
+    "flag": "????",
     "groupId": "G",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "H1",
-    "code": "H1",
-    "name": "Group H Team 1",
-    "flag": "◇",
+    "code": "ESP",
+    "name": "Spain",
+    "flag": "????",
     "groupId": "H",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "H2",
-    "code": "H2",
-    "name": "Group H Team 2",
-    "flag": "◇",
+    "code": "CPV",
+    "name": "Cabo Verde",
+    "flag": "????",
     "groupId": "H",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "H3",
-    "code": "H3",
-    "name": "Group H Team 3",
-    "flag": "◇",
+    "code": "KSA",
+    "name": "Saudi Arabia",
+    "flag": "????",
     "groupId": "H",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "H4",
-    "code": "H4",
-    "name": "Group H Team 4",
-    "flag": "◇",
+    "code": "URU",
+    "name": "Uruguay",
+    "flag": "????",
     "groupId": "H",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "I1",
-    "code": "I1",
-    "name": "Group I Team 1",
-    "flag": "◇",
+    "code": "FRA",
+    "name": "France",
+    "flag": "????",
     "groupId": "I",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "I2",
-    "code": "I2",
-    "name": "Group I Team 2",
-    "flag": "◇",
+    "code": "SEN",
+    "name": "Senegal",
+    "flag": "????",
     "groupId": "I",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "I3",
-    "code": "I3",
-    "name": "Group I Team 3",
-    "flag": "◇",
+    "code": "NOR",
+    "name": "Norway",
+    "flag": "????",
     "groupId": "I",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "I4",
-    "code": "I4",
-    "name": "Group I Team 4",
-    "flag": "◇",
+    "code": "IRQ",
+    "name": "Iraq",
+    "flag": "????",
     "groupId": "I",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "J1",
-    "code": "J1",
-    "name": "Group J Team 1",
-    "flag": "◇",
+    "code": "ARG",
+    "name": "Argentina",
+    "flag": "????",
     "groupId": "J",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "J2",
-    "code": "J2",
-    "name": "Group J Team 2",
-    "flag": "◇",
+    "code": "ALG",
+    "name": "Algeria",
+    "flag": "????",
     "groupId": "J",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "J3",
-    "code": "J3",
-    "name": "Group J Team 3",
-    "flag": "◇",
+    "code": "AUT",
+    "name": "Austria",
+    "flag": "????",
     "groupId": "J",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "J4",
-    "code": "J4",
-    "name": "Group J Team 4",
-    "flag": "◇",
+    "code": "JOR",
+    "name": "Jordan",
+    "flag": "????",
     "groupId": "J",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "K1",
-    "code": "K1",
-    "name": "Group K Team 1",
-    "flag": "◇",
+    "code": "POR",
+    "name": "Portugal",
+    "flag": "????",
     "groupId": "K",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "K2",
-    "code": "K2",
-    "name": "Group K Team 2",
-    "flag": "◇",
+    "code": "UZB",
+    "name": "Uzbekistan",
+    "flag": "????",
     "groupId": "K",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "K3",
-    "code": "K3",
-    "name": "Group K Team 3",
-    "flag": "◇",
+    "code": "COL",
+    "name": "Colombia",
+    "flag": "????",
     "groupId": "K",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "K4",
-    "code": "K4",
-    "name": "Group K Team 4",
-    "flag": "◇",
+    "code": "COD",
+    "name": "Congo DR",
+    "flag": "????",
     "groupId": "K",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "L1",
-    "code": "L1",
-    "name": "Group L Team 1",
-    "flag": "◇",
+    "code": "ENG",
+    "name": "England",
+    "flag": "??",
     "groupId": "L",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "L2",
-    "code": "L2",
-    "name": "Group L Team 2",
-    "flag": "◇",
+    "code": "CRO",
+    "name": "Croatia",
+    "flag": "????",
     "groupId": "L",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "L3",
-    "code": "L3",
-    "name": "Group L Team 3",
-    "flag": "◇",
+    "code": "GHA",
+    "name": "Ghana",
+    "flag": "????",
     "groupId": "L",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "L4",
-    "code": "L4",
-    "name": "Group L Team 4",
-    "flag": "◇",
+    "code": "PAN",
+    "name": "Panama",
+    "flag": "????",
     "groupId": "L",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   }
 ]

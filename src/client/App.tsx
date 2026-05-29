@@ -23,7 +23,7 @@ export function App() {
 
   async function signIn(form: FormData) {
     setError('');
-    const next = await login(String(form.get('name')), String(form.get('inviteCode')));
+    const next = await login(String(form.get('name')), String(form.get('inviteCode')), String(form.get('contact') ?? ''));
     localStorage.setItem('wc-player', JSON.stringify(next));
     setPlayer(next);
   }
@@ -64,6 +64,8 @@ export function App() {
   return (
     <Shell player={player} view={view} setView={setView}>
       {error && <div className="error">{error}</div>}
+      {state.currentPlayer?.status === 'pending' && <div className="warning-box">Your entry is waiting for admin approval. You can save predictions now; they count after approval if submitted before the deadline.</div>}
+      {state.currentPlayer?.status === 'disabled' && <div className="error">Your entry is not active in the official leaderboard. Contact the admin.</div>}
       {view === 'predict' && <MatchPredictions state={state} locked={locked} saving={saving} onSave={saveMatches} />}
       {view === 'bonus' && <BonusPredictionPanel state={state} locked={locked} saving={saving} onSave={saveBonuses} />}
       {view === 'leaderboard' && <Leaderboard state={state} onSelect={(playerId) => { setSelectedPlayerId(playerId); setView('details'); }} />}
@@ -81,7 +83,9 @@ function LoginScreen({ error, onSubmit }: { error: string; onSubmit: React.FormE
         <h1>World Cup 2026 predictions</h1>
         <form onSubmit={onSubmit}>
           <label>Name<input name="name" required placeholder="Your name" /></label>
-          <label>Invite code or PIN<input name="inviteCode" required placeholder="FRIENDS2026" /></label>
+          <label>Contact, optional<input name="contact" placeholder="Email or phone" /></label>
+          <label>Invite code or admin PIN<input name="inviteCode" required placeholder="FRIENDS2026" /></label>
+          <p className="form-note">Entry fee payment is handled outside this app by personal transfer to the admin. No card, bank, or payment data is collected here.</p>
           <button>Enter league</button>
         </form>
         {error && <div className="error">{error}</div>}
@@ -97,7 +101,7 @@ function Shell({ player, view, setView, children }: { player: any; view: View; s
         <div><p className="eyebrow">WC 2026 League</p><h1>Predictions</h1></div>
         <span>{player.name}</span>
       </header>
-      <nav>{(['predict', 'bonus', 'leaderboard', 'details', 'admin'] as View[]).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}>{navLabel(item)}</button>)}</nav>
+      <nav>{(['predict', 'bonus', 'leaderboard', 'details', ...(player.role === 'admin' ? ['admin'] : [])] as View[]).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}>{navLabel(item)}</button>)}</nav>
       {children}
     </div>
   );

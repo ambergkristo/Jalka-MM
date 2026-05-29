@@ -46,6 +46,7 @@ label { display: grid; gap: 7px; color: #b9c5bb; font-size: .9rem; font-weight: 
 }
 .login-panel h1 { margin: 0 0 18px; font-size: clamp(2rem, 10vw, 3.5rem); line-height: .9; }
 .login-panel form { display: grid; gap: 14px; }
+.form-note { margin: 0; color: #b9c5bb; font-size: .88rem; line-height: 1.45; }
 .eyebrow { margin: 0 0 6px; text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; color: #b8e06c; font-weight: 900; }
 .app-shell { max-width: 1060px; margin: 0 auto; padding: 14px; padding-bottom: 106px; }
 header { display: flex; justify-content: space-between; align-items: end; gap: 16px; padding-top: 6px; }

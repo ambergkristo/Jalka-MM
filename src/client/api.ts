@@ -9,7 +9,7 @@ const api = async <T>(path: string, init?: RequestInit): Promise<T> => {
   return response.json();
 };
 
-export const login = (name: string, inviteCode: string) => api<{ id: string; name: string; role: string }>('/login', { method: 'POST', body: JSON.stringify({ name, inviteCode }) });
+export const login = (name: string, inviteCode: string, contact = '') => api<{ id: string; name: string; role: string; status: string }>('/login', { method: 'POST', body: JSON.stringify({ name, inviteCode, contact }) });
 export const loadState = (playerId?: string) => api<any>(`/state${playerId ? `?playerId=${playerId}` : ''}`);
 export const savePredictions = (playerId: string, predictions: MatchPrediction[]) => api<any>('/predictions', { method: 'POST', body: JSON.stringify({ playerId, predictions }) });
 export const saveBonusPrediction = (playerId: string, groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) => api<any>('/bonus-predictions', { method: 'POST', body: JSON.stringify({ playerId, groups, knockout }) });
@@ -19,3 +19,4 @@ export const setLock = (actor: string, locked: boolean) => api<any>('/admin/lock
 export const setDeadline = (actor: string, deadline: string) => api<any>('/admin/deadline', { method: 'POST', body: JSON.stringify({ actor, deadline }) });
 export const recalculate = () => api<any>('/admin/recalculate', { method: 'POST', body: '{}' });
 export const loadBreakdown = (playerId: string) => api<any[]>(`/breakdown?playerId=${playerId}`);
+export const updatePlayerStatus = (actorId: string, adminCode: string, playerId: string, status: string, note = '') => api<any>('/admin/player-status', { method: 'POST', body: JSON.stringify({ actorId, adminCode, playerId, status, note }) });

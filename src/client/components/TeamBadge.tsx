@@ -3,7 +3,7 @@ import type { Team } from '../../domain/types.js';
 export function TeamBadge({ team, slotLabel, align = 'left' }: { team?: Partial<Team> | null; slotLabel?: string; align?: 'left' | 'right' }) {
   const name = team?.name || slotLabel || 'Team TBC';
   const code = team?.code;
-  const flag = team?.flag || '◇';
+  const flag = team?.flag || 'TBC';
   return (
     <span className={`team-badge ${align === 'right' ? 'right' : ''}`}>
       <span className="team-flag" aria-hidden="true">{flag}</span>

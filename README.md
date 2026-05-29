@@ -5,16 +5,19 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 ## Current Features
 
 - Player login with name and invite code/PIN.
-- Mobile match prediction entry for all 104 seeded World Cup 2026-shaped matches.
+- Public player registration with optional contact field and pending/approved/disabled approval status.
+- Mobile match prediction entry for all 104 World Cup 2026-shaped matches.
 - Bonus prediction flow for group winners, group second places, group qualifiers, knockout round participants, third-place winner, champion, and top scorer.
 - Admin match result entry.
 - Admin bonus-result entry, including multiple tied top scorers.
 - Admin lock/unlock and deadline configuration.
+- Admin player approval screen. Only approved players appear in the official leaderboard.
 - Real leaderboard calculated from stored predictions, results, and score breakdowns.
 - Participant score detail view with match and bonus explanations.
 - Manual result provider boundary for future live-score integrations.
-- Dark, mobile-first match prediction screen with grouped stages, neutral seeded team slots, codes, and flag placeholders.
+- Dark, mobile-first match prediction screen with grouped stages, team names, codes, flags, and Estonia-time kickoff display when verified.
 - Tournament data source layer with explicit verification status and validation.
+- Safe tournament-data seeding that preserves players, predictions, and results.
 - Bracket slot/progression and basic group standings domain foundations.
 
 ## Run Locally
@@ -24,7 +27,7 @@ cd "C:\Users\Kasutaja\Documents\Jalka MM APP"
 npm install
 npm test
 npm run build
-npm run seed
+npm run seed:tournament-data
 npm run dev
 ```
 
@@ -35,14 +38,20 @@ Commands:
 - `npm install`: install dependencies
 - `npm test`: run pure scoring tests and SQLite stored-data tests
 - `npm run build`: compile the API and build the PWA
-- `npm run seed`: create/update the local SQLite demo data
+- `npm run seed`: alias for safe tournament-data update
+- `npm run seed:tournament-data`: safely update teams, groups, and matches without deleting players, predictions, or results
+- `npm run seed:demo`: destructive local reset followed by demo player seeding
+- `npm run reset:dev`: destructive local development wipe
 - `npm run dev`: run API and Vite dev server
 - `npm run validate:tournament-data`: validate tournament JSON source files
+- `npm run audit:tournament-data`: print an operator readiness report for tournament data
 
 ## Demo Access
 
 - Player invite code: `FRIENDS2026`
 - Admin PIN: `ADMIN2026`
+
+New player registrations start as `pending`. Pending players may enter and save predictions, but they do not appear in the official leaderboard until the admin approves them.
 
 ## Architecture
 
@@ -75,7 +84,29 @@ Knockout match score points are based on the home-away bracket slot score. Team 
 
 ## Admin Flow
 
-Use `ADMIN2026`, open the Admin tab, enter match results, edit the prediction deadline, lock/unlock predictions, enter bonus results, and trigger recalculation. Every result, deadline, and bonus-result change is written to `admin_audit_log`.
+Use `ADMIN2026`, open the Admin tab, enter match results, edit the prediction deadline, lock/unlock predictions, enter bonus results, approve/disable players, and trigger recalculation. Every result, deadline, bonus-result, and player-status change is written to `admin_audit_log`.
+
+The admin approval action requires the admin PIN in the admin screen and is enforced by the backend. Normal players do not see the Admin tab, and non-admin approval requests are rejected server-side.
+
+## Public Registration And Approval
+
+The public flow is intentionally simple for a private friends league:
+
+1. Admin shares the app URL.
+2. Player registers with name, optional contact, and the league invite code.
+3. Player can immediately fill and save match and bonus predictions.
+4. Player pays the entry fee outside the app by personal transfer to the admin.
+5. Admin confirms payment manually and approves the player in the Admin tab.
+
+The app does not collect money, process card payments, connect to banks, or store payment credentials.
+
+Player statuses:
+
+- `pending`: default for new players; predictions are saved but excluded from the official leaderboard.
+- `approved`: included in official leaderboard and ranking.
+- `disabled`: excluded from official leaderboard and scoring views.
+
+If a pending player submits predictions before the deadline and is approved later, the original prediction submission timestamp remains the leaderboard tie-break timestamp. Approval time is not used as the tie-breaker.
 
 ## Bonus Prediction Flow
 
@@ -84,6 +115,34 @@ Use the Bonus tab as a player. Select each group winner, group second place, and
 ## Admin Bonus Results
 
 Use the Admin tab. Enter final group outcomes, knockout round participants, third-place winner, champion, and top scorer results. Multiple tied top scorers can be entered separated by commas or new lines. Saving bonus results writes to `bonus_results` and recalculates score breakdowns.
+
+## Data Storage And Safety
+
+Local data is stored in `data/worldcup2026.sqlite` unless `WORLDCUP_DB_PATH` is set.
+
+Tournament structure data is separate from competition/user data:
+
+- Tournament structure: `teams`, `groups`, `matches`, bracket slots, kickoff times, and metadata from `src/data/worldcup2026`.
+- Competition/user data: players, prediction submissions, match predictions, bonus predictions, actual results, bonus results, score breakdowns, leaderboard snapshots, and admin audit log.
+
+Safe commands:
+
+- `npm run seed` / `npm run seed:tournament-data`: updates tournament structure tables and preserves players, predictions, results, and audit history.
+- `npm run validate:tournament-data`: validates JSON source files only.
+- `npm run audit:tournament-data`: reports readiness and unresolved data.
+
+Destructive commands:
+
+- `npm run seed:demo`: wipes local data, then creates demo players.
+- `npm run reset:dev`: wipes local development data.
+
+Destructive commands are intentionally explicit and refuse production mode unless `ALLOW_PRODUCTION_RESET=true` is set. For real competition use, back up the SQLite database before updates:
+
+```powershell
+Copy-Item .\data\worldcup2026.sqlite ".\data\worldcup2026-backup-$(Get-Date -Format yyyyMMdd-HHmmss).sqlite"
+```
+
+Before hosting publicly, replace simple invite-code auth, configure backups, put the API behind HTTPS, set an explicit deployment database path, and avoid treating local SQLite/demo mode as production-safe.
 
 ## Tournament Data Source
 
@@ -95,17 +154,18 @@ Tournament source files live in `src/data/worldcup2026`:
 - `matches.json`: 104 matches
 - `bracket.json`: knockout slot placeholders
 
-Current `verificationStatus` is `seeded`. The seeded data is intentionally neutral: group-stage fixtures use labels such as `Group A Team 1 vs Group A Team 2`, not unverified real-country matchups. Replace these JSON files with verified official data before live competition use, then run:
+Current `verificationStatus` is `partial_official`. Official group/team data and part of the FIFA-published group-stage fixture list are encoded, while unresolved kickoff timestamps and some fixtures remain marked as TBC/manual/unknown. Do not invite real players until `npm run audit:tournament-data` shows the remaining gaps are acceptable for your operation.
 
 ```bash
 npm run validate:tournament-data
+npm run audit:tournament-data
 ```
 
-Validation checks team/group/match counts, duplicate match numbers, invalid team and group references, date validity/TBC handling, and required verification status.
+Validation checks metadata, allowed verification statuses, team/group/match counts, duplicate team IDs, duplicate match numbers, invalid team and group references, date/TBC handling, knockout slot usage, unresolved kickoff-time counts, and required source metadata.
 
 The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use neutral team IDs from the JSON registry. Knockout matches use clear bracket slot labels such as `Winner Group A`, `3rd Group C/D/E`, or `Winner Match 73` because exact knockout teams depend on progression.
 
-Dates are seeded as ISO timestamps. The UI formats valid dates and shows `Date TBC` if a date is missing or invalid, so broken labels like `Invalid Date` should not appear.
+Group-stage kickoff times are displayed in Estonia time (`Europe/Tallinn`) as `HH:mm Eesti aeg` when a verified ISO timestamp exists. If the value is unknown or invalid, the app shows `Time TBC`; broken labels like `Invalid Date` should not appear.
 
 ## Bracket And Standings Foundations
 
@@ -125,11 +185,12 @@ The app is fully functional with manual admin updates. Future adapters for API-F
 
 ## Known Limitations
 
-- Current tournament data is seeded and neutral, not verified official World Cup 2026 data.
+- Current tournament data is only partially official. Kickoff timestamps still need full official verification.
 - Full official FIFA tie-break rules are not complete.
 - Knockout best-third-place mapping still requires verified official mapping.
 - Knockout bracket slots are structurally seeded; automatic bracket progression is only foundational.
 - External live-score providers are not implemented yet.
+- Local SQLite mode needs backups and hosting hardening before public production use.
 - Authentication is simple invite-code/PIN based for private league MVP use.
 - Node prints an experimental warning for built-in SQLite on Node 24.
 

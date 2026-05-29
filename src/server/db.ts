@@ -14,7 +14,7 @@ export const db = new DatabaseSync(dbPath);
 export function migrate(): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, invite_code TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'player', created_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', contact TEXT, admin_note TEXT);
     CREATE TABLE IF NOT EXISTS competitions (id TEXT PRIMARY KEY, name TEXT NOT NULL, prediction_deadline TEXT NOT NULL, predictions_locked INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT, flag TEXT, group_id TEXT);
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
@@ -30,14 +30,41 @@ export function migrate(): void {
   `);
   try { db.exec('ALTER TABLE teams ADD COLUMN code TEXT'); } catch {}
   try { db.exec('ALTER TABLE teams ADD COLUMN flag TEXT'); } catch {}
+  try { db.exec("ALTER TABLE players ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"); } catch {}
+  try { db.exec('ALTER TABLE players ADD COLUMN contact TEXT'); } catch {}
+  try { db.exec('ALTER TABLE players ADD COLUMN admin_note TEXT'); } catch {}
 }
 
-export function seedDemo(): void {
+export function seedTournamentData(): void {
   migrate();
   const now = new Date().toISOString();
+  db.prepare('INSERT OR REPLACE INTO competitions VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)').run('wc2026', 'Friends World Cup 2026', '2026-06-10T20:59:00.000Z', 'wc2026', 0, now);
+  const tournamentData = getTournamentData();
   db.exec(`
-    DELETE FROM score_breakdowns;
+    DELETE FROM matches;
+    DELETE FROM groups;
+    DELETE FROM teams;
+  `);
+  for (const group of tournamentData.groups) db.prepare('INSERT OR REPLACE INTO groups VALUES (?, ?)').run(group.id, group.name);
+  for (const team of createTeams()) db.prepare('INSERT OR REPLACE INTO teams (id, name, code, flag, group_id) VALUES (?, ?, ?, ?, ?)').run(team.id, team.name, team.code, team.flag, team.groupId ?? null);
+  for (const match of createMatches()) db.prepare('INSERT OR REPLACE INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(match.id, match.stage, match.groupId ?? null, match.kickoffAt, match.homeTeamId ?? null, match.awayTeamId ?? null, match.homeSlot, match.awaySlot);
+}
+
+export function seedDemo(options: { allowDestructive?: boolean } = {}): void {
+  resetDevData(options);
+  seedTournamentData();
+  const demo = createPlayer('Demo Player', 'FRIENDS2026');
+  createPlayer('Admin', 'ADMIN2026', 'admin');
+  updatePlayerStatus('admin-admin', 'ADMIN2026', demo.id, 'approved');
+}
+
+export function resetDevData(options: { allowDestructive?: boolean } = {}): void {
+  assertDestructiveAllowed(options.allowDestructive);
+  migrate();
+  db.exec(`
+    DELETE FROM admin_audit_log;
     DELETE FROM leaderboard_snapshots;
+    DELETE FROM score_breakdowns;
     DELETE FROM bonus_results;
     DELETE FROM bonus_predictions;
     DELETE FROM actual_results;
@@ -46,25 +73,25 @@ export function seedDemo(): void {
     DELETE FROM matches;
     DELETE FROM groups;
     DELETE FROM teams;
+    DELETE FROM players;
+    DELETE FROM users;
+    DELETE FROM competitions;
   `);
-  db.prepare('INSERT OR REPLACE INTO competitions VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)').run('wc2026', 'Friends World Cup 2026', '2026-06-10T20:59:00.000Z', 'wc2026', 0, now);
-  const tournamentData = getTournamentData();
-  for (const group of tournamentData.groups) db.prepare('INSERT OR REPLACE INTO groups VALUES (?, ?)').run(group.id, group.name);
-  for (const team of createTeams()) db.prepare('INSERT OR REPLACE INTO teams (id, name, code, flag, group_id) VALUES (?, ?, ?, ?, ?)').run(team.id, team.name, team.code, team.flag, team.groupId ?? null);
-  for (const match of createMatches()) db.prepare('INSERT OR REPLACE INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(match.id, match.stage, match.groupId ?? null, match.kickoffAt, match.homeTeamId ?? null, match.awayTeamId ?? null, match.homeSlot, match.awaySlot);
-  createPlayer('Demo Player', 'FRIENDS2026');
-  createPlayer('Admin', 'ADMIN2026', 'admin');
 }
 
-export function createPlayer(name: string, inviteCode: string, role = 'player') {
+export function createPlayer(name: string, inviteCode: string, role = 'player', contact = '') {
   const id = slug(`${name}-${role}`);
   const now = new Date().toISOString();
+  const status = role === 'admin' ? 'approved' : 'pending';
   db.prepare('INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?)').run(id, name, inviteCode, role, now);
-  db.prepare('INSERT OR IGNORE INTO players VALUES (?, ?, ?, ?)').run(id, id, name, now);
-  return { id, name, role };
+  db.prepare('INSERT OR IGNORE INTO players (id, user_id, display_name, created_at, status, contact, admin_note) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, id, name, now, status, contact || null, null);
+  if (contact) db.prepare('UPDATE players SET contact = ? WHERE id = ?').run(contact, id);
+  const row = one('SELECT players.status, players.contact, users.role FROM players JOIN users ON users.id = players.user_id WHERE players.id = ?', [id]);
+  return { id, name, role: String(row?.role ?? role), status: String(row?.status ?? status), contact: row?.contact ?? contact };
 }
 
 export function getState(playerId?: string) {
+  const currentPlayer = playerId ? one('SELECT players.*, users.role FROM players JOIN users ON users.id = players.user_id WHERE players.id = ?', [playerId]) : null;
   return {
     competition: one('SELECT * FROM competitions WHERE id = ?', ['wc2026']),
     teams: all('SELECT * FROM teams ORDER BY id'),
@@ -76,6 +103,8 @@ export function getState(playerId?: string) {
     results: all('SELECT * FROM actual_results ORDER BY match_id'),
     leaderboard: getLeaderboard(),
     tournamentDataStatus: getTournamentDataStatus(),
+    currentPlayer,
+    playerAdmin: currentPlayer?.role === 'admin' ? getPlayerAdminRows() : [],
     lastUpdated: new Date().toISOString()
   };
 }
@@ -86,7 +115,10 @@ export function getTournamentDataStatus() {
   return {
     metadata: tournamentData.metadata,
     validation,
-    counts: validation.counts
+    counts: validation.counts,
+    unresolved: validation.unresolved,
+    riskLevel: validation.riskLevel,
+    storage: getStorageStatus()
   };
 }
 
@@ -129,6 +161,15 @@ export function saveBonusResults(actor: string, groups: GroupBonusPrediction[], 
   recalculateScores();
 }
 
+export function updatePlayerStatus(actorId: string, adminCode: string, playerId: string, status: string, note = '') {
+  assertAdmin(actorId, adminCode);
+  if (!['pending', 'approved', 'disabled'].includes(status)) throw new Error('Invalid player status');
+  db.prepare("UPDATE players SET status = ?, admin_note = COALESCE(NULLIF(?, ''), admin_note) WHERE id = ?").run(status, note, playerId);
+  audit(actorId, 'player.status.updated', { playerId, status, note });
+  recalculateScores();
+  return getState(actorId);
+}
+
 export function recalculateScores() {
   db.exec('DELETE FROM score_breakdowns');
   const results = new Map(all('SELECT * FROM actual_results').map((row) => [Number(row.match_id), row]));
@@ -163,7 +204,7 @@ export function getLeaderboard(): ParticipantScore[] {
   const previous = one('SELECT snapshot_json FROM leaderboard_snapshots ORDER BY id DESC LIMIT 1');
   const previousRanks = new Map<string, number>();
   if (previous) JSON.parse(String(previous.snapshot_json)).forEach((score: ParticipantScore, index: number) => previousRanks.set(score.playerId, index + 1));
-  const scores = all('SELECT players.id, players.display_name, COALESCE(prediction_submissions.submitted_at, players.created_at) AS submitted_at FROM players LEFT JOIN prediction_submissions ON prediction_submissions.player_id = players.id').map((player) => {
+  const scores = all("SELECT players.id, players.display_name, COALESCE(prediction_submissions.submitted_at, players.created_at) AS submitted_at FROM players LEFT JOIN prediction_submissions ON prediction_submissions.player_id = players.id WHERE players.status = 'approved'").map((player) => {
     const rows = all('SELECT item_type, points FROM score_breakdowns WHERE player_id = ?', [String(player.id)]);
     const matchPoints = sumPoints(rows.filter((row) => row.item_type === 'match').map((row) => ({ points: Number(row.points) })));
     const bonusPoints = sumPoints(rows.filter((row) => row.item_type === 'bonus').map((row) => ({ points: Number(row.points) })));
@@ -195,10 +236,47 @@ export function resetForTests() {
   `);
 }
 
+export function getStorageStatus() {
+  const isSqlite = dbPath.endsWith('.sqlite');
+  const mode = process.env.WORLDCUP_MODE ?? 'local';
+  return {
+    mode,
+    database: isSqlite ? 'SQLite' : 'custom',
+    dbPath,
+    productionSafe: mode === 'production' && !isSqlite,
+    warning: isSqlite ? 'Local SQLite storage is suitable for MVP/demo use, but needs backups and hosting hardening before public production use.' : ''
+  };
+}
+
 function assertUnlocked() {
   const competition = one('SELECT predictions_locked, prediction_deadline FROM competitions WHERE id = ?', ['wc2026']);
   if (competition?.predictions_locked === 1) throw new Error('Predictions are locked');
   if (competition?.prediction_deadline && Date.now() > new Date(String(competition.prediction_deadline)).getTime()) throw new Error('Prediction deadline has passed');
+}
+
+function assertAdmin(actorId: string, adminCode: string) {
+  const actor = one('SELECT role FROM users WHERE id = ?', [actorId]);
+  if (actor?.role !== 'admin' || adminCode !== 'ADMIN2026') throw new Error('Admin access required');
+}
+
+function getPlayerAdminRows() {
+  return all(`
+    SELECT players.id, players.display_name, players.created_at, players.status, players.contact, players.admin_note,
+      prediction_submissions.submitted_at,
+      COUNT(predictions.match_id) AS prediction_count
+    FROM players
+    LEFT JOIN prediction_submissions ON prediction_submissions.player_id = players.id
+    LEFT JOIN predictions ON predictions.player_id = players.id
+    GROUP BY players.id
+    ORDER BY players.status, players.created_at
+  `);
+}
+
+function assertDestructiveAllowed(allowDestructive?: boolean) {
+  if (!allowDestructive) throw new Error('Destructive reset refused. Use reset:dev or seed:demo explicitly.');
+  if (process.env.WORLDCUP_MODE === 'production' && process.env.ALLOW_PRODUCTION_RESET !== 'true') {
+    throw new Error('Destructive reset refused in production mode.');
+  }
 }
 
 function audit(actor: string, action: string, payload: unknown) {

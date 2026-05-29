@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Match, MatchPrediction, Team } from '../../domain/types.js';
-import { formatMatchDate } from '../lib/date.js';
+import { formatEstoniaKickoffTime, formatMatchDate } from '../lib/date.js';
 import { UserDataStatus } from './DataStatus.js';
 import { TeamBadge } from './TeamBadge.js';
 
@@ -44,9 +44,13 @@ export function MatchCard({ match, value, disabled, onChange, teamsById = new Ma
   const kickoff = match.kickoffAt ?? match.kickoff_at;
   const homeTeam = match.homeTeamId || match.home_team_id ? teamsById.get(match.homeTeamId ?? match.home_team_id) : null;
   const awayTeam = match.awayTeamId || match.away_team_id ? teamsById.get(match.awayTeamId ?? match.away_team_id) : null;
+  const groupId = match.groupId ?? match.group_id;
   return (
     <article className="match-card">
-      <div className="match-meta"><span>Match {match.id} · {stageLabel(match.stage)}{match.groupId || match.group_id ? ` · Group ${match.groupId ?? match.group_id}` : ''}</span><span>{formatMatchDate(kickoff)}</span></div>
+      <div className="match-meta">
+        <span>{groupId ? `Group ${groupId}` : stageLabel(match.stage)} · Match {match.id}</span>
+        <span>{match.stage === 'GROUP' ? formatEstoniaKickoffTime(kickoff) : formatMatchDate(kickoff)}</span>
+      </div>
       <div className="score-row">
         <TeamBadge team={homeTeam} slotLabel={match.homeSlot ?? match.home_slot} />
         <input disabled={disabled} type="number" min="0" value={value.homeGoals} onChange={(event) => onChange({ ...value, homeGoals: Number(event.target.value) })} />

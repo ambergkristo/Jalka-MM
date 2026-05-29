@@ -2,61 +2,61 @@
   {
     "id": "A",
     "name": "Group A",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "B",
     "name": "Group B",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "C",
     "name": "Group C",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "D",
     "name": "Group D",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "E",
     "name": "Group E",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "F",
     "name": "Group F",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "G",
     "name": "Group G",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "H",
     "name": "Group H",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "I",
     "name": "Group I",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "J",
     "name": "Group J",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "K",
     "name": "Group K",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   },
   {
     "id": "L",
     "name": "Group L",
-    "verificationStatus": "seeded"
+    "verificationStatus": "partial_official"
   }
 ]
