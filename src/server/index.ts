@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createServer } from 'node:http';
-import { breakdownFor, createPlayer, getState, recalculateScores, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, setLock } from './db.js';
+import { breakdownFor, createPlayer, getState, recalculateScores, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, setDeadline, setLock } from './db.js';
 
 seedDemo();
 
@@ -31,6 +31,11 @@ createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/admin/lock') {
       const body = await readJson(request);
       setLock(String(body.actor ?? 'admin'), Boolean(body.locked));
+      return json(response, 200, getState());
+    }
+    if (request.method === 'POST' && url.pathname === '/api/admin/deadline') {
+      const body = await readJson(request);
+      setDeadline(String(body.actor ?? 'admin'), String(body.deadline));
       return json(response, 200, getState());
     }
     if (request.method === 'POST' && url.pathname === '/api/admin/bonus-results') {

@@ -1,11 +1,23 @@
 # World Cup 2026 Friends Predictor
 
-Mobile-first PWA MVP for a private World Cup prediction league. It is isolated from the existing FUTU booking app in this repository.
+Mobile-first PWA MVP for a private World Cup prediction league.
+
+## Current Features
+
+- Player login with name and invite code/PIN.
+- Mobile match prediction entry for all 104 seeded World Cup 2026-shaped matches.
+- Bonus prediction flow for group winners, group second places, group qualifiers, knockout round participants, third-place winner, champion, and top scorer.
+- Admin match result entry.
+- Admin bonus-result entry, including multiple tied top scorers.
+- Admin lock/unlock and deadline configuration.
+- Real leaderboard calculated from stored predictions, results, and score breakdowns.
+- Participant score detail view with match and bonus explanations.
+- Manual result provider boundary for future live-score integrations.
 
 ## Run Locally
 
 ```bash
-cd worldcup2026
+cd "C:\Users\Kasutaja\Documents\Jalka MM APP"
 npm install
 npm test
 npm run build
@@ -14,6 +26,14 @@ npm run dev
 ```
 
 Open `http://localhost:5174`. The API runs on `http://localhost:8787`.
+
+Commands:
+
+- `npm install`: install dependencies
+- `npm test`: run pure scoring tests and SQLite stored-data tests
+- `npm run build`: compile the API and build the PWA
+- `npm run seed`: create/update the local SQLite demo data
+- `npm run dev`: run API and Vite dev server
 
 ## Demo Access
 
@@ -50,13 +70,37 @@ Knockout match score points are based on the home-away bracket slot score. Team 
 
 ## Admin Flow
 
-Use `ADMIN2026`, open the Admin tab, enter results, lock/unlock predictions, and trigger recalculation. Every result, deadline, and bonus-result change is written to `admin_audit_log`.
+Use `ADMIN2026`, open the Admin tab, enter match results, edit the prediction deadline, lock/unlock predictions, enter bonus results, and trigger recalculation. Every result, deadline, and bonus-result change is written to `admin_audit_log`.
+
+## Bonus Prediction Flow
+
+Use the Bonus tab as a player. Select each group winner, group second place, and two qualifiers. Then select teams reaching Round of 16, quarter-finals, semi-finals, and the final, plus the third-place winner, champion, and top scorer. The screen shows how many required fields are still missing and saves through the API to `bonus_predictions`.
+
+## Admin Bonus Results
+
+Use the Admin tab. Enter final group outcomes, knockout round participants, third-place winner, champion, and top scorer results. Multiple tied top scorers can be entered separated by commas or new lines. Saving bonus results writes to `bonus_results` and recalculates score breakdowns.
+
+## Score Explanations
+
+Open the Leaderboard tab and choose Details for a participant, or open the Details tab for the current player. The detail view reads `score_breakdowns` through `/api/breakdown` and displays match and bonus explanation labels such as `6p: exact score correct` or `4p: correct result and goal difference`.
 
 ## External Result Providers
 
 `src/server/providers.ts` defines `ManualResultProvider`, `ExternalFootballResultProvider`, and `NormalizedMatchResult`.
 
 The app is fully functional with manual admin updates. Future adapters for API-Football, football-data.org, SportMonks, or LiveScore API should implement `ExternalFootballResultProvider` and return normalized match results. API key placeholders are documented in that file but are not required for the MVP.
+
+## Known Limitations
+
+- Seeded teams are placeholders except the initial host examples; replace with official participant data once finalized.
+- Knockout bracket slots are structurally seeded, not connected to an automatic bracket progression engine.
+- External live-score providers are not implemented yet.
+- Authentication is simple invite-code/PIN based for private league MVP use.
+- Node prints an experimental warning for built-in SQLite on Node 24.
+
+## Git Status
+
+The project repository is `https://github.com/ambergkristo/Jalka-MM` on branch `main`.
 
 ## Reference Files
 

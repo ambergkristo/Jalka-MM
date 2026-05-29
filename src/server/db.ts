@@ -5,7 +5,7 @@ import { createMatches, createTeams } from '../domain/seed.js';
 import { rankParticipants, scoreGroupBonus, scoreKnockoutBonus, scoreMatch, sumPoints } from '../domain/scoring.js';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction, MatchResult, ParticipantScore } from '../domain/types.js';
 
-const dbPath = join(process.cwd(), 'data', 'worldcup2026.sqlite');
+const dbPath = process.env.WORLDCUP_DB_PATH ?? join(process.cwd(), 'data', 'worldcup2026.sqlite');
 mkdirSync(dirname(dbPath), { recursive: true });
 export const db = new DatabaseSync(dbPath);
 
@@ -55,6 +55,7 @@ export function getState(playerId?: string) {
     matches: all('SELECT * FROM matches ORDER BY id'),
     predictions: playerId ? all('SELECT * FROM predictions WHERE player_id = ? ORDER BY match_id', [playerId]) : [],
     bonusPrediction: playerId ? one('SELECT * FROM bonus_predictions WHERE player_id = ?', [playerId]) : null,
+    bonusResult: one('SELECT * FROM bonus_results WHERE competition_id = ?', ['wc2026']),
     results: all('SELECT * FROM actual_results ORDER BY match_id'),
     leaderboard: getLeaderboard(),
     lastUpdated: new Date().toISOString()
@@ -85,6 +86,12 @@ export function saveResult(actor: string, result: MatchResult) {
 export function setLock(actor: string, locked: boolean) {
   db.prepare('UPDATE competitions SET predictions_locked = ?, updated_at = ? WHERE id = ?').run(locked ? 1 : 0, new Date().toISOString(), 'wc2026');
   audit(actor, locked ? 'deadline.locked' : 'deadline.unlocked', { locked });
+}
+
+export function setDeadline(actor: string, deadline: string) {
+  if (Number.isNaN(new Date(deadline).getTime())) throw new Error('Invalid deadline');
+  db.prepare('UPDATE competitions SET prediction_deadline = ?, updated_at = ? WHERE id = ?').run(deadline, new Date().toISOString(), 'wc2026');
+  audit(actor, 'deadline.updated', { deadline });
 }
 
 export function saveBonusResults(actor: string, groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction & { topScorers?: string[] }) {
@@ -141,8 +148,29 @@ export function breakdownFor(playerId: string) {
   return all('SELECT * FROM score_breakdowns WHERE player_id = ? ORDER BY item_type, item_id', [playerId]);
 }
 
+export function resetForTests() {
+  db.exec(`
+    DELETE FROM admin_audit_log;
+    DELETE FROM leaderboard_snapshots;
+    DELETE FROM score_breakdowns;
+    DELETE FROM bonus_results;
+    DELETE FROM bonus_predictions;
+    DELETE FROM actual_results;
+    DELETE FROM prediction_submissions;
+    DELETE FROM predictions;
+    DELETE FROM matches;
+    DELETE FROM groups;
+    DELETE FROM teams;
+    DELETE FROM players;
+    DELETE FROM users;
+    DELETE FROM competitions;
+  `);
+}
+
 function assertUnlocked() {
-  if (one('SELECT predictions_locked FROM competitions WHERE id = ?', ['wc2026'])?.predictions_locked === 1) throw new Error('Predictions are locked');
+  const competition = one('SELECT predictions_locked, prediction_deadline FROM competitions WHERE id = ?', ['wc2026']);
+  if (competition?.predictions_locked === 1) throw new Error('Predictions are locked');
+  if (competition?.prediction_deadline && Date.now() > new Date(String(competition.prediction_deadline)).getTime()) throw new Error('Prediction deadline has passed');
 }
 
 function audit(actor: string, action: string, payload: unknown) {

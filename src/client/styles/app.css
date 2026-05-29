@@ -6,7 +6,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button {
   border: 1px solid #173d2c;
   background: #173d2c;
@@ -16,7 +16,7 @@ button {
   padding: 0 14px;
 }
 button:disabled { opacity: .55; }
-input, select {
+input, select, textarea {
   width: 100%;
   border: 1px solid #c9c2b2;
   border-radius: 8px;
@@ -24,6 +24,7 @@ input, select {
   min-height: 42px;
   padding: 8px 10px;
 }
+textarea { min-height: 86px; resize: vertical; }
 .login {
   min-height: 100vh;
   display: grid;
@@ -53,6 +54,7 @@ nav button.active, .filters button.active { background: #173d2c; color: #fff; }
 .summary { display: flex; justify-content: space-between; align-items: center; padding: 14px; margin: 6px 0 10px; }
 .summary strong { font-size: 1.4rem; }
 .match-list { display: grid; gap: 10px; }
+.stack { display: grid; gap: 12px; }
 .match-card { padding: 12px; }
 .match-meta { display: flex; justify-content: space-between; color: #69746d; font-size: .8rem; margin-bottom: 8px; }
 .score-row { display: grid; grid-template-columns: minmax(0, 1fr) 54px 54px minmax(0, 1fr); align-items: center; gap: 8px; }
@@ -75,6 +77,18 @@ nav button.active, .filters button.active { background: #173d2c; color: #fff; }
 .admin-grid { display: grid; gap: 12px; }
 .panel { padding: 14px; display: grid; gap: 10px; }
 .panel h2 { margin: 0; }
+.panel h3 { margin: 4px 0 0; }
+.wide { grid-column: 1 / -1; }
+.admin-group { border-top: 1px solid #d7cfbd; padding-top: 10px; display: grid; gap: 8px; }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 6px; max-height: 240px; overflow: auto; padding: 8px; border: 1px solid #e4ddcf; border-radius: 8px; }
+.check-row { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.check-row input { width: auto; min-height: auto; }
+.field-note { margin: 4px 0 0; color: #526058; font-weight: 750; }
+.field-note.missing { color: #a1482f; }
+.muted { color: #69746d; margin: 0; }
+.ghost { background: #fffdf7; color: #173d2c; }
+.breakdown-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; border-top: 1px solid #e4ddcf; padding-top: 10px; }
+.breakdown-row p { grid-column: 1 / -1; margin: 0; color: #526058; }
 .error, .empty { padding: 12px; border-radius: 8px; background: #ffe8dd; border: 1px solid #d98262; color: #6f210d; }
 
 @media (min-width: 760px) {
