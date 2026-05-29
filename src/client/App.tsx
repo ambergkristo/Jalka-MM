@@ -97,8 +97,12 @@ function Shell({ player, view, setView, children }: { player: any; view: View; s
         <div><p className="eyebrow">WC 2026 League</p><h1>Predictions</h1></div>
         <span>{player.name}</span>
       </header>
-      <nav>{(['predict', 'bonus', 'leaderboard', 'details', 'admin'] as View[]).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}>{item}</button>)}</nav>
+      <nav>{(['predict', 'bonus', 'leaderboard', 'details', 'admin'] as View[]).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}>{navLabel(item)}</button>)}</nav>
       {children}
     </div>
   );
+}
+
+function navLabel(view: View) {
+  return ({ predict: 'Predictions', bonus: 'Bonus', leaderboard: 'Leaderboard', details: 'Details', admin: 'Admin' } as Record<View, string>)[view];
 }

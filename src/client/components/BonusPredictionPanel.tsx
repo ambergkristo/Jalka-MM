@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, Team } from '../../domain/types.js';
 import { countMissingBonus, readBonusDraft, toggleTeam } from './bonusDraft.js';
+import { TeamBadge } from './TeamBadge.js';
 
 export function BonusPredictionPanel({ state, locked, saving, onSave }: { state: any; locked: boolean; saving: string; onSave: (groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) => void }) {
   const groupIds = state.groups.map((group: any) => String(group.id));
@@ -48,7 +49,7 @@ export function BonusPredictionPanel({ state, locked, saving, onSave }: { state:
 }
 
 export function TeamSelect({ teams, value, disabled, onChange }: { teams: Team[]; value: string; disabled: boolean; onChange: (value: string) => void }) {
-  return <select disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}><option value="">Select team</option>{teams.map((team: any) => <option key={team.id} value={team.id}>{team.name}</option>)}</select>;
+  return <select disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}><option value="">Select team</option>{teams.map((team: any) => <option key={team.id} value={team.id}>{team.flag} {team.name} ({team.code})</option>)}</select>;
 }
 
 function RoundChecks({ label, max, teams, values, disabled, onChange }: { label: string; max: number; teams: Team[]; values: string[]; disabled: boolean; onChange: (values: string[]) => void }) {
@@ -56,7 +57,7 @@ function RoundChecks({ label, max, teams, values, disabled, onChange }: { label:
 }
 
 function TeamChecks({ teams, values, max, disabled, onChange }: { teams: Team[]; values: string[]; max: number; disabled: boolean; onChange: (values: string[]) => void }) {
-  return <div className="check-grid">{teams.map((team: any) => <label className="check-row" key={team.id}><input disabled={disabled || (!values.includes(team.id) && values.length >= max)} type="checkbox" checked={values.includes(team.id)} onChange={() => onChange(toggleTeam(values, team.id, max))} />{team.name}</label>)}</div>;
+  return <div className="check-grid">{teams.map((team: any) => <label className="check-row" key={team.id}><input disabled={disabled || (!values.includes(team.id) && values.length >= max)} type="checkbox" checked={values.includes(team.id)} onChange={() => onChange(toggleTeam(values, team.id, max))} /><TeamBadge team={team} /></label>)}</div>;
 }
 
 function FieldLabel({ text, missing }: { text: string; missing: boolean }) {

@@ -13,6 +13,7 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Real leaderboard calculated from stored predictions, results, and score breakdowns.
 - Participant score detail view with match and bonus explanations.
 - Manual result provider boundary for future live-score integrations.
+- Dark, mobile-first match prediction screen with grouped stages, seeded national team names, country codes, and emoji flags.
 
 ## Run Locally
 
@@ -80,6 +81,14 @@ Use the Bonus tab as a player. Select each group winner, group second place, and
 
 Use the Admin tab. Enter final group outcomes, knockout round participants, third-place winner, champion, and top scorer results. Multiple tied top scorers can be entered separated by commas or new lines. Saving bonus results writes to `bonus_results` and recalculates score breakdowns.
 
+## Seeded Teams And Schedule
+
+Teams are seeded from `src/domain/teams.ts`. Each seeded team has a display name, short code, emoji flag, and group assignment. The seed uses real national-team names for a realistic private-league demo, but it is still seeded data and should be reviewed against the final official tournament field before production use.
+
+The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use team IDs from the central registry. Knockout matches use clear bracket slot labels such as `Winner Group A` or `Winner R32 Match 73` because exact knockout teams depend on progression.
+
+Dates are seeded as ISO timestamps. The UI formats valid dates and shows `Date TBC` if a date is missing or invalid, so broken labels like `Invalid Date` should not appear.
+
 ## Score Explanations
 
 Open the Leaderboard tab and choose Details for a participant, or open the Details tab for the current player. The detail view reads `score_breakdowns` through `/api/breakdown` and displays match and bonus explanation labels such as `6p: exact score correct` or `4p: correct result and goal difference`.
@@ -92,7 +101,7 @@ The app is fully functional with manual admin updates. Future adapters for API-F
 
 ## Known Limitations
 
-- Seeded teams are placeholders except the initial host examples; replace with official participant data once finalized.
+- Seeded teams are realistic national teams, not a verified final official 2026 field.
 - Knockout bracket slots are structurally seeded, not connected to an automatic bracket progression engine.
 - External live-score providers are not implemented yet.
 - Authentication is simple invite-code/PIN based for private league MVP use.

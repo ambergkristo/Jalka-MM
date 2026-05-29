@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { GroupBonusPrediction, KnockoutBonusPrediction, Match, MatchPrediction } from '../../domain/types.js';
+import type { GroupBonusPrediction, KnockoutBonusPrediction, Match, MatchPrediction, Team } from '../../domain/types.js';
 import { recalculate, saveBonusResults, saveResult, setDeadline, setLock } from '../api.js';
 import { readBonusDraft, splitTopScorers } from './bonusDraft.js';
 import { TeamSelect } from './BonusPredictionPanel.js';
@@ -8,6 +8,7 @@ import { MatchCard } from './MatchPredictions.js';
 export function AdminPanel({ state, player, onRefresh, onError }: { state: any; player: any; onRefresh: (state?: any) => void; onError: (message: string) => void }) {
   const [matchId, setMatchId] = useState(1);
   const match = useMemo(() => state.matches.find((item: Match) => item.id === matchId), [state.matches, matchId]);
+  const teamsById = useMemo(() => new Map(state.teams.map((team: any) => [team.id, team as Team])), [state.teams]);
   const [result, setResult] = useState<MatchPrediction>({ matchId: 1, homeGoals: 0, awayGoals: 0 });
   const [deadlineValue, setDeadlineValue] = useState(toLocalDateTime(state.competition.prediction_deadline));
   const groupIds = state.groups.map((group: any) => String(group.id));
@@ -30,7 +31,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
         <select value={matchId} onChange={(event) => { const next = Number(event.target.value); setMatchId(next); setResult({ matchId: next, homeGoals: 0, awayGoals: 0 }); }}>
           {state.matches.map((item: Match) => <option key={item.id} value={item.id}>#{item.id} {item.homeSlot} v {item.awaySlot}</option>)}
         </select>
-        {match && <MatchCard match={match} value={result} disabled={false} onChange={setResult} />}
+        {match && <MatchCard match={match} teamsById={teamsById} value={result} disabled={false} onChange={setResult} />}
         <button onClick={() => run(saveResult(player.name, result))}>Save result</button>
       </div>
       <div className="panel">

@@ -4,6 +4,8 @@ export type SlotSide = 'HOME' | 'AWAY';
 export interface Team {
   id: string;
   name: string;
+  code: string;
+  flag: string;
   groupId?: string;
 }
 

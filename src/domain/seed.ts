@@ -1,14 +1,10 @@
 import type { Match, Team } from './types.js';
+import { createSeededTeams } from './teams.js';
 
 const GROUPS = Array.from({ length: 12 }, (_, index) => String.fromCharCode(65 + index));
 
 export function createTeams(): Team[] {
-  const named = ['Canada', 'Mexico', 'United States'];
-  return Array.from({ length: 48 }, (_, index) => {
-    const number = index + 1;
-    const groupId = GROUPS[Math.floor(index / 4)];
-    return { id: `T${String(number).padStart(2, '0')}`, name: named[index] ?? `Country ${String(number).padStart(2, '0')}`, groupId };
-  });
+  return createSeededTeams();
 }
 
 export function createMatches(teams = createTeams()): Match[] {
@@ -24,9 +20,18 @@ export function createMatches(teams = createTeams()): Match[] {
       id++;
     }
   }
+  const knockoutSlots: Record<string, string[]> = {
+    R32: ['Winner Group A', 'Runner-up Group B', 'Winner Group C', 'Runner-up Group D', 'Winner Group E', 'Runner-up Group F', 'Winner Group G', 'Runner-up Group H', 'Winner Group I', 'Runner-up Group J', 'Winner Group K', 'Runner-up Group L', 'Best third-place 1', 'Best third-place 2', 'Best third-place 3', 'Best third-place 4', 'Winner Group B', 'Runner-up Group A', 'Winner Group D', 'Runner-up Group C', 'Winner Group F', 'Runner-up Group E', 'Winner Group H', 'Runner-up Group G', 'Winner Group J', 'Runner-up Group I', 'Winner Group L', 'Runner-up Group K', 'Best third-place 5', 'Best third-place 6', 'Best third-place 7', 'Best third-place 8'],
+    R16: Array.from({ length: 16 }, (_, index) => `Winner R32 Match ${73 + Math.floor(index / 2)}`),
+    QF: Array.from({ length: 8 }, (_, index) => `Winner R16 Match ${89 + Math.floor(index / 2)}`),
+    SF: Array.from({ length: 4 }, (_, index) => `Winner QF Match ${97 + Math.floor(index / 2)}`),
+    THIRD_PLACE: ['Loser SF Match 101', 'Loser SF Match 102'],
+    FINAL: ['Winner SF Match 101', 'Winner SF Match 102']
+  };
   for (const [stage, count] of [['R32', 16], ['R16', 8], ['QF', 4], ['SF', 2], ['THIRD_PLACE', 1], ['FINAL', 1]] as Array<[Match['stage'], number]>) {
     for (let index = 1; index <= count; index++) {
-      matches.push({ id, stage, kickoffAt: kickoff(day++), homeSlot: `${stage} slot ${index}A`, awaySlot: `${stage} slot ${index}B` });
+      const slotIndex = (index - 1) * 2;
+      matches.push({ id, stage, kickoffAt: kickoff(day++), homeSlot: knockoutSlots[stage][slotIndex], awaySlot: knockoutSlots[stage][slotIndex + 1] });
       id++;
     }
   }

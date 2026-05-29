@@ -14,7 +14,7 @@ export function migrate(): void {
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, invite_code TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'player', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS competitions (id TEXT PRIMARY KEY, name TEXT NOT NULL, prediction_deadline TEXT NOT NULL, predictions_locked INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, group_id TEXT);
+    CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT, flag TEXT, group_id TEXT);
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS matches (id INTEGER PRIMARY KEY, stage TEXT NOT NULL, group_id TEXT, kickoff_at TEXT NOT NULL, home_team_id TEXT, away_team_id TEXT, home_slot TEXT NOT NULL, away_slot TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS predictions (player_id TEXT NOT NULL, match_id INTEGER NOT NULL, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL, PRIMARY KEY (player_id, match_id));
@@ -26,14 +26,28 @@ export function migrate(): void {
     CREATE TABLE IF NOT EXISTS leaderboard_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL, snapshot_json TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS admin_audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, actor TEXT NOT NULL, action TEXT NOT NULL, payload_json TEXT NOT NULL, created_at TEXT NOT NULL);
   `);
+  try { db.exec('ALTER TABLE teams ADD COLUMN code TEXT'); } catch {}
+  try { db.exec('ALTER TABLE teams ADD COLUMN flag TEXT'); } catch {}
 }
 
 export function seedDemo(): void {
   migrate();
   const now = new Date().toISOString();
+  db.exec(`
+    DELETE FROM score_breakdowns;
+    DELETE FROM leaderboard_snapshots;
+    DELETE FROM bonus_results;
+    DELETE FROM bonus_predictions;
+    DELETE FROM actual_results;
+    DELETE FROM prediction_submissions;
+    DELETE FROM predictions;
+    DELETE FROM matches;
+    DELETE FROM groups;
+    DELETE FROM teams;
+  `);
   db.prepare('INSERT OR REPLACE INTO competitions VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)').run('wc2026', 'Friends World Cup 2026', '2026-06-10T20:59:00.000Z', 'wc2026', 0, now);
   for (const groupId of Array.from({ length: 12 }, (_, index) => String.fromCharCode(65 + index))) db.prepare('INSERT OR REPLACE INTO groups VALUES (?, ?)').run(groupId, `Group ${groupId}`);
-  for (const team of createTeams()) db.prepare('INSERT OR REPLACE INTO teams VALUES (?, ?, ?)').run(team.id, team.name, team.groupId ?? null);
+  for (const team of createTeams()) db.prepare('INSERT OR REPLACE INTO teams (id, name, code, flag, group_id) VALUES (?, ?, ?, ?, ?)').run(team.id, team.name, team.code, team.flag, team.groupId ?? null);
   for (const match of createMatches()) db.prepare('INSERT OR REPLACE INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(match.id, match.stage, match.groupId ?? null, match.kickoffAt, match.homeTeamId ?? null, match.awayTeamId ?? null, match.homeSlot, match.awaySlot);
   createPlayer('Demo Player', 'FRIENDS2026');
   createPlayer('Admin', 'ADMIN2026', 'admin');
