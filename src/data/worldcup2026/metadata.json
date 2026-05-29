@@ -1,0 +1,10 @@
+{
+  "sourceName": "Internal seeded placeholder data",
+  "sourceReference": "src/data/worldcup2026/*.json",
+  "sourceRetrievedAt": "2026-05-29T11:17:19.490Z",
+  "verificationStatus": "seeded",
+  "notes": [
+    "This dataset is intentionally neutral and must not be treated as official World Cup 2026 fixtures.",
+    "Replace these JSON files with verified official tournament data before live competition use."
+  ]
+}

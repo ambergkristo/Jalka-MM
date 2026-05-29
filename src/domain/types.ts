@@ -1,5 +1,6 @@
 export type Stage = 'GROUP' | 'R32' | 'R16' | 'QF' | 'SF' | 'THIRD_PLACE' | 'FINAL';
 export type SlotSide = 'HOME' | 'AWAY';
+export type VerificationStatus = 'official' | 'seeded' | 'manual' | 'unknown';
 
 export interface Team {
   id: string;
@@ -7,6 +8,7 @@ export interface Team {
   code: string;
   flag: string;
   groupId?: string;
+  verificationStatus?: VerificationStatus;
 }
 
 export interface Match {
@@ -18,6 +20,15 @@ export interface Match {
   awayTeamId?: string;
   homeSlot: string;
   awaySlot: string;
+  verificationStatus?: VerificationStatus;
+}
+
+export interface TournamentMetadata {
+  sourceName: string;
+  sourceReference: string;
+  sourceRetrievedAt: string;
+  verificationStatus: VerificationStatus;
+  notes?: string[];
 }
 
 export interface Scoreline {

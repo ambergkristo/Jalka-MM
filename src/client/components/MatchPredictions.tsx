@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Match, MatchPrediction, Team } from '../../domain/types.js';
 import { formatMatchDate } from '../lib/date.js';
+import { UserDataStatus } from './DataStatus.js';
 import { TeamBadge } from './TeamBadge.js';
 
 export function MatchPredictions({ state, locked, saving, onSave }: { state: any; locked: boolean; saving: string; onSave: (predictions: MatchPrediction[]) => void }) {
@@ -23,6 +24,7 @@ export function MatchPredictions({ state, locked, saving, onSave }: { state: any
         <strong>{completed}/104</strong>
         <span>{locked ? 'Predictions locked' : saving || 'Ready to edit'}</span>
       </div>
+      <UserDataStatus status={state.tournamentDataStatus} />
       <div className="filters">{['GROUP', 'R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL'].map((item) => <button key={item} className={stage === item ? 'active' : ''} onClick={() => setStage(item)}>{stageLabel(item)}</button>)}</div>
       <div className="match-list">
         {groupedMatches.map(([heading, sectionMatches]) => (

@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.server.json && vite build",
     "build:server": "tsc -p tsconfig.server.json",
     "test": "vitest run && tsc -p tsconfig.server.json && node --test dist/test-db/db-node-test.js",
-    "seed": "node --run build:server && node dist/server/seed-cli.js"
+    "seed": "node --run build:server && node dist/server/seed-cli.js",
+    "validate:tournament-data": "node scripts/validate-tournament-data.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.4.1",

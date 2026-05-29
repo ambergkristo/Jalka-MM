@@ -1,0 +1,386 @@
+[
+  {
+    "id": "A1",
+    "code": "A1",
+    "name": "Group A Team 1",
+    "flag": "◇",
+    "groupId": "A",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "A2",
+    "code": "A2",
+    "name": "Group A Team 2",
+    "flag": "◇",
+    "groupId": "A",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "A3",
+    "code": "A3",
+    "name": "Group A Team 3",
+    "flag": "◇",
+    "groupId": "A",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "A4",
+    "code": "A4",
+    "name": "Group A Team 4",
+    "flag": "◇",
+    "groupId": "A",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "B1",
+    "code": "B1",
+    "name": "Group B Team 1",
+    "flag": "◇",
+    "groupId": "B",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "B2",
+    "code": "B2",
+    "name": "Group B Team 2",
+    "flag": "◇",
+    "groupId": "B",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "B3",
+    "code": "B3",
+    "name": "Group B Team 3",
+    "flag": "◇",
+    "groupId": "B",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "B4",
+    "code": "B4",
+    "name": "Group B Team 4",
+    "flag": "◇",
+    "groupId": "B",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "C1",
+    "code": "C1",
+    "name": "Group C Team 1",
+    "flag": "◇",
+    "groupId": "C",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "C2",
+    "code": "C2",
+    "name": "Group C Team 2",
+    "flag": "◇",
+    "groupId": "C",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "C3",
+    "code": "C3",
+    "name": "Group C Team 3",
+    "flag": "◇",
+    "groupId": "C",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "C4",
+    "code": "C4",
+    "name": "Group C Team 4",
+    "flag": "◇",
+    "groupId": "C",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "D1",
+    "code": "D1",
+    "name": "Group D Team 1",
+    "flag": "◇",
+    "groupId": "D",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "D2",
+    "code": "D2",
+    "name": "Group D Team 2",
+    "flag": "◇",
+    "groupId": "D",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "D3",
+    "code": "D3",
+    "name": "Group D Team 3",
+    "flag": "◇",
+    "groupId": "D",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "D4",
+    "code": "D4",
+    "name": "Group D Team 4",
+    "flag": "◇",
+    "groupId": "D",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "E1",
+    "code": "E1",
+    "name": "Group E Team 1",
+    "flag": "◇",
+    "groupId": "E",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "E2",
+    "code": "E2",
+    "name": "Group E Team 2",
+    "flag": "◇",
+    "groupId": "E",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "E3",
+    "code": "E3",
+    "name": "Group E Team 3",
+    "flag": "◇",
+    "groupId": "E",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "E4",
+    "code": "E4",
+    "name": "Group E Team 4",
+    "flag": "◇",
+    "groupId": "E",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "F1",
+    "code": "F1",
+    "name": "Group F Team 1",
+    "flag": "◇",
+    "groupId": "F",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "F2",
+    "code": "F2",
+    "name": "Group F Team 2",
+    "flag": "◇",
+    "groupId": "F",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "F3",
+    "code": "F3",
+    "name": "Group F Team 3",
+    "flag": "◇",
+    "groupId": "F",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "F4",
+    "code": "F4",
+    "name": "Group F Team 4",
+    "flag": "◇",
+    "groupId": "F",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "G1",
+    "code": "G1",
+    "name": "Group G Team 1",
+    "flag": "◇",
+    "groupId": "G",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "G2",
+    "code": "G2",
+    "name": "Group G Team 2",
+    "flag": "◇",
+    "groupId": "G",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "G3",
+    "code": "G3",
+    "name": "Group G Team 3",
+    "flag": "◇",
+    "groupId": "G",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "G4",
+    "code": "G4",
+    "name": "Group G Team 4",
+    "flag": "◇",
+    "groupId": "G",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "H1",
+    "code": "H1",
+    "name": "Group H Team 1",
+    "flag": "◇",
+    "groupId": "H",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "H2",
+    "code": "H2",
+    "name": "Group H Team 2",
+    "flag": "◇",
+    "groupId": "H",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "H3",
+    "code": "H3",
+    "name": "Group H Team 3",
+    "flag": "◇",
+    "groupId": "H",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "H4",
+    "code": "H4",
+    "name": "Group H Team 4",
+    "flag": "◇",
+    "groupId": "H",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "I1",
+    "code": "I1",
+    "name": "Group I Team 1",
+    "flag": "◇",
+    "groupId": "I",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "I2",
+    "code": "I2",
+    "name": "Group I Team 2",
+    "flag": "◇",
+    "groupId": "I",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "I3",
+    "code": "I3",
+    "name": "Group I Team 3",
+    "flag": "◇",
+    "groupId": "I",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "I4",
+    "code": "I4",
+    "name": "Group I Team 4",
+    "flag": "◇",
+    "groupId": "I",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "J1",
+    "code": "J1",
+    "name": "Group J Team 1",
+    "flag": "◇",
+    "groupId": "J",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "J2",
+    "code": "J2",
+    "name": "Group J Team 2",
+    "flag": "◇",
+    "groupId": "J",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "J3",
+    "code": "J3",
+    "name": "Group J Team 3",
+    "flag": "◇",
+    "groupId": "J",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "J4",
+    "code": "J4",
+    "name": "Group J Team 4",
+    "flag": "◇",
+    "groupId": "J",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "K1",
+    "code": "K1",
+    "name": "Group K Team 1",
+    "flag": "◇",
+    "groupId": "K",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "K2",
+    "code": "K2",
+    "name": "Group K Team 2",
+    "flag": "◇",
+    "groupId": "K",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "K3",
+    "code": "K3",
+    "name": "Group K Team 3",
+    "flag": "◇",
+    "groupId": "K",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "K4",
+    "code": "K4",
+    "name": "Group K Team 4",
+    "flag": "◇",
+    "groupId": "K",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "L1",
+    "code": "L1",
+    "name": "Group L Team 1",
+    "flag": "◇",
+    "groupId": "L",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "L2",
+    "code": "L2",
+    "name": "Group L Team 2",
+    "flag": "◇",
+    "groupId": "L",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "L3",
+    "code": "L3",
+    "name": "Group L Team 3",
+    "flag": "◇",
+    "groupId": "L",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "L4",
+    "code": "L4",
+    "name": "Group L Team 4",
+    "flag": "◇",
+    "groupId": "L",
+    "verificationStatus": "seeded"
+  }
+]

@@ -3,6 +3,7 @@ import type { GroupBonusPrediction, KnockoutBonusPrediction, Match, MatchPredict
 import { recalculate, saveBonusResults, saveResult, setDeadline, setLock } from '../api.js';
 import { readBonusDraft, splitTopScorers } from './bonusDraft.js';
 import { TeamSelect } from './BonusPredictionPanel.js';
+import { AdminDataStatus } from './DataStatus.js';
 import { MatchCard } from './MatchPredictions.js';
 
 export function AdminPanel({ state, player, onRefresh, onError }: { state: any; player: any; onRefresh: (state?: any) => void; onError: (message: string) => void }) {
@@ -26,6 +27,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
 
   return (
     <section className="admin-grid">
+      <AdminDataStatus status={state.tournamentDataStatus} />
       <div className="panel">
         <h2>Match result</h2>
         <select value={matchId} onChange={(event) => { const next = Number(event.target.value); setMatchId(next); setResult({ matchId: next, homeGoals: 0, awayGoals: 0 }); }}>

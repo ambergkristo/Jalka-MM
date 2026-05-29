@@ -3,6 +3,8 @@ import { dirname, join } from 'node:path';
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { createMatches, createTeams } from '../domain/seed.js';
 import { rankParticipants, scoreGroupBonus, scoreKnockoutBonus, scoreMatch, sumPoints } from '../domain/scoring.js';
+import { getTournamentData } from '../domain/tournamentData.js';
+import { validateTournamentData } from '../domain/tournamentValidation.js';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction, MatchResult, ParticipantScore } from '../domain/types.js';
 
 const dbPath = process.env.WORLDCUP_DB_PATH ?? join(process.cwd(), 'data', 'worldcup2026.sqlite');
@@ -46,7 +48,8 @@ export function seedDemo(): void {
     DELETE FROM teams;
   `);
   db.prepare('INSERT OR REPLACE INTO competitions VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)').run('wc2026', 'Friends World Cup 2026', '2026-06-10T20:59:00.000Z', 'wc2026', 0, now);
-  for (const groupId of Array.from({ length: 12 }, (_, index) => String.fromCharCode(65 + index))) db.prepare('INSERT OR REPLACE INTO groups VALUES (?, ?)').run(groupId, `Group ${groupId}`);
+  const tournamentData = getTournamentData();
+  for (const group of tournamentData.groups) db.prepare('INSERT OR REPLACE INTO groups VALUES (?, ?)').run(group.id, group.name);
   for (const team of createTeams()) db.prepare('INSERT OR REPLACE INTO teams (id, name, code, flag, group_id) VALUES (?, ?, ?, ?, ?)').run(team.id, team.name, team.code, team.flag, team.groupId ?? null);
   for (const match of createMatches()) db.prepare('INSERT OR REPLACE INTO matches VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(match.id, match.stage, match.groupId ?? null, match.kickoffAt, match.homeTeamId ?? null, match.awayTeamId ?? null, match.homeSlot, match.awaySlot);
   createPlayer('Demo Player', 'FRIENDS2026');
@@ -72,7 +75,18 @@ export function getState(playerId?: string) {
     bonusResult: one('SELECT * FROM bonus_results WHERE competition_id = ?', ['wc2026']),
     results: all('SELECT * FROM actual_results ORDER BY match_id'),
     leaderboard: getLeaderboard(),
+    tournamentDataStatus: getTournamentDataStatus(),
     lastUpdated: new Date().toISOString()
+  };
+}
+
+export function getTournamentDataStatus() {
+  const tournamentData = getTournamentData();
+  const validation = validateTournamentData(tournamentData);
+  return {
+    metadata: tournamentData.metadata,
+    validation,
+    counts: validation.counts
   };
 }
 

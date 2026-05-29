@@ -1,0 +1,62 @@
+[
+  {
+    "id": "A",
+    "name": "Group A",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "B",
+    "name": "Group B",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "C",
+    "name": "Group C",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "D",
+    "name": "Group D",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "E",
+    "name": "Group E",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "F",
+    "name": "Group F",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "G",
+    "name": "Group G",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "H",
+    "name": "Group H",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "I",
+    "name": "Group I",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "J",
+    "name": "Group J",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "K",
+    "name": "Group K",
+    "verificationStatus": "seeded"
+  },
+  {
+    "id": "L",
+    "name": "Group L",
+    "verificationStatus": "seeded"
+  }
+]

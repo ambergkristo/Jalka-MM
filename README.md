@@ -13,7 +13,9 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Real leaderboard calculated from stored predictions, results, and score breakdowns.
 - Participant score detail view with match and bonus explanations.
 - Manual result provider boundary for future live-score integrations.
-- Dark, mobile-first match prediction screen with grouped stages, seeded national team names, country codes, and emoji flags.
+- Dark, mobile-first match prediction screen with grouped stages, neutral seeded team slots, codes, and flag placeholders.
+- Tournament data source layer with explicit verification status and validation.
+- Bracket slot/progression and basic group standings domain foundations.
 
 ## Run Locally
 
@@ -35,6 +37,7 @@ Commands:
 - `npm run build`: compile the API and build the PWA
 - `npm run seed`: create/update the local SQLite demo data
 - `npm run dev`: run API and Vite dev server
+- `npm run validate:tournament-data`: validate tournament JSON source files
 
 ## Demo Access
 
@@ -44,6 +47,7 @@ Commands:
 ## Architecture
 
 - `src/domain`: pure TypeScript tournament data and scoring logic. No React, HTTP, or database dependencies.
+- `src/data/worldcup2026`: JSON source files for tournament metadata, teams, groups, matches, and bracket slots.
 - `src/server`: Node TypeScript API using built-in SQLite (`node:sqlite`) and a manual result provider boundary.
 - `src/client`: React + Vite PWA UI for prediction entry, leaderboard, and admin result entry.
 - `data/worldcup2026.sqlite`: local SQLite database created at runtime.
@@ -81,13 +85,33 @@ Use the Bonus tab as a player. Select each group winner, group second place, and
 
 Use the Admin tab. Enter final group outcomes, knockout round participants, third-place winner, champion, and top scorer results. Multiple tied top scorers can be entered separated by commas or new lines. Saving bonus results writes to `bonus_results` and recalculates score breakdowns.
 
-## Seeded Teams And Schedule
+## Tournament Data Source
 
-Teams are seeded from `src/domain/teams.ts`. Each seeded team has a display name, short code, emoji flag, and group assignment. The seed uses real national-team names for a realistic private-league demo, but it is still seeded data and should be reviewed against the final official tournament field before production use.
+Tournament source files live in `src/data/worldcup2026`:
 
-The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use team IDs from the central registry. Knockout matches use clear bracket slot labels such as `Winner Group A` or `Winner R32 Match 73` because exact knockout teams depend on progression.
+- `metadata.json`: source name/reference, retrieved timestamp, and `verificationStatus`
+- `teams.json`: 48 team or slot records
+- `groups.json`: 12 group records
+- `matches.json`: 104 matches
+- `bracket.json`: knockout slot placeholders
+
+Current `verificationStatus` is `seeded`. The seeded data is intentionally neutral: group-stage fixtures use labels such as `Group A Team 1 vs Group A Team 2`, not unverified real-country matchups. Replace these JSON files with verified official data before live competition use, then run:
+
+```bash
+npm run validate:tournament-data
+```
+
+Validation checks team/group/match counts, duplicate match numbers, invalid team and group references, date validity/TBC handling, and required verification status.
+
+The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use neutral team IDs from the JSON registry. Knockout matches use clear bracket slot labels such as `Winner Group A`, `3rd Group C/D/E`, or `Winner Match 73` because exact knockout teams depend on progression.
 
 Dates are seeded as ISO timestamps. The UI formats valid dates and shows `Date TBC` if a date is missing or invalid, so broken labels like `Invalid Date` should not appear.
+
+## Bracket And Standings Foundations
+
+`src/domain/bracket.ts` formats and resolves bracket slots for concrete teams, group winners, group runner-ups, best-third placeholders, previous-match winners, and previous-match losers.
+
+`src/domain/standings.ts` calculates basic group standings: played, wins, draws, losses, goals for, goals against, goal difference, and points. Sorting currently uses points, goal difference, and goals for. Full official tie-break rules are intentionally not claimed yet.
 
 ## Score Explanations
 
@@ -101,8 +125,10 @@ The app is fully functional with manual admin updates. Future adapters for API-F
 
 ## Known Limitations
 
-- Seeded teams are realistic national teams, not a verified final official 2026 field.
-- Knockout bracket slots are structurally seeded, not connected to an automatic bracket progression engine.
+- Current tournament data is seeded and neutral, not verified official World Cup 2026 data.
+- Full official FIFA tie-break rules are not complete.
+- Knockout best-third-place mapping still requires verified official mapping.
+- Knockout bracket slots are structurally seeded; automatic bracket progression is only foundational.
 - External live-score providers are not implemented yet.
 - Authentication is simple invite-code/PIN based for private league MVP use.
 - Node prints an experimental warning for built-in SQLite on Node 24.

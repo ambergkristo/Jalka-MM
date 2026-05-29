@@ -1,0 +1,82 @@
+{
+  "verificationStatus": "seeded",
+  "note": "Neutral seeded bracket placeholders. Replace with verified official mapping before live competition use.",
+  "slots": {
+    "R32": [
+      "Winner Group A",
+      "3rd Group C/D/E",
+      "Runner-up Group B",
+      "Runner-up Group C",
+      "Winner Group D",
+      "3rd Group B/E/F",
+      "Winner Group E",
+      "Runner-up Group F",
+      "Winner Group G",
+      "3rd Group A/B/C",
+      "Runner-up Group H",
+      "Runner-up Group I",
+      "Winner Group J",
+      "3rd Group F/G/H",
+      "Winner Group K",
+      "Runner-up Group L",
+      "Winner Group B",
+      "3rd Group A/D/E",
+      "Runner-up Group A",
+      "Runner-up Group D",
+      "Winner Group F",
+      "3rd Group C/G/I",
+      "Winner Group H",
+      "Runner-up Group G",
+      "Winner Group I",
+      "3rd Group D/J/K",
+      "Runner-up Group J",
+      "Runner-up Group K",
+      "Winner Group L",
+      "3rd Group H/I/J",
+      "Winner Group C",
+      "Runner-up Group E"
+    ],
+    "R16": [
+      "Winner Match 73",
+      "Winner Match 73",
+      "Winner Match 74",
+      "Winner Match 74",
+      "Winner Match 75",
+      "Winner Match 75",
+      "Winner Match 76",
+      "Winner Match 76",
+      "Winner Match 77",
+      "Winner Match 77",
+      "Winner Match 78",
+      "Winner Match 78",
+      "Winner Match 79",
+      "Winner Match 79",
+      "Winner Match 80",
+      "Winner Match 80"
+    ],
+    "QF": [
+      "Winner Match 89",
+      "Winner Match 89",
+      "Winner Match 90",
+      "Winner Match 90",
+      "Winner Match 91",
+      "Winner Match 91",
+      "Winner Match 92",
+      "Winner Match 92"
+    ],
+    "SF": [
+      "Winner Match 97",
+      "Winner Match 97",
+      "Winner Match 98",
+      "Winner Match 98"
+    ],
+    "THIRD_PLACE": [
+      "Loser Match 101",
+      "Loser Match 102"
+    ],
+    "FINAL": [
+      "Winner Match 101",
+      "Winner Match 102"
+    ]
+  }
+}
