@@ -52,7 +52,16 @@ export function BonusPredictionPanel({ state, locked, saving, onSave }: { state:
 }
 
 export function TeamSelect({ teams, value, disabled, onChange }: { teams: Team[]; value: string; disabled: boolean; onChange: (value: string) => void }) {
-  return <select disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}><option value="">Vali riik</option>{teams.map((team: any) => <option key={team.id} value={team.id}>{validFlag(team.flag) ? `${team.flag} ` : ''}{teamNameEt(team)} ({team.code})</option>)}</select>;
+  const selectedTeam = teams.find((team: any) => team.id === value);
+  return (
+    <div className="team-select">
+      {selectedTeam && <TeamBadge team={selectedTeam} />}
+      <select disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Vali riik</option>
+        {teams.map((team: any) => <option key={team.id} value={team.id}>{teamNameEt(team)} ({team.code})</option>)}
+      </select>
+    </div>
+  );
 }
 
 function RoundChecks({ label, max, teams, values, disabled, onChange }: { label: string; max: number; teams: Team[]; values: string[]; disabled: boolean; onChange: (values: string[]) => void }) {
@@ -65,8 +74,4 @@ function TeamChecks({ teams, values, max, disabled, onChange }: { teams: Team[];
 
 function FieldLabel({ text, missing }: { text: string; missing: boolean }) {
   return <p className={missing ? 'field-note missing' : 'field-note'}>{text}</p>;
-}
-
-function validFlag(flag: unknown): flag is string {
-  return typeof flag === 'string' && flag.trim() !== '' && !flag.includes('?') && !flag.includes('�');
 }

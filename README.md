@@ -20,7 +20,7 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Manual result provider boundary for future live-score integrations.
 - Dark, mobile-first match prediction screen with grouped stages, team names, codes, flags, and Estonia-time kickoff display when verified.
 - Estonian player/admin UI and a live countdown to the prediction deadline.
-- UTF-8 emoji flags stored in the central team registry and rendered without external flag services.
+- Reliable local SVG flags via `flag-icons`, with UTF-8 emoji flags retained as tournament metadata fallback.
 - Tournament data source layer with explicit verification status and validation.
 - Safe tournament-data seeding that preserves players, predictions, and results.
 - Bracket slot/progression and basic group standings domain foundations.
@@ -274,7 +274,7 @@ Validation checks metadata, allowed verification statuses, team/group/match coun
 
 The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use stable team IDs from the JSON registry, with Estonian display names and technical short codes in the UI. Knockout matches use clear bracket slot labels such as `Winner Group A`, `3rd Group C/D/E`, or `Winner Match 73` because exact knockout teams depend on progression.
 
-Team badges render the stored emoji flag directly as the visible mark. The country code remains secondary text under the Estonian country name. No SVG flag assets or external flag CDN are used.
+Team badges render local SVG flags from the `flag-icons` package for cross-platform consistency, including Windows browsers where emoji-only flag sequences may appear as regional letters such as `MX`. The country code remains secondary text under the Estonian country name. No external flag CDN is used.
 
 Group-stage kickoff times are stored as UTC ISO timestamps and displayed in Estonia time (`Europe/Tallinn`) with Estonian formatting, for example `11. juuni · 22:00 Eesti aeg`. If the value is unknown or invalid, the app shows `Aeg täpsustamisel`; broken labels like `Invalid Date` should not appear.
 

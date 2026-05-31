@@ -95,14 +95,24 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
 .team-badge { display: inline-flex; align-items: center; min-width: 0; gap: 8px; }
 .team-badge.right { justify-content: flex-end; text-align: right; }
 .team-flag {
-  width: 30px;
-  min-width: 30px;
+  width: 32px;
+  min-width: 32px;
+  height: 24px;
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(244, 247, 239, .18);
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-  font-size: 1.45rem;
+  font-size: 1rem;
   line-height: 1;
+}
+.team-flag-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 .team-copy { display: grid; min-width: 0; }
 .team-copy strong { color: #f4f7ef; font-size: .96rem; line-height: 1.1; overflow-wrap: anywhere; }
@@ -131,6 +141,8 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
 .check-grid { display: grid; grid-template-columns: 1fr; gap: 7px; max-height: 278px; overflow: auto; padding: 8px; border: 1px solid #263e31; border-radius: 8px; background: #08120d; }
 .check-row { display: flex; align-items: center; gap: 9px; min-height: 44px; font-size: .95rem; }
 .check-row input { width: 20px; min-height: 20px; flex: 0 0 auto; }
+.team-select { display: grid; gap: 8px; }
+.team-select .team-badge { padding: 4px 0; }
 .field-note { margin: 4px 0 0; color: #b9c5bb; font-weight: 850; }
 .field-note.missing { color: #f0b86d; }
 .data-status { margin: 0 0 12px; padding: 10px 12px; border: 1px solid #31473b; border-radius: 8px; color: #b9c5bb; background: #08120d; font-size: .86rem; }
@@ -154,7 +166,7 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
   header h1 { font-size: 1.62rem; }
   .score-row { grid-template-columns: minmax(0, 1fr) 52px 52px minmax(0, 1fr); gap: 7px; }
   .score-row input { min-height: 54px; font-size: 1.2rem; }
-  .team-flag { width: 26px; min-width: 26px; font-size: 1.3rem; }
+  .team-flag { width: 28px; min-width: 28px; height: 21px; }
   .team-copy strong { font-size: .88rem; }
   .match-meta { font-size: .76rem; }
 }
