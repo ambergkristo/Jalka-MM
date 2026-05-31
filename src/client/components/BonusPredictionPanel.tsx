@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, Team } from '../../domain/types.js';
+import { teamNameEt } from '../lib/messages.js';
+import { DeadlineBanner } from './DeadlineBanner.js';
 import { countMissingBonus, readBonusDraft, toggleTeam } from './bonusDraft.js';
 import { TeamBadge } from './TeamBadge.js';
 
@@ -15,41 +17,42 @@ export function BonusPredictionPanel({ state, locked, saving, onSave }: { state:
   return (
     <section>
       <div className="summary">
-        <strong>{missing === 0 ? 'Complete' : `${missing} missing`}</strong>
-        <span>{locked ? 'Bonus predictions locked' : saving || 'Bonus predictions are editable'}</span>
+        <strong>{missing === 0 ? 'Valmis' : `${missing} puudu`}</strong>
+        <span>{locked ? 'Boonusennustused on lukus' : saving || 'Boonusennustusi saab muuta'}</span>
       </div>
+      <DeadlineBanner deadline={state.competition.prediction_deadline} locked={locked} />
       <div className="stack">
         {groupIds.map((groupId: string) => {
           const group = draft.groups.find((item) => item.groupId === groupId)!;
           const teams = state.teams.filter((team: any) => team.group_id === groupId || team.groupId === groupId);
           return (
             <article className="panel" key={groupId}>
-              <h2>Group {groupId}</h2>
-              <label>Winner<TeamSelect disabled={locked} teams={teams} value={group.winnerTeamId} onChange={(winnerTeamId) => updateGroup(groupId, { winnerTeamId })} /></label>
-              <label>Second place<TeamSelect disabled={locked} teams={teams} value={group.secondTeamId} onChange={(secondTeamId) => updateGroup(groupId, { secondTeamId })} /></label>
-              <FieldLabel text={`Qualifiers (${group.qualifierTeamIds.length}/2)`} missing={group.qualifierTeamIds.length < 2} />
+              <h2>Alagrupp {groupId}</h2>
+              <label>Alagrupi võitja<TeamSelect disabled={locked} teams={teams} value={group.winnerTeamId} onChange={(winnerTeamId) => updateGroup(groupId, { winnerTeamId })} /></label>
+              <label>Teine koht<TeamSelect disabled={locked} teams={teams} value={group.secondTeamId} onChange={(secondTeamId) => updateGroup(groupId, { secondTeamId })} /></label>
+              <FieldLabel text={`Edasipääsejad (${group.qualifierTeamIds.length}/2)`} missing={group.qualifierTeamIds.length < 2} />
               <TeamChecks disabled={locked} teams={teams} values={group.qualifierTeamIds} max={2} onChange={(qualifierTeamIds) => updateGroup(groupId, { qualifierTeamIds })} />
             </article>
           );
         })}
         <article className="panel">
-          <h2>Knockout bonuses</h2>
-          <RoundChecks label="Teams reaching Round of 16" max={16} teams={state.teams} values={draft.knockout.r16TeamIds} disabled={locked} onChange={(r16TeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, r16TeamIds } }))} />
-          <RoundChecks label="Teams reaching quarter-finals" max={8} teams={state.teams} values={draft.knockout.qfTeamIds} disabled={locked} onChange={(qfTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, qfTeamIds } }))} />
-          <RoundChecks label="Teams reaching semi-finals" max={4} teams={state.teams} values={draft.knockout.sfTeamIds} disabled={locked} onChange={(sfTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, sfTeamIds } }))} />
-          <RoundChecks label="Teams reaching final" max={2} teams={state.teams} values={draft.knockout.finalTeamIds} disabled={locked} onChange={(finalTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, finalTeamIds } }))} />
-          <label>Third-place match winner<TeamSelect disabled={locked} teams={state.teams} value={draft.knockout.thirdPlaceWinnerTeamId} onChange={(thirdPlaceWinnerTeamId) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, thirdPlaceWinnerTeamId } }))} /></label>
-          <label>World Cup winner<TeamSelect disabled={locked} teams={state.teams} value={draft.knockout.championTeamId} onChange={(championTeamId) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, championTeamId } }))} /></label>
-          <label>Top scorer<input disabled={locked} value={draft.knockout.topScorer} onChange={(event) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, topScorer: event.target.value } }))} placeholder="Player name" /></label>
+          <h2>Playoff’i boonused</h2>
+          <RoundChecks label="Kaheksandikfinaali jõudjad" max={16} teams={state.teams} values={draft.knockout.r16TeamIds} disabled={locked} onChange={(r16TeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, r16TeamIds } }))} />
+          <RoundChecks label="Veerandfinaali jõudjad" max={8} teams={state.teams} values={draft.knockout.qfTeamIds} disabled={locked} onChange={(qfTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, qfTeamIds } }))} />
+          <RoundChecks label="Poolfinaali jõudjad" max={4} teams={state.teams} values={draft.knockout.sfTeamIds} disabled={locked} onChange={(sfTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, sfTeamIds } }))} />
+          <RoundChecks label="Finaali jõudjad" max={2} teams={state.teams} values={draft.knockout.finalTeamIds} disabled={locked} onChange={(finalTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, finalTeamIds } }))} />
+          <label>3. koha mängu võitja<TeamSelect disabled={locked} teams={state.teams} value={draft.knockout.thirdPlaceWinnerTeamId} onChange={(thirdPlaceWinnerTeamId) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, thirdPlaceWinnerTeamId } }))} /></label>
+          <label>Maailmameister<TeamSelect disabled={locked} teams={state.teams} value={draft.knockout.championTeamId} onChange={(championTeamId) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, championTeamId } }))} /></label>
+          <label>Suurim väravakütt<input disabled={locked} value={draft.knockout.topScorer} onChange={(event) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, topScorer: event.target.value } }))} placeholder="Mängija nimi" /></label>
         </article>
       </div>
-      <button className="sticky-save" disabled={locked} onClick={() => onSave(draft.groups, draft.knockout)}>Save bonus predictions</button>
+      <button className="sticky-save" disabled={locked} onClick={() => onSave(draft.groups, draft.knockout)}>Salvesta boonusennustused</button>
     </section>
   );
 }
 
 export function TeamSelect({ teams, value, disabled, onChange }: { teams: Team[]; value: string; disabled: boolean; onChange: (value: string) => void }) {
-  return <select disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}><option value="">Select team</option>{teams.map((team: any) => <option key={team.id} value={team.id}>{team.flag} {team.name} ({team.code})</option>)}</select>;
+  return <select disabled={disabled} value={value} onChange={(event) => onChange(event.target.value)}><option value="">Vali riik</option>{teams.map((team: any) => <option key={team.id} value={team.id}>{validFlag(team.flag) ? `${team.flag} ` : ''}{teamNameEt(team)} ({team.code})</option>)}</select>;
 }
 
 function RoundChecks({ label, max, teams, values, disabled, onChange }: { label: string; max: number; teams: Team[]; values: string[]; disabled: boolean; onChange: (values: string[]) => void }) {
@@ -62,4 +65,8 @@ function TeamChecks({ teams, values, max, disabled, onChange }: { teams: Team[];
 
 function FieldLabel({ text, missing }: { text: string; missing: boolean }) {
   return <p className={missing ? 'field-note missing' : 'field-note'}>{text}</p>;
+}
+
+function validFlag(flag: unknown): flag is string {
+  return typeof flag === 'string' && flag.trim() !== '' && !flag.includes('?') && !flag.includes('�');
 }

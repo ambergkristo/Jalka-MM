@@ -19,7 +19,7 @@ async function migrateSqlite(): Promise<void> {
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, invite_code TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'player', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', contact TEXT, admin_note TEXT, updated_at TEXT, approved_at TEXT);
     CREATE TABLE IF NOT EXISTS competitions (id TEXT PRIMARY KEY, name TEXT NOT NULL, prediction_deadline TEXT NOT NULL, predictions_locked INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT, flag TEXT, group_id TEXT);
+    CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, name_et TEXT, code TEXT, flag TEXT, group_id TEXT);
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS matches (id INTEGER PRIMARY KEY, stage TEXT NOT NULL, group_id TEXT, kickoff_at TEXT NOT NULL, home_team_id TEXT, away_team_id TEXT, home_slot TEXT NOT NULL, away_slot TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS predictions (player_id TEXT NOT NULL, match_id INTEGER NOT NULL, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL, PRIMARY KEY (player_id, match_id));
@@ -34,6 +34,7 @@ async function migrateSqlite(): Promise<void> {
   for (const sql of [
     'ALTER TABLE teams ADD COLUMN code TEXT',
     'ALTER TABLE teams ADD COLUMN flag TEXT',
+    'ALTER TABLE teams ADD COLUMN name_et TEXT',
     "ALTER TABLE players ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'",
     'ALTER TABLE players ADD COLUMN contact TEXT',
     'ALTER TABLE players ADD COLUMN admin_note TEXT',
@@ -48,7 +49,7 @@ async function migratePostgres(): Promise<void> {
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, invite_code TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'player', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS players (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, display_name TEXT NOT NULL, created_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', contact TEXT, admin_note TEXT, updated_at TEXT, approved_at TEXT);
     CREATE TABLE IF NOT EXISTS competitions (id TEXT PRIMARY KEY, name TEXT NOT NULL, prediction_deadline TEXT NOT NULL, predictions_locked INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, code TEXT, flag TEXT, group_id TEXT);
+    CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, name TEXT NOT NULL, name_et TEXT, code TEXT, flag TEXT, group_id TEXT);
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS matches (id INTEGER PRIMARY KEY, stage TEXT NOT NULL, group_id TEXT, kickoff_at TEXT NOT NULL, home_team_id TEXT, away_team_id TEXT, home_slot TEXT NOT NULL, away_slot TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS predictions (player_id TEXT NOT NULL, match_id INTEGER NOT NULL, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL, PRIMARY KEY (player_id, match_id));
@@ -61,6 +62,7 @@ async function migratePostgres(): Promise<void> {
     CREATE TABLE IF NOT EXISTS admin_audit_log (id BIGSERIAL PRIMARY KEY, actor TEXT NOT NULL, action TEXT NOT NULL, payload_json TEXT NOT NULL, created_at TEXT NOT NULL);
   `);
   await db.run('UPDATE players SET updated_at = COALESCE(updated_at, created_at)');
+  await db.exec('ALTER TABLE teams ADD COLUMN IF NOT EXISTS name_et TEXT').catch(() => undefined);
 }
 
 export async function seedTournamentData(): Promise<void> {
@@ -69,7 +71,7 @@ export async function seedTournamentData(): Promise<void> {
   await upsertCompetition(now);
   await db.exec('DELETE FROM matches; DELETE FROM groups; DELETE FROM teams;');
   for (const group of getTournamentData().groups) await upsert('groups', ['id', 'name'], [group.id, group.name], ['id']);
-  for (const team of createTeams()) await upsert('teams', ['id', 'name', 'code', 'flag', 'group_id'], [team.id, team.name, team.code, team.flag, team.groupId ?? null], ['id']);
+  for (const team of createTeams()) await upsert('teams', ['id', 'name', 'name_et', 'code', 'flag', 'group_id'], [team.id, team.name, team.nameEt ?? team.name, team.code, team.flag, team.groupId ?? null], ['id']);
   for (const match of createMatches()) await upsert('matches', ['id', 'stage', 'group_id', 'kickoff_at', 'home_team_id', 'away_team_id', 'home_slot', 'away_slot'], [match.id, match.stage, match.groupId ?? null, match.kickoffAt, match.homeTeamId ?? null, match.awayTeamId ?? null, match.homeSlot, match.awaySlot], ['id']);
 }
 
@@ -266,7 +268,7 @@ export function getStorageStatus() {
     publicAppBaseUrl: config.publicAppBaseUrl,
     tournamentDataMode: config.tournamentDataMode,
     productionSafe: config.appEnv === 'production' && config.databaseMode === 'postgres',
-    warning: config.databaseMode === 'sqlite' ? 'Local SQLite storage is suitable for MVP/demo use, but needs backups and persistent disk before public production use.' : ''
+    warning: config.databaseMode === 'sqlite' ? 'Kohalik SQLite sobib arenduseks ja demoks, kuid avalikuks kasutuseks on vaja püsivat andmebaasi ning varukoopiaid.' : ''
   };
 }
 
@@ -288,12 +290,13 @@ export async function healthCheck() {
 }
 
 async function upsertCompetition(now: string): Promise<void> {
+  const predictionDeadline = '2026-06-11T19:00:00.000Z';
   if (db.provider === 'postgres') {
     await db.run(`INSERT INTO competitions (id, name, prediction_deadline, predictions_locked, updated_at)
       VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)
-      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, prediction_deadline = EXCLUDED.prediction_deadline, updated_at = EXCLUDED.updated_at`, ['wc2026', 'Friends World Cup 2026', '2026-06-10T20:59:00.000Z', 'wc2026', 0, now]);
+      ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, prediction_deadline = EXCLUDED.prediction_deadline, updated_at = EXCLUDED.updated_at`, ['wc2026', 'Friends World Cup 2026', predictionDeadline, 'wc2026', 0, now]);
   } else {
-    await db.run('INSERT OR REPLACE INTO competitions VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)', ['wc2026', 'Friends World Cup 2026', '2026-06-10T20:59:00.000Z', 'wc2026', 0, now]);
+    await db.run('INSERT OR REPLACE INTO competitions VALUES (?, ?, ?, COALESCE((SELECT predictions_locked FROM competitions WHERE id = ?), ?), ?)', ['wc2026', 'Friends World Cup 2026', predictionDeadline, 'wc2026', 0, now]);
   }
 }
 

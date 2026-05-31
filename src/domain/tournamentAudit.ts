@@ -15,6 +15,7 @@ export interface TournamentAuditReport {
   unresolvedTeamSlots: number;
   unresolvedFixtureDates: number;
   unresolvedKickoffTimes: number;
+  verifiedGroupStageKickoffTimes: number;
   unresolvedGroupStageKickoffMatchIds: number[];
   unresolvedKnockoutSlots: number;
   valid: boolean;
@@ -38,6 +39,7 @@ export function createTournamentAuditReport(input: { metadata: TournamentMetadat
     unresolvedTeamSlots: validation.unresolved.teamSlots,
     unresolvedFixtureDates: validation.unresolved.fixtureDates,
     unresolvedKickoffTimes: validation.unresolved.kickoffTimes,
+    verifiedGroupStageKickoffTimes: validation.counts.groupMatches - validation.unresolved.kickoffTimes,
     unresolvedGroupStageKickoffMatchIds: validation.unresolved.groupStageKickoffMatchIds,
     unresolvedKnockoutSlots: validation.unresolved.knockoutSlots,
     valid: validation.valid,

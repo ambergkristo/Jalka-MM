@@ -44,6 +44,7 @@ export function validateTournamentData({ metadata, teams, groups, matches }) {
     teamSeen.add(team.id);
     if (team.groupId && !groupIds.has(team.groupId)) errors.push(`Team ${team.id} references invalid group ${team.groupId}`);
     if (team.verificationStatus && !allowedVerificationStatuses.includes(team.verificationStatus)) errors.push(`Team ${team.id} has invalid verificationStatus ${team.verificationStatus}`);
+    if (!hasValidConcreteFlag(team)) errors.push(`Team ${team.id} has invalid or corrupted flag value`);
   }
 
   for (const group of groups) {
@@ -98,6 +99,7 @@ export function createAuditReport(data) {
     unresolvedTeamSlots: validation.unresolved.teamSlots,
     unresolvedFixtureDates: validation.unresolved.fixtureDates,
     unresolvedKickoffTimes: validation.unresolved.kickoffTimes,
+    verifiedGroupStageKickoffTimes: validation.counts.groupMatches - validation.unresolved.kickoffTimes,
     unresolvedGroupStageKickoffMatchIds: validation.unresolved.groupStageKickoffMatchIds,
     unresolvedKnockoutSlots: validation.unresolved.knockoutSlots,
     valid: validation.valid,
@@ -119,4 +121,9 @@ function riskLevelFor(status) {
   if (status === 'official') return 'low';
   if (status === 'partial_official') return 'medium';
   return 'high';
+}
+
+function hasValidConcreteFlag(team) {
+  if (!team.groupId) return true;
+  return typeof team.flag === 'string' && team.flag.trim() !== '' && !team.flag.includes('?') && !team.flag.includes('�');
 }

@@ -58,6 +58,11 @@ describe('validateTournamentData', () => {
     expect(result.errors).toContain('Duplicate team id A1');
   });
 
+  it('detects corrupted concrete team flags', () => {
+    const result = validateTournamentData({ metadata, teams: [{ ...teams[0], flag: '????' }, ...teams.slice(1)], groups, matches });
+    expect(result.errors).toContain('Team A1 has invalid or corrupted flag value');
+  });
+
   it('detects invalid team references', () => {
     const result = validateTournamentData({ metadata, teams, groups, matches: [{ ...matches[0], homeTeamId: 'NOPE' }] });
     expect(result.errors).toContain('Match 1 references invalid home team NOPE');

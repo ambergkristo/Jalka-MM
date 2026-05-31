@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { Match, MatchPrediction, Team } from '../../domain/types.js';
 import { formatEstoniaKickoffTime, formatMatchDate } from '../lib/date.js';
+import { et } from '../lib/messages.js';
 import { UserDataStatus } from './DataStatus.js';
+import { DeadlineBanner } from './DeadlineBanner.js';
 import { TeamBadge } from './TeamBadge.js';
 
 export function MatchPredictions({ state, locked, saving, onSave }: { state: any; locked: boolean; saving: string; onSave: (predictions: MatchPrediction[]) => void }) {
@@ -22,8 +24,9 @@ export function MatchPredictions({ state, locked, saving, onSave }: { state: any
     <section>
       <div className="summary">
         <strong>{completed}/104</strong>
-        <span>{locked ? 'Predictions locked' : saving || 'Ready to edit'}</span>
+        <span>{locked ? 'Ennustused on lukus' : saving || 'Ennustusi saab muuta'}</span>
       </div>
+      <DeadlineBanner deadline={state.competition.prediction_deadline} locked={locked} />
       <UserDataStatus status={state.tournamentDataStatus} />
       <div className="filters">{['GROUP', 'R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL'].map((item) => <button key={item} className={stage === item ? 'active' : ''} onClick={() => setStage(item)}>{stageLabel(item)}</button>)}</div>
       <div className="match-list">
@@ -34,7 +37,7 @@ export function MatchPredictions({ state, locked, saving, onSave }: { state: any
           </section>
         ))}
       </div>
-      <button className="sticky-save" disabled={locked} onClick={() => onSave(Object.values(draft))}>Save predictions</button>
+      <button className="sticky-save" disabled={locked} onClick={() => onSave(Object.values(draft))}>Salvesta ennustused</button>
     </section>
   );
 }
@@ -48,7 +51,7 @@ export function MatchCard({ match, value, disabled, onChange, teamsById = new Ma
   return (
     <article className="match-card">
       <div className="match-meta">
-        <span>{groupId ? `Group ${groupId}` : stageLabel(match.stage)} · Match {match.id}</span>
+        <span>{groupId ? `Alagrupp ${groupId}` : stageLabel(match.stage)} · Mäng {match.id}</span>
         <span>{match.stage === 'GROUP' ? formatEstoniaKickoffTime(kickoff) : formatMatchDate(kickoff)}</span>
       </div>
       <div className="score-row">
@@ -58,7 +61,7 @@ export function MatchCard({ match, value, disabled, onChange, teamsById = new Ma
         <TeamBadge team={awayTeam} slotLabel={match.awaySlot ?? match.away_slot} align="right" />
       </div>
       {tiedKnockout && <select disabled={disabled} value={value.penaltyWinner ?? ''} onChange={(event) => onChange({ ...value, penaltyWinner: event.target.value as MatchPrediction['penaltyWinner'] })}>
-        <option value="">Penalty winner</option><option value="HOME">{match.homeSlot ?? match.home_slot}</option><option value="AWAY">{match.awaySlot ?? match.away_slot}</option>
+        <option value="">Penaltiseeria võitja</option><option value="HOME">{match.homeSlot ?? match.home_slot}</option><option value="AWAY">{match.awaySlot ?? match.away_slot}</option>
       </select>}
     </article>
   );
@@ -67,12 +70,12 @@ export function MatchCard({ match, value, disabled, onChange, teamsById = new Ma
 function groupMatches(matches: Match[]): Array<[string, Match[]]> {
   const groups = new Map<string, Match[]>();
   for (const match of matches as any[]) {
-    const groupId = match.groupId ?? match.group_id ?? 'Other';
+    const groupId = match.groupId ?? match.group_id ?? 'Muu';
     groups.set(groupId, [...(groups.get(groupId) ?? []), match]);
   }
-  return [...groups.entries()].map(([groupId, groupMatches]) => [`Group ${groupId}`, groupMatches]);
+  return [...groups.entries()].map(([groupId, groupMatches]) => [`Alagrupp ${groupId}`, groupMatches]);
 }
 
 export function stageLabel(stage: string) {
-  return ({ GROUP: 'Groups', R32: 'R32', R16: 'R16', QF: 'QF', SF: 'SF', THIRD_PLACE: 'Third place', FINAL: 'Final' } as Record<string, string>)[stage] ?? stage;
+  return (et.stages as Record<string, string>)[stage] ?? stage;
 }

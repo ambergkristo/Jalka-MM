@@ -1,13 +1,13 @@
 {
-  "sourceName": "FIFA.com World Cup 2026 schedule and group articles",
-  "sourceReference": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-teams-stadiums",
-  "sourceRetrievedAt": "2026-05-29T14:23:23.812Z",
+  "sourceName": "FIFA.com and FIFA Digital Hub World Cup 2026 match schedule PDF",
+  "sourceReference": "https://digitalhub.fifa.com/asset/4b5d4417-3343-4732-9cdf-14b6662af407/FWC26-Match-Schedule_English.pdf",
+  "sourceRetrievedAt": "2026-05-31T00:00:00.000Z",
   "verificationStatus": "partial_official",
-  "verifiedBy": "Codex manual RM5 encoding from official FIFA source snippets",
+  "verifiedBy": "Codex RM8 manual encoding from official FIFA schedule PDF, with UTC timestamp conversion cross-checks",
   "notes": [
-    "Official group/team data is encoded from FIFA-published World Cup 2026 group and schedule material available on 2026-05-29.",
-    "The first 24 group-stage fixtures visible in the official schedule source are encoded with teams and venues, but kickoff timestamps remain TBC because the static source text used here did not expose full verified kickoff times.",
-    "Remaining group-stage pairings, full kickoff timestamps, and later knockout scheduling must be verified against the downloadable official schedule before real competition use.",
+    "Official group/team data, group-stage match IDs, venues, dates, and Eastern Time kick-off times are encoded from the FIFA World Cup 2026 match schedule PDF dated 10 April 2026.",
+    "Group-stage kickoffAt values are stored as UTC ISO timestamps and displayed in Europe/Tallinn time in the UI.",
+    "Tournament data remains partial_official because knockout participants and tournament results remain unresolved until play begins.",
     "Knockout slots are bracket labels and remain unresolved until tournament results are known."
   ]
 }

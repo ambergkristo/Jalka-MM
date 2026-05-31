@@ -18,6 +18,8 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Participant score detail view with match and bonus explanations.
 - Manual result provider boundary for future live-score integrations.
 - Dark, mobile-first match prediction screen with grouped stages, team names, codes, flags, and Estonia-time kickoff display when verified.
+- Estonian player/admin UI and a live countdown to the prediction deadline.
+- UTF-8 emoji flags stored in the central team registry and rendered without external flag services.
 - Tournament data source layer with explicit verification status and validation.
 - Safe tournament-data seeding that preserves players, predictions, and results.
 - Bracket slot/progression and basic group standings domain foundations.
@@ -137,6 +139,14 @@ Safe commands:
 - `npm run validate:tournament-data`: validates JSON source files only.
 - `npm run audit:tournament-data`: reports readiness and unresolved data.
 
+After deploying tournament-data fixes to production, run only the safe update:
+
+```bash
+npm run seed:tournament-data
+```
+
+This updates tournament structure rows such as teams, localized names, emoji flags, fixtures, kickoff times, and the default prediction deadline. It preserves players, approval statuses, predictions, results, score breakdowns, leaderboard snapshots, and the admin audit log.
+
 Destructive commands:
 
 - `npm run seed:demo`: wipes local data, then creates demo players.
@@ -250,18 +260,18 @@ Tournament source files live in `src/data/worldcup2026`:
 - `matches.json`: 104 matches
 - `bracket.json`: knockout slot placeholders
 
-Current `verificationStatus` is `partial_official`. Official group/team data and part of the FIFA-published group-stage fixture list are encoded, while unresolved kickoff timestamps and some fixtures remain marked as TBC/manual/unknown. Do not invite real players until `npm run audit:tournament-data` shows the remaining gaps are acceptable for your operation. The audit output lists every group-stage match ID still missing kickoff time.
+Current `verificationStatus` is `partial_official`. Official group/team data plus all 72 group-stage match IDs, fixtures, venues, dates, and kickoff timestamps are encoded from the FIFA World Cup 2026 match schedule PDF. Knockout teams and final tournament outcomes remain unresolved until play begins, so the whole tournament data set is not marked fully official. The audit output lists verified group-stage kickoff counts and every match ID still missing kickoff time.
 
 ```bash
 npm run validate:tournament-data
 npm run audit:tournament-data
 ```
 
-Validation checks metadata, allowed verification statuses, team/group/match counts, duplicate team IDs, duplicate match numbers, invalid team and group references, date/TBC handling, knockout slot usage, unresolved kickoff-time counts, and required source metadata.
+Validation checks metadata, allowed verification statuses, team/group/match counts, duplicate team IDs, duplicate match numbers, invalid team and group references, corrupted concrete-team flags, date/TBC handling, knockout slot usage, unresolved kickoff-time counts, and required source metadata.
 
-The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use neutral team IDs from the JSON registry. Knockout matches use clear bracket slot labels such as `Winner Group A`, `3rd Group C/D/E`, or `Winner Match 73` because exact knockout teams depend on progression.
+The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use stable team IDs from the JSON registry, with Estonian display names and technical short codes in the UI. Knockout matches use clear bracket slot labels such as `Winner Group A`, `3rd Group C/D/E`, or `Winner Match 73` because exact knockout teams depend on progression.
 
-Group-stage kickoff times are displayed in Estonia time (`Europe/Tallinn`) as `HH:mm Eesti aeg` when a verified ISO timestamp exists. If the value is unknown or invalid, the app shows `Time TBC`; broken labels like `Invalid Date` should not appear.
+Group-stage kickoff times are stored as UTC ISO timestamps and displayed in Estonia time (`Europe/Tallinn`) with Estonian formatting, for example `11. juuni · 22:00 Eesti aeg`. If the value is unknown or invalid, the app shows `Aeg täpsustamisel`; broken labels like `Invalid Date` should not appear.
 
 ## Bracket And Standings Foundations
 
@@ -281,7 +291,7 @@ The app is fully functional with manual admin updates. Future adapters for API-F
 
 ## Known Limitations
 
-- Current tournament data is only partially official. Kickoff timestamps still need full official verification.
+- Current tournament data is only partially official because knockout participants and outcomes are unresolved until the tournament is played.
 - Full official FIFA tie-break rules are not complete.
 - Knockout best-third-place mapping still requires verified official mapping.
 - Knockout bracket slots are structurally seeded; automatic bracket progression is only foundational.

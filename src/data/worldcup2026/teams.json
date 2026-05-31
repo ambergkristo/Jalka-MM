@@ -3,384 +3,432 @@
     "id": "A1",
     "code": "MEX",
     "name": "Mexico",
-    "flag": "????",
+    "flag": "🇲🇽",
     "groupId": "A",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Mehhiko"
   },
   {
     "id": "A2",
     "code": "RSA",
     "name": "South Africa",
-    "flag": "????",
+    "flag": "🇿🇦",
     "groupId": "A",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Lõuna-Aafrika"
   },
   {
     "id": "A3",
     "code": "KOR",
     "name": "Korea Republic",
-    "flag": "????",
+    "flag": "🇰🇷",
     "groupId": "A",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Lõuna-Korea"
   },
   {
     "id": "A4",
     "code": "CZE",
     "name": "Czechia",
-    "flag": "????",
+    "flag": "🇨🇿",
     "groupId": "A",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Tšehhi"
   },
   {
     "id": "B1",
     "code": "CAN",
     "name": "Canada",
-    "flag": "????",
+    "flag": "🇨🇦",
     "groupId": "B",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Kanada"
   },
   {
     "id": "B2",
     "code": "BIH",
     "name": "Bosnia and Herzegovina",
-    "flag": "????",
+    "flag": "🇧🇦",
     "groupId": "B",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Bosnia ja Hertsegoviina"
   },
   {
     "id": "B3",
     "code": "QAT",
     "name": "Qatar",
-    "flag": "????",
+    "flag": "🇶🇦",
     "groupId": "B",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Katar"
   },
   {
     "id": "B4",
     "code": "SUI",
     "name": "Switzerland",
-    "flag": "????",
+    "flag": "🇨🇭",
     "groupId": "B",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Šveits"
   },
   {
     "id": "C1",
     "code": "BRA",
     "name": "Brazil",
-    "flag": "????",
+    "flag": "🇧🇷",
     "groupId": "C",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Brasiilia"
   },
   {
     "id": "C2",
     "code": "MAR",
     "name": "Morocco",
-    "flag": "????",
+    "flag": "🇲🇦",
     "groupId": "C",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Maroko"
   },
   {
     "id": "C3",
     "code": "HAI",
     "name": "Haiti",
-    "flag": "????",
+    "flag": "🇭🇹",
     "groupId": "C",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Haiti"
   },
   {
     "id": "C4",
     "code": "SCO",
     "name": "Scotland",
-    "flag": "??",
+    "flag": "🏴",
     "groupId": "C",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Šotimaa"
   },
   {
     "id": "D1",
     "code": "USA",
     "name": "USA",
-    "flag": "????",
+    "flag": "🇺🇸",
     "groupId": "D",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "USA"
   },
   {
     "id": "D2",
     "code": "PAR",
     "name": "Paraguay",
-    "flag": "????",
+    "flag": "🇵🇾",
     "groupId": "D",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Paraguay"
   },
   {
     "id": "D3",
     "code": "AUS",
     "name": "Australia",
-    "flag": "????",
+    "flag": "🇦🇺",
     "groupId": "D",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Austraalia"
   },
   {
     "id": "D4",
     "code": "TUR",
-    "name": "T?rkiye",
-    "flag": "????",
+    "name": "Türkiye",
+    "flag": "🇹🇷",
     "groupId": "D",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Türgi"
   },
   {
     "id": "E1",
     "code": "GER",
     "name": "Germany",
-    "flag": "????",
+    "flag": "🇩🇪",
     "groupId": "E",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Saksamaa"
   },
   {
     "id": "E2",
     "code": "CUW",
-    "name": "Cura?ao",
-    "flag": "????",
+    "name": "Curaçao",
+    "flag": "🇨🇼",
     "groupId": "E",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Curaçao"
   },
   {
     "id": "E3",
     "code": "CIV",
-    "name": "C?te d?Ivoire",
-    "flag": "????",
+    "name": "Côte d’Ivoire",
+    "flag": "🇨🇮",
     "groupId": "E",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Elevandiluurannik"
   },
   {
     "id": "E4",
     "code": "ECU",
     "name": "Ecuador",
-    "flag": "????",
+    "flag": "🇪🇨",
     "groupId": "E",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Ecuador"
   },
   {
     "id": "F1",
     "code": "NED",
     "name": "Netherlands",
-    "flag": "????",
+    "flag": "🇳🇱",
     "groupId": "F",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Holland"
   },
   {
     "id": "F2",
     "code": "JPN",
     "name": "Japan",
-    "flag": "????",
+    "flag": "🇯🇵",
     "groupId": "F",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Jaapan"
   },
   {
     "id": "F3",
     "code": "TUN",
     "name": "Tunisia",
-    "flag": "????",
+    "flag": "🇹🇳",
     "groupId": "F",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Tuneesia"
   },
   {
     "id": "F4",
     "code": "SWE",
     "name": "Sweden",
-    "flag": "????",
+    "flag": "🇸🇪",
     "groupId": "F",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Rootsi"
   },
   {
     "id": "G1",
     "code": "BEL",
     "name": "Belgium",
-    "flag": "????",
+    "flag": "🇧🇪",
     "groupId": "G",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Belgia"
   },
   {
     "id": "G2",
     "code": "EGY",
     "name": "Egypt",
-    "flag": "????",
+    "flag": "🇪🇬",
     "groupId": "G",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Egiptus"
   },
   {
     "id": "G3",
     "code": "IRN",
     "name": "IR Iran",
-    "flag": "????",
+    "flag": "🇮🇷",
     "groupId": "G",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Iraan"
   },
   {
     "id": "G4",
     "code": "NZL",
     "name": "New Zealand",
-    "flag": "????",
+    "flag": "🇳🇿",
     "groupId": "G",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Uus-Meremaa"
   },
   {
     "id": "H1",
     "code": "ESP",
     "name": "Spain",
-    "flag": "????",
+    "flag": "🇪🇸",
     "groupId": "H",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Hispaania"
   },
   {
     "id": "H2",
     "code": "CPV",
     "name": "Cabo Verde",
-    "flag": "????",
+    "flag": "🇨🇻",
     "groupId": "H",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Cabo Verde"
   },
   {
     "id": "H3",
     "code": "KSA",
     "name": "Saudi Arabia",
-    "flag": "????",
+    "flag": "🇸🇦",
     "groupId": "H",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Saudi Araabia"
   },
   {
     "id": "H4",
     "code": "URU",
     "name": "Uruguay",
-    "flag": "????",
+    "flag": "🇺🇾",
     "groupId": "H",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Uruguay"
   },
   {
     "id": "I1",
     "code": "FRA",
     "name": "France",
-    "flag": "????",
+    "flag": "🇫🇷",
     "groupId": "I",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Prantsusmaa"
   },
   {
     "id": "I2",
     "code": "SEN",
     "name": "Senegal",
-    "flag": "????",
+    "flag": "🇸🇳",
     "groupId": "I",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Senegal"
   },
   {
     "id": "I3",
     "code": "NOR",
     "name": "Norway",
-    "flag": "????",
+    "flag": "🇳🇴",
     "groupId": "I",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Norra"
   },
   {
     "id": "I4",
     "code": "IRQ",
     "name": "Iraq",
-    "flag": "????",
+    "flag": "🇮🇶",
     "groupId": "I",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Iraak"
   },
   {
     "id": "J1",
     "code": "ARG",
     "name": "Argentina",
-    "flag": "????",
+    "flag": "🇦🇷",
     "groupId": "J",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Argentina"
   },
   {
     "id": "J2",
     "code": "ALG",
     "name": "Algeria",
-    "flag": "????",
+    "flag": "🇩🇿",
     "groupId": "J",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Alžeeria"
   },
   {
     "id": "J3",
     "code": "AUT",
     "name": "Austria",
-    "flag": "????",
+    "flag": "🇦🇹",
     "groupId": "J",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Austria"
   },
   {
     "id": "J4",
     "code": "JOR",
     "name": "Jordan",
-    "flag": "????",
+    "flag": "🇯🇴",
     "groupId": "J",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Jordaania"
   },
   {
     "id": "K1",
     "code": "POR",
     "name": "Portugal",
-    "flag": "????",
+    "flag": "🇵🇹",
     "groupId": "K",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Portugal"
   },
   {
     "id": "K2",
     "code": "UZB",
     "name": "Uzbekistan",
-    "flag": "????",
+    "flag": "🇺🇿",
     "groupId": "K",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Usbekistan"
   },
   {
     "id": "K3",
     "code": "COL",
     "name": "Colombia",
-    "flag": "????",
+    "flag": "🇨🇴",
     "groupId": "K",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Colombia"
   },
   {
     "id": "K4",
     "code": "COD",
     "name": "Congo DR",
-    "flag": "????",
+    "flag": "🇨🇩",
     "groupId": "K",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Kongo DV"
   },
   {
     "id": "L1",
     "code": "ENG",
     "name": "England",
-    "flag": "??",
+    "flag": "🏴",
     "groupId": "L",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Inglismaa"
   },
   {
     "id": "L2",
     "code": "CRO",
     "name": "Croatia",
-    "flag": "????",
+    "flag": "🇭🇷",
     "groupId": "L",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Horvaatia"
   },
   {
     "id": "L3",
     "code": "GHA",
     "name": "Ghana",
-    "flag": "????",
+    "flag": "🇬🇭",
     "groupId": "L",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Ghana"
   },
   {
     "id": "L4",
     "code": "PAN",
     "name": "Panama",
-    "flag": "????",
+    "flag": "🇵🇦",
     "groupId": "L",
-    "verificationStatus": "partial_official"
+    "verificationStatus": "partial_official",
+    "nameEt": "Panama"
   }
 ]

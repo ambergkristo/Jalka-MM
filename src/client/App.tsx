@@ -6,6 +6,7 @@ import { MatchPredictions } from './components/MatchPredictions.js';
 import { ScoreDetails } from './components/ScoreDetails.js';
 import { loadState, login, saveBonusPrediction, savePredictions } from './api.js';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction } from '../domain/types.js';
+import { et, errorEt } from './lib/messages.js';
 
 export type View = 'predict' | 'bonus' | 'leaderboard' | 'details' | 'admin';
 
@@ -18,7 +19,7 @@ export function App() {
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
 
   useEffect(() => {
-    loadState(player?.id).then(setState).catch((err) => setError(err.message));
+    loadState(player?.id).then(setState).catch((err) => setError(errorEt(err.message)));
   }, [player?.id]);
 
   async function signIn(form: FormData) {
@@ -33,39 +34,39 @@ export function App() {
   }
 
   async function saveMatches(predictions: MatchPrediction[]) {
-    setSaving('Saving match predictions...');
+    setSaving('Salvestan ennustusi...');
     try {
       await refresh(await savePredictions(player.id, predictions));
-      setSaving('Saved');
+      setSaving('Salvestatud');
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorEt((err as Error).message));
     } finally {
       setTimeout(() => setSaving(''), 1200);
     }
   }
 
   async function saveBonuses(groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) {
-    setSaving('Saving bonus predictions...');
+    setSaving('Salvestan boonusennustusi...');
     try {
       await refresh(await saveBonusPrediction(player.id, groups, knockout));
-      setSaving('Saved');
+      setSaving('Salvestatud');
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorEt((err as Error).message));
     } finally {
       setTimeout(() => setSaving(''), 1200);
     }
   }
 
-  if (!player) return <LoginScreen error={error} onSubmit={(event) => { event.preventDefault(); signIn(new FormData(event.currentTarget)).catch((err) => setError(err.message)); }} />;
-  if (!state) return <Shell player={player} view={view} setView={setView}><div className="empty">Loading tournament data...</div></Shell>;
+  if (!player) return <LoginScreen error={error} onSubmit={(event) => { event.preventDefault(); signIn(new FormData(event.currentTarget)).catch((err) => setError(errorEt(err.message))); }} />;
+  if (!state) return <Shell player={player} view={view} setView={setView}><div className="empty">Laen turniiriandmeid...</div></Shell>;
 
   const locked = state.competition.predictions_locked === 1 || Date.now() > new Date(state.competition.prediction_deadline).getTime();
 
   return (
     <Shell player={player} view={view} setView={setView}>
       {error && <div className="error">{error}</div>}
-      {state.currentPlayer?.status === 'pending' && <div className="warning-box">Your entry is waiting for admin approval. You can save predictions now; they count after approval if submitted before the deadline.</div>}
-      {state.currentPlayer?.status === 'disabled' && <div className="error">Your entry is not active in the official leaderboard. Contact the admin.</div>}
+      {state.currentPlayer?.status === 'pending' && <div className="warning-box">{et.playerStatus.pending}</div>}
+      {state.currentPlayer?.status === 'disabled' && <div className="error">{et.playerStatus.disabled}</div>}
       {view === 'predict' && <MatchPredictions state={state} locked={locked} saving={saving} onSave={saveMatches} />}
       {view === 'bonus' && <BonusPredictionPanel state={state} locked={locked} saving={saving} onSave={saveBonuses} />}
       {view === 'leaderboard' && <Leaderboard state={state} onSelect={(playerId) => { setSelectedPlayerId(playerId); setView('details'); }} />}
@@ -79,14 +80,14 @@ function LoginScreen({ error, onSubmit }: { error: string; onSubmit: React.FormE
   return (
     <main className="login">
       <section className="login-panel">
-        <p className="eyebrow">Private friends league</p>
-        <h1>World Cup 2026 predictions</h1>
+        <p className="eyebrow">Privaatne sõprade liiga</p>
+        <h1>MM 2026 ennustused</h1>
         <form onSubmit={onSubmit}>
-          <label>Name<input name="name" required placeholder="Your name" /></label>
-          <label>Contact, optional<input name="contact" placeholder="Email or phone" /></label>
-          <label>Invite code or admin PIN<input name="inviteCode" required placeholder="FRIENDS2026" /></label>
-          <p className="form-note">Entry fee payment is handled outside this app by personal transfer to the admin. No card, bank, or payment data is collected here.</p>
-          <button>Enter league</button>
+          <label>Nimi<input name="name" required placeholder="Sinu nimi" /></label>
+          <label>Kontakt, valikuline<input name="contact" placeholder="E-post või telefon" /></label>
+          <label>Kutse kood või halduri PIN<input name="inviteCode" required placeholder="FRIENDS2026" /></label>
+          <p className="form-note">Osalustasu makstakse väljaspool rakendust isikliku ülekandega korraldajale. Kaardi-, panga- ega makseandmeid siin ei koguta.</p>
+          <button>Sisene liigasse</button>
         </form>
         {error && <div className="error">{error}</div>}
       </section>
@@ -98,7 +99,7 @@ function Shell({ player, view, setView, children }: { player: any; view: View; s
   return (
     <div className="app-shell">
       <header>
-        <div><p className="eyebrow">WC 2026 League</p><h1>Predictions</h1></div>
+        <div><p className="eyebrow">MM 2026 liiga</p><h1>Ennustused</h1></div>
         <span>{player.name}</span>
       </header>
       <nav>{(['predict', 'bonus', 'leaderboard', 'details', ...(player.role === 'admin' ? ['admin'] : [])] as View[]).map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}>{navLabel(item)}</button>)}</nav>
@@ -108,5 +109,5 @@ function Shell({ player, view, setView, children }: { player: any; view: View; s
 }
 
 function navLabel(view: View) {
-  return ({ predict: 'Predictions', bonus: 'Bonus', leaderboard: 'Leaderboard', details: 'Details', admin: 'Admin' } as Record<View, string>)[view];
+  return et.nav[view];
 }

@@ -5,6 +5,7 @@ export type VerificationStatus = 'official' | 'partial_official' | 'seeded' | 'm
 export interface Team {
   id: string;
   name: string;
+  nameEt?: string;
   code: string;
   flag: string;
   groupId?: string;

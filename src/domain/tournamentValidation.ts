@@ -48,6 +48,7 @@ export function validateTournamentData(input: { metadata: TournamentMetadata; te
     teamSeen.add(team.id);
     if (team.groupId && !groupIds.has(team.groupId)) errors.push(`Team ${team.id} references invalid group ${team.groupId}`);
     if (team.verificationStatus && !allowedVerificationStatuses.includes(team.verificationStatus)) errors.push(`Team ${team.id} has invalid verificationStatus ${team.verificationStatus}`);
+    if (!hasValidConcreteFlag(team)) errors.push(`Team ${team.id} has invalid or corrupted flag value`);
   }
 
   for (const group of input.groups) {
@@ -106,6 +107,11 @@ function validateMetadata(metadata: TournamentMetadata, errors: string[]): void 
   if ((metadata.verificationStatus === 'official' || metadata.verificationStatus === 'partial_official') && (!metadata.sourceName || !metadata.sourceReference || !metadata.sourceRetrievedAt)) {
     errors.push(`${metadata.verificationStatus} data requires source metadata`);
   }
+}
+
+function hasValidConcreteFlag(team: Team): boolean {
+  if (!team.groupId) return true;
+  return typeof team.flag === 'string' && team.flag.trim() !== '' && !team.flag.includes('?') && !team.flag.includes('�');
 }
 
 function missingTeamSlots(match: Match): number {

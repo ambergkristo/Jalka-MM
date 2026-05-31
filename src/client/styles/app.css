@@ -73,6 +73,18 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
 .summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px; margin: 6px 0 10px; }
 .summary strong { font-size: 1.35rem; color: #f7ffe7; }
 .summary span { color: #b9c5bb; text-align: right; }
+.deadline-banner {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid #2f7a50;
+  border-radius: 8px;
+  background: #102416;
+  color: #d7f76f;
+}
+.deadline-banner span { color: #b9c5bb; font-size: .9rem; }
+.deadline-banner.locked, .deadline-banner.warning { border-color: #9b7438; background: #251b0b; color: #f0d59a; }
 .match-list, .stack { display: grid; gap: 12px; }
 .match-section { display: grid; gap: 10px; }
 .match-section h2 { margin: 12px 2px 0; color: #f7ffe7; font-size: 1.15rem; }
