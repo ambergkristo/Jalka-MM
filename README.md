@@ -36,6 +36,8 @@ npm run dev
 
 Open `http://localhost:5174`. The API runs on `http://localhost:8787`.
 
+In production, the Node server started with `node dist/server/index.js` serves both `/api/*` routes and the built React/Vite frontend from `dist/client`. The root URL `/` returns `dist/client/index.html`, and SPA routes fall back to that HTML while unknown `/api/*` routes remain JSON API 404 responses.
+
 Commands:
 
 - `npm install`: install dependencies
