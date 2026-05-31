@@ -188,6 +188,24 @@ export async function updatePlayerStatus(actorId: string, adminCode: string, pla
   return getState(actorId);
 }
 
+export async function deletePlayer(actorId: string, adminCode: string, playerId: string) {
+  await assertAdmin(actorId, adminCode);
+  if (actorId === playerId) throw new Error('Admin cannot delete own player');
+  const player = await one('SELECT id, user_id, display_name, status FROM players WHERE id = ?', [playerId]);
+  if (!player) throw new Error('Player not found');
+  await db.transaction(async (tx) => {
+    await tx.run('DELETE FROM score_breakdowns WHERE player_id = ?', [playerId]);
+    await tx.run('DELETE FROM bonus_predictions WHERE player_id = ?', [playerId]);
+    await tx.run('DELETE FROM prediction_submissions WHERE player_id = ?', [playerId]);
+    await tx.run('DELETE FROM predictions WHERE player_id = ?', [playerId]);
+    await tx.run('DELETE FROM players WHERE id = ?', [playerId]);
+    await tx.run('DELETE FROM users WHERE id = ?', [String(player.user_id)]);
+    await tx.run('INSERT INTO admin_audit_log (actor, action, payload_json, created_at) VALUES (?, ?, ?, ?)', [actorId, 'player.deleted', JSON.stringify({ playerId, displayName: player.display_name, status: player.status }), new Date().toISOString()]);
+  });
+  await recalculateScores();
+  return getState(actorId);
+}
+
 export async function verifyAdminAccess(actorId: string, adminCode: string): Promise<void> {
   await assertAdmin(actorId, adminCode);
 }

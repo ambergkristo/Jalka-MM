@@ -94,7 +94,16 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
 .score-row input { min-height: 56px; padding: 4px; text-align: center; font-size: 1.3rem; font-weight: 950; background: #f5f8ed; color: #07110d; border-color: #d7f76f; }
 .team-badge { display: inline-flex; align-items: center; min-width: 0; gap: 8px; }
 .team-badge.right { justify-content: flex-end; text-align: right; }
-.team-flag { width: 28px; height: 28px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 999px; background: #16261d; font-size: 1.15rem; }
+.team-flag {
+  width: 30px;
+  min-width: 30px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 1.45rem;
+  line-height: 1;
+}
 .team-copy { display: grid; min-width: 0; }
 .team-copy strong { color: #f4f7ef; font-size: .96rem; line-height: 1.1; overflow-wrap: anywhere; }
 .team-copy small { color: #7f9287; font-size: .72rem; font-weight: 850; }
@@ -135,6 +144,7 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
 .warning-box { padding: 10px; border: 1px solid #9b7438; border-radius: 8px; }
 .muted { color: #9ca99f; margin: 0; }
 .ghost { background: #0e2017; color: #dce8dc; border-color: #263e31; }
+.ghost.danger { border-color: #9b4938; color: #ffd6ca; background: #24110e; }
 .breakdown-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; border-top: 1px solid #263e31; padding-top: 10px; }
 .breakdown-row p { grid-column: 1 / -1; margin: 0; color: #b9c5bb; }
 .error, .empty { padding: 12px; border-radius: 8px; background: #31140f; border: 1px solid #9b4938; color: #ffd6ca; }
@@ -144,7 +154,7 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
   header h1 { font-size: 1.62rem; }
   .score-row { grid-template-columns: minmax(0, 1fr) 52px 52px minmax(0, 1fr); gap: 7px; }
   .score-row input { min-height: 54px; font-size: 1.2rem; }
-  .team-flag { width: 24px; height: 24px; }
+  .team-flag { width: 26px; min-width: 26px; font-size: 1.3rem; }
   .team-copy strong { font-size: .88rem; }
   .match-meta { font-size: .76rem; }
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, Match, MatchPrediction, Team } from '../../domain/types.js';
-import { recalculate, saveBonusResults, saveResult, setDeadline, setLock, updatePlayerStatus } from '../api.js';
+import { deletePlayer, recalculate, saveBonusResults, saveResult, setDeadline, setLock, updatePlayerStatus } from '../api.js';
 import { readBonusDraft, splitTopScorers } from './bonusDraft.js';
 import { TeamSelect } from './BonusPredictionPanel.js';
 import { AdminDataStatus } from './DataStatus.js';
@@ -16,6 +16,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
   const groupIds = state.groups.map((group: any) => String(group.id));
   const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds));
   const [adminCode, setAdminCode] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState('');
 
   const updateGroup = (groupId: string, patch: Partial<GroupBonusPrediction>) => {
     setBonus((current) => ({ ...current, groups: current.groups.map((group) => group.groupId === groupId ? { ...group, ...patch } : group) }));
@@ -26,6 +27,15 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
   };
 
   const run = (promise: Promise<any>) => promise.then(onRefresh).catch((err) => onError(errorEt(err.message)));
+
+  const confirmDelete = (playerId: string) => {
+    if (deleteConfirmId !== playerId) {
+      setDeleteConfirmId(playerId);
+      return;
+    }
+    setDeleteConfirmId('');
+    run(deletePlayer(player.id, adminCode, playerId));
+  };
 
   return (
     <section className="admin-grid">
@@ -47,6 +57,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
                 {Number(row.duplicate_name_count) > 1 && <span>Topeltnimi</span>}
                 <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'approved'))}>Kinnita</button>
                 <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'disabled'))}>Keela</button>
+                <button className="ghost danger" onClick={() => confirmDelete(row.id)}>{deleteConfirmId === row.id ? 'Kinnita kustutamine' : 'Eemalda testkasutaja'}</button>
               </article>
             ))}
           </div>
@@ -82,7 +93,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
             </div>
           );
         })}
-        <RoundInput label="R16 riigid" values={bonus.knockout.r16TeamIds} onChange={(r16TeamIds) => updateKnockout({ r16TeamIds })} />
+        <RoundInput label="1/16-finaali riigid" values={bonus.knockout.r16TeamIds} onChange={(r16TeamIds) => updateKnockout({ r16TeamIds })} />
         <RoundInput label="Veerandfinaali riigid" values={bonus.knockout.qfTeamIds} onChange={(qfTeamIds) => updateKnockout({ qfTeamIds })} />
         <RoundInput label="Poolfinaali riigid" values={bonus.knockout.sfTeamIds} onChange={(sfTeamIds) => updateKnockout({ sfTeamIds })} />
         <RoundInput label="Finaali riigid" values={bonus.knockout.finalTeamIds} onChange={(finalTeamIds) => updateKnockout({ finalTeamIds })} />

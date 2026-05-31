@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { breakdownFor, createPlayer, getState, healthCheck, recalculateScores, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedTournamentData, setDeadline, setLock, updatePlayerStatus, verifyAdminAccess } from './db.js';
+import { breakdownFor, createPlayer, deletePlayer, getState, healthCheck, recalculateScores, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedTournamentData, setDeadline, setLock, updatePlayerStatus, verifyAdminAccess } from './db.js';
 import { getRuntimeConfig } from './config.js';
 
 await seedTournamentData();
@@ -60,6 +60,10 @@ createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/admin/player-status') {
       const body = await readJson(request);
       return json(response, 200, await updatePlayerStatus(String(body.actorId ?? ''), String(body.adminCode ?? ''), String(body.playerId ?? ''), String(body.status ?? ''), String(body.note ?? '')));
+    }
+    if (request.method === 'POST' && url.pathname === '/api/admin/delete-player') {
+      const body = await readJson(request);
+      return json(response, 200, await deletePlayer(String(body.actorId ?? ''), String(body.adminCode ?? ''), String(body.playerId ?? '')));
     }
     if (request.method === 'POST' && url.pathname === '/api/admin/recalculate') {
       const body = await readJson(request);

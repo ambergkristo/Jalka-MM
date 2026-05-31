@@ -20,3 +20,4 @@ export const setDeadline = (actorId: string, adminCode: string, deadline: string
 export const recalculate = (actorId: string, adminCode: string) => api<any>('/admin/recalculate', { method: 'POST', body: JSON.stringify({ actorId, adminCode }) });
 export const loadBreakdown = (playerId: string) => api<any[]>(`/breakdown?playerId=${playerId}`);
 export const updatePlayerStatus = (actorId: string, adminCode: string, playerId: string, status: string, note = '') => api<any>('/admin/player-status', { method: 'POST', body: JSON.stringify({ actorId, adminCode, playerId, status, note }) });
+export const deletePlayer = (actorId: string, adminCode: string, playerId: string) => api<any>('/admin/delete-player', { method: 'POST', body: JSON.stringify({ actorId, adminCode, playerId }) });

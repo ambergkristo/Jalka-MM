@@ -8,8 +8,8 @@ export const et = {
   },
   stages: {
     GROUP: 'Alagrupid',
-    R32: 'R32',
-    R16: 'R16',
+    R32: '1/32-finaalid',
+    R16: '1/16-finaalid',
     QF: 'Veerandfinaalid',
     SF: 'Poolfinaalid',
     THIRD_PLACE: '3. koha mäng',
@@ -23,7 +23,9 @@ export const et = {
     locked: 'Ennustused on lukus',
     deadlinePassed: 'Ennustuste tähtaeg on möödas',
     adminRequired: 'Halduri ligipääs on vajalik',
-    invalidDeadline: 'Tähtaeg ei ole korrektne'
+    invalidDeadline: 'Tähtaeg ei ole korrektne',
+    playerNotFound: 'Kasutajat ei leitud',
+    cannotDeleteSelf: 'Haldur ei saa iseennast kustutada'
   }
 };
 
@@ -32,7 +34,9 @@ export function errorEt(message: string): string {
     'Predictions are locked': et.errors.locked,
     'Prediction deadline has passed': et.errors.deadlinePassed,
     'Admin access required': et.errors.adminRequired,
-    'Invalid deadline': et.errors.invalidDeadline
+    'Invalid deadline': et.errors.invalidDeadline,
+    'Player not found': et.errors.playerNotFound,
+    'Admin cannot delete own player': et.errors.cannotDeleteSelf
   } as Record<string, string>)[message] ?? message;
 }
 

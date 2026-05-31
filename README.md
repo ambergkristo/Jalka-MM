@@ -12,6 +12,7 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Admin bonus-result entry, including multiple tied top scorers.
 - Admin lock/unlock and deadline configuration.
 - Admin player approval screen. Only approved players appear in the official leaderboard.
+- Admin-only selected test-user removal for cleaning deployment test data before launch.
 - Runtime config boundary for `local`, `staging`, and `production` modes.
 - SQLite backup command and explicit destructive reset guardrails.
 - Real leaderboard calculated from stored predictions, results, and score breakdowns.
@@ -95,6 +96,8 @@ Knockout match score points are based on the home-away bracket slot score. Team 
 Use `ADMIN2026`, open the Admin tab, enter match results, edit the prediction deadline, lock/unlock predictions, enter bonus results, approve/disable players, and trigger recalculation. Every result, deadline, bonus-result, and player-status change is written to `admin_audit_log`.
 
 The admin approval action requires the admin PIN in the admin screen and is enforced by the backend. Normal players do not see the Admin tab, and non-admin approval requests are rejected server-side.
+
+Before inviting real players, remove only explicitly identified deployment test users from the Admin tab with `Eemalda testkasutaja`. The action requires the admin PIN and a second confirmation click. It deletes only the selected player's user row, match predictions, bonus predictions, submission timestamp, and score rows, then writes `player.deleted` to `admin_audit_log`. It does not reset tournament data, results, other players, or the production database.
 
 ## Public Registration And Approval
 
@@ -270,6 +273,8 @@ npm run audit:tournament-data
 Validation checks metadata, allowed verification statuses, team/group/match counts, duplicate team IDs, duplicate match numbers, invalid team and group references, corrupted concrete-team flags, date/TBC handling, knockout slot usage, unresolved kickoff-time counts, and required source metadata.
 
 The match seed keeps the 104-match shape: 72 group matches and 32 knockout matches. Group-stage matches use stable team IDs from the JSON registry, with Estonian display names and technical short codes in the UI. Knockout matches use clear bracket slot labels such as `Winner Group A`, `3rd Group C/D/E`, or `Winner Match 73` because exact knockout teams depend on progression.
+
+Team badges render the stored emoji flag directly as the visible mark. The country code remains secondary text under the Estonian country name. No SVG flag assets or external flag CDN are used.
 
 Group-stage kickoff times are stored as UTC ISO timestamps and displayed in Estonia time (`Europe/Tallinn`) with Estonian formatting, for example `11. juuni · 22:00 Eesti aeg`. If the value is unknown or invalid, the app shows `Aeg täpsustamisel`; broken labels like `Invalid Date` should not appear.
 

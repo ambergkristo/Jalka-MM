@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 process.env.WORLDCUP_DB_PATH = join(process.cwd(), 'data', 'test-worldcup2026.sqlite');
 
-const { breakdownFor, createPlayer, getLeaderboard, getState, recalculateScores, resetDevData, resetForTests, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, seedTournamentData, setDeadline, setLock, updatePlayerStatus } = await import('../server/db.js');
+const { breakdownFor, createPlayer, deletePlayer, getLeaderboard, getState, recalculateScores, resetDevData, resetForTests, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, seedTournamentData, setDeadline, setLock, updatePlayerStatus } = await import('../server/db.js');
 
 describe('stored scoring path', () => {
   beforeEach(async () => {
@@ -130,5 +130,19 @@ describe('stored scoring path', () => {
     await updatePlayerStatus('admin-admin', 'ADMIN2026', player.id, 'approved');
     await seedTournamentData();
     assert.equal((await getState(player.id)).currentPlayer?.status, 'approved');
+  });
+
+  it('lets admin delete one selected test player and dependent predictions only', async () => {
+    const remove = await createPlayer('Remove Test', 'FRIENDS2026');
+    const keep = await createPlayer('Keep Test', 'FRIENDS2026');
+    await savePredictions(remove.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
+    await savePredictions(keep.id, [{ matchId: 1, homeGoals: 2, awayGoals: 0 }]);
+    await assert.rejects(() => deletePlayer(keep.id, 'ADMIN2026', remove.id), /Admin access required/);
+
+    const state = await deletePlayer('admin-admin', 'ADMIN2026', remove.id);
+
+    assert.equal(state.playerAdmin.some((row: any) => row.id === remove.id), false);
+    assert.equal((await getState(keep.id)).predictions.length, 1);
+    assert.equal((await getState(remove.id)).currentPlayer, null);
   });
 });
