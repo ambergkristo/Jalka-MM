@@ -63,7 +63,7 @@ createServer(async (request, response) => {
     }
     if (request.method === 'POST' && url.pathname === '/api/admin/delete-player') {
       const body = await readJson(request);
-      return json(response, 200, await deletePlayer(String(body.actorId ?? ''), String(body.adminCode ?? ''), String(body.playerId ?? '')));
+      return json(response, 200, await deletePlayer(String(body.actorId ?? ''), String(body.adminCode ?? ''), String(body.playerId ?? ''), String(body.confirmationName ?? '')));
     }
     if (request.method === 'POST' && url.pathname === '/api/admin/recalculate') {
       const body = await readJson(request);

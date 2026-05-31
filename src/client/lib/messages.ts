@@ -2,8 +2,10 @@ export const et = {
   nav: {
     predict: 'Ennustused',
     bonus: 'Boonused',
+    results: 'Tulemused',
     leaderboard: 'Edetabel',
     details: 'Punktid',
+    rules: 'Reeglid',
     admin: 'Haldus'
   },
   stages: {
@@ -25,7 +27,8 @@ export const et = {
     adminRequired: 'Halduri ligipääs on vajalik',
     invalidDeadline: 'Tähtaeg ei ole korrektne',
     playerNotFound: 'Kasutajat ei leitud',
-    cannotDeleteSelf: 'Haldur ei saa iseennast kustutada'
+    cannotDeleteSelf: 'Haldur ei saa iseennast kustutada',
+    deleteConfirmationMismatch: 'Kustutamise kinnitus ei klapi osaleja nimega'
   }
 };
 
@@ -36,7 +39,8 @@ export function errorEt(message: string): string {
     'Admin access required': et.errors.adminRequired,
     'Invalid deadline': et.errors.invalidDeadline,
     'Player not found': et.errors.playerNotFound,
-    'Admin cannot delete own player': et.errors.cannotDeleteSelf
+    'Admin cannot delete own player': et.errors.cannotDeleteSelf,
+    'Player delete confirmation does not match': et.errors.deleteConfirmationMismatch
   } as Record<string, string>)[message] ?? message;
 }
 

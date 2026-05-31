@@ -6,8 +6,9 @@ import { TeamSelect } from './BonusPredictionPanel.js';
 import { AdminDataStatus } from './DataStatus.js';
 import { MatchCard } from './MatchPredictions.js';
 import { errorEt } from '../lib/messages.js';
+import { competitionStateLabel, defaultPlayerView, type CompetitionState } from '../lib/competitionState.js';
 
-export function AdminPanel({ state, player, onRefresh, onError }: { state: any; player: any; onRefresh: (state?: any) => void; onError: (message: string) => void }) {
+export function AdminPanel({ state, player, competitionState, onRefresh, onError }: { state: any; player: any; competitionState: CompetitionState; onRefresh: (state?: any) => void; onError: (message: string) => void }) {
   const [matchId, setMatchId] = useState(1);
   const match = useMemo(() => state.matches.find((item: Match) => item.id === matchId), [state.matches, matchId]);
   const teamsById = useMemo(() => new Map(state.teams.map((team: any) => [team.id, team as Team])), [state.teams]);
@@ -17,6 +18,7 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
   const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds));
   const [adminCode, setAdminCode] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState('');
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
 
   const updateGroup = (groupId: string, patch: Partial<GroupBonusPrediction>) => {
     setBonus((current) => ({ ...current, groups: current.groups.map((group) => group.groupId === groupId ? { ...group, ...patch } : group) }));
@@ -31,15 +33,26 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
   const confirmDelete = (playerId: string) => {
     if (deleteConfirmId !== playerId) {
       setDeleteConfirmId(playerId);
+      setDeleteConfirmName('');
       return;
     }
     setDeleteConfirmId('');
-    run(deletePlayer(player.id, adminCode, playerId));
+    run(deletePlayer(player.id, adminCode, playerId, deleteConfirmName));
+    setDeleteConfirmName('');
   };
 
   return (
     <section className="admin-grid">
       <AdminDataStatus status={state.tournamentDataStatus} />
+      <div className="panel wide">
+        <h2>Võistluse seis</h2>
+        <dl className="status-grid">
+          <dt>Tähtaeg</dt><dd>{new Date(state.competition.prediction_deadline).toLocaleString('et-EE')}</dd>
+          <dt>Lukus</dt><dd>{state.competition.predictions_locked === 1 ? 'jah' : 'ei'}</dd>
+          <dt>Olek</dt><dd>{competitionStateLabel(competitionState)}</dd>
+          <dt>Vaikimisi vaade</dt><dd>{defaultPlayerView(competitionState) === 'results' ? 'Tulemused' : 'Ennustused'}</dd>
+        </dl>
+      </div>
       <div className="panel wide">
         <h2>Osalejate kinnitamine</h2>
         <label>Halduri kood<input type="password" value={adminCode} onChange={(event) => setAdminCode(event.target.value)} placeholder="Halduri PIN" /></label>
@@ -57,7 +70,14 @@ export function AdminPanel({ state, player, onRefresh, onError }: { state: any; 
                 {Number(row.duplicate_name_count) > 1 && <span>Topeltnimi</span>}
                 <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'approved'))}>Kinnita</button>
                 <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'disabled'))}>Keela</button>
-                <button className="ghost danger" onClick={() => confirmDelete(row.id)}>{deleteConfirmId === row.id ? 'Kinnita kustutamine' : 'Eemalda testkasutaja'}</button>
+                {deleteConfirmId === row.id && (
+                  <label className="delete-confirm">
+                    Kustutamiseks sisesta täpne nimi: {row.display_name}
+                    <input value={deleteConfirmName} onChange={(event) => setDeleteConfirmName(event.target.value)} placeholder={row.display_name} />
+                    <small>Kustutatakse ainult see osaleja koos tema ennustuste ja punktiridadega.</small>
+                  </label>
+                )}
+                <button className="ghost danger" onClick={() => confirmDelete(row.id)} disabled={deleteConfirmId === row.id && deleteConfirmName.trim() !== row.display_name}>{deleteConfirmId === row.id ? 'Kinnita kustutamine' : 'Eemalda testkasutaja'}</button>
               </article>
             ))}
           </div>

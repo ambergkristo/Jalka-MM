@@ -137,9 +137,10 @@ describe('stored scoring path', () => {
     const keep = await createPlayer('Keep Test', 'FRIENDS2026');
     await savePredictions(remove.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
     await savePredictions(keep.id, [{ matchId: 1, homeGoals: 2, awayGoals: 0 }]);
-    await assert.rejects(() => deletePlayer(keep.id, 'ADMIN2026', remove.id), /Admin access required/);
+    await assert.rejects(() => deletePlayer(keep.id, 'ADMIN2026', remove.id, 'Remove Test'), /Admin access required/);
+    await assert.rejects(() => deletePlayer('admin-admin', 'ADMIN2026', remove.id, 'wrong name'), /confirmation/i);
 
-    const state = await deletePlayer('admin-admin', 'ADMIN2026', remove.id);
+    const state = await deletePlayer('admin-admin', 'ADMIN2026', remove.id, 'Remove Test');
 
     assert.equal(state.playerAdmin.some((row: any) => row.id === remove.id), false);
     assert.equal((await getState(keep.id)).predictions.length, 1);

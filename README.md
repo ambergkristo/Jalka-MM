@@ -5,9 +5,12 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 ## Current Features
 
 - Player login with name and invite code/PIN.
+- Public landing page with deadline-aware primary actions.
+- Mobile-readable Estonian rules view.
 - Public player registration with optional contact field and pending/approved/disabled approval status.
 - Mobile match prediction entry for all 104 World Cup 2026-shaped matches.
 - Bonus prediction flow for group winners, group second places, group qualifiers, knockout round participants, third-place winner, champion, and top scorer.
+- Results/overview screen for post-deadline match results, own prediction comparison, points, and leaderboard preview.
 - Admin match result entry.
 - Admin bonus-result entry, including multiple tied top scorers.
 - Admin lock/unlock and deadline configuration.
@@ -20,6 +23,7 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Manual result provider boundary for future live-score integrations.
 - Dark, mobile-first match prediction screen with grouped stages, team names, codes, flags, and Estonia-time kickoff display when verified.
 - Estonian player/admin UI and a live countdown to the prediction deadline.
+- Competition-state-aware routing for open predictions, locked predictions, live tournament, and finished tournament states.
 - Reliable local SVG flags via `flag-icons`, with UTF-8 emoji flags retained as tournament metadata fallback.
 - Tournament data source layer with explicit verification status and validation.
 - Safe tournament-data seeding that preserves players, predictions, and results.
@@ -67,7 +71,7 @@ New player registrations start as `pending`. Pending players may enter and save 
 - `src/domain`: pure TypeScript tournament data and scoring logic. No React, HTTP, or database dependencies.
 - `src/data/worldcup2026`: JSON source files for tournament metadata, teams, groups, matches, and bracket slots.
 - `src/server`: Node TypeScript API using built-in SQLite (`node:sqlite`) and a manual result provider boundary.
-- `src/client`: React + Vite PWA UI for prediction entry, leaderboard, and admin result entry.
+- `src/client`: React + Vite PWA UI for landing, rules, prediction entry, results overview, leaderboard, and admin result entry.
 - `data/worldcup2026.sqlite`: local SQLite database created at runtime.
 
 The database schema includes `users`, `players`, `competitions`, `teams`, `groups`, `matches`, `predictions`, `prediction_submissions`, `actual_results`, `bonus_predictions`, `bonus_results`, `score_breakdowns`, `leaderboard_snapshots`, and `admin_audit_log`.
@@ -97,7 +101,22 @@ Use `ADMIN2026`, open the Admin tab, enter match results, edit the prediction de
 
 The admin approval action requires the admin PIN in the admin screen and is enforced by the backend. Normal players do not see the Admin tab, and non-admin approval requests are rejected server-side.
 
-Before inviting real players, remove only explicitly identified deployment test users from the Admin tab with `Eemalda testkasutaja`. The action requires the admin PIN and a second confirmation click. It deletes only the selected player's user row, match predictions, bonus predictions, submission timestamp, and score rows, then writes `player.deleted` to `admin_audit_log`. It does not reset tournament data, results, other players, or the production database.
+Before inviting real players, remove only explicitly identified deployment test users from the Admin tab with `Eemalda testkasutaja`. The action requires the admin PIN, selecting one specific player, and typing the exact player display name before the final delete button is enabled. It deletes only the selected player's user row, match predictions, bonus predictions, submission timestamp, and score rows, then writes `player.deleted` to `admin_audit_log`. It does not reset tournament data, results, other players, or the production database.
+
+## Landing, Rules, And Results Flow
+
+The public root URL opens a landing page instead of dropping directly into registration. It explains the private friends competition and offers `Mine ennustama` / `Vaata tulemusi` plus `Reeglid`.
+
+The app derives player-facing state from the prediction deadline, manual lock flag, and stored match results:
+
+- `predictions_open`: primary action goes to `Ennustused`.
+- `predictions_locked_before_tournament`: forms remain read-only and the primary action goes to overview.
+- `tournament_live`: `Tulemused` becomes the main follow-along view.
+- `tournament_finished`: primary action goes to final results/leaderboard summary.
+
+The `Tulemused` view uses only stored manual results and score breakdowns. It shows `Tulemus sisestamata` until the admin enters a result and does not claim automated live data.
+
+Players can use `Vaheta kasutajat` to clear only the local browser identity. This does not delete the player record or any predictions.
 
 ## Public Registration And Approval
 
@@ -234,8 +253,10 @@ Verify deployment:
 - Confirm `databaseConnectivity` is `true`.
 - Confirm `adminSecretConfigured` is `true`.
 - Open the app URL and register a test player.
+- Confirm the landing page and `Reeglid` view are visible.
 - Save match and bonus predictions.
 - Approve the player as admin.
+- Enter one manual match result and confirm `Tulemused` shows the result, own prediction, and points.
 - Restart/redeploy the Render service.
 - Confirm the player and predictions still exist.
 
@@ -252,6 +273,7 @@ Pre-launch checklist:
 - Registration and admin approval flow are tested.
 - Public leaderboard includes approved players only.
 - Pending and disabled players are excluded from official ranking.
+- Test users are removed one by one through the admin `Eemalda testkasutaja` flow only after live verification.
 
 ## Tournament Data Source
 

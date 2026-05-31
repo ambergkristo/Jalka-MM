@@ -188,11 +188,12 @@ export async function updatePlayerStatus(actorId: string, adminCode: string, pla
   return getState(actorId);
 }
 
-export async function deletePlayer(actorId: string, adminCode: string, playerId: string) {
+export async function deletePlayer(actorId: string, adminCode: string, playerId: string, confirmationName = '') {
   await assertAdmin(actorId, adminCode);
   if (actorId === playerId) throw new Error('Admin cannot delete own player');
   const player = await one('SELECT id, user_id, display_name, status FROM players WHERE id = ?', [playerId]);
   if (!player) throw new Error('Player not found');
+  if (String(confirmationName).trim() !== String(player.display_name)) throw new Error('Player delete confirmation does not match');
   await db.transaction(async (tx) => {
     await tx.run('DELETE FROM score_breakdowns WHERE player_id = ?', [playerId]);
     await tx.run('DELETE FROM bonus_predictions WHERE player_id = ?', [playerId]);
