@@ -6,16 +6,16 @@ import { backupSqliteDatabase } from '../server/backup.js';
 import { getRuntimeConfig, requireDestructiveConfirmation } from '../server/config.js';
 
 describe('runtime config', () => {
-  it('loads local defaults with an unsafe documented admin secret', () => {
+  it('loads local defaults with a documented unsafe session secret', () => {
     const config = getRuntimeConfig({ APP_ENV: 'local' });
     expect(config.appEnv).toBe('local');
     expect(config.databaseMode).toBe('sqlite');
-    expect(config.adminSecret).toBe('ADMIN2026');
+    expect(config.sessionSecret).toBe('local-dev-session-secret-change-me');
   });
 
-  it('requires admin secret in production', () => {
-    expect(() => getRuntimeConfig({ APP_ENV: 'production' })).toThrow(/ADMIN_SECRET/);
-    expect(getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' }).adminSecret).toBe('secret');
+  it('requires session secret in production', () => {
+    expect(() => getRuntimeConfig({ APP_ENV: 'production' })).toThrow(/SESSION_SECRET/);
+    expect(getRuntimeConfig({ APP_ENV: 'production', SESSION_SECRET: 'session-secret', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' }).sessionSecret).toBe('session-secret');
   });
 
   it('selects postgres and requires DATABASE_URL', () => {
@@ -24,12 +24,12 @@ describe('runtime config', () => {
   });
 
   it('refuses production sqlite unless explicitly overridden', () => {
-    expect(() => getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'sqlite' })).toThrow(/Production mode requires/);
-    expect(getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'sqlite', ALLOW_UNSAFE_PRODUCTION_SQLITE: 'true' }).databaseMode).toBe('sqlite');
+    expect(() => getRuntimeConfig({ APP_ENV: 'production', SESSION_SECRET: 'session-secret', DATABASE_MODE: 'sqlite' })).toThrow(/Production mode requires/);
+    expect(getRuntimeConfig({ APP_ENV: 'production', SESSION_SECRET: 'session-secret', DATABASE_MODE: 'sqlite', ALLOW_UNSAFE_PRODUCTION_SQLITE: 'true' }).databaseMode).toBe('sqlite');
   });
 
   it('refuses destructive confirmation in production mode', () => {
-    const config = getRuntimeConfig({ APP_ENV: 'production', ADMIN_SECRET: 'secret', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' });
+    const config = getRuntimeConfig({ APP_ENV: 'production', SESSION_SECRET: 'session-secret', DATABASE_MODE: 'postgres', DATABASE_URL: 'postgres://example' });
     expect(() => requireDestructiveConfirmation(config, 'DELETE_LOCAL_DATA')).toThrow(/production/);
   });
 

@@ -7,7 +7,7 @@ import { MatchPredictions } from './components/MatchPredictions.js';
 import { ResultsOverview } from './components/ResultsOverview.js';
 import { RulesView } from './components/RulesView.js';
 import { ScoreDetails } from './components/ScoreDetails.js';
-import { loadState, login, saveBonusPrediction, savePredictions } from './api.js';
+import { adminLogin, currentSession, finalSubmitPredictions, loadState, login, logoutSession, register, saveBonusPrediction, savePredictions } from './api.js';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction } from '../domain/types.js';
 import { defaultPlayerView, deriveCompetitionState, type PlayerView } from './lib/competitionState.js';
 import { et, errorEt } from './lib/messages.js';
@@ -16,7 +16,7 @@ type Screen = 'landing' | 'login' | 'app' | 'rules';
 export type View = PlayerView;
 
 export function App() {
-  const [player, setPlayer] = useState(() => JSON.parse(localStorage.getItem('wc-player') ?? 'null'));
+  const [player, setPlayer] = useState<any>(null);
   const [state, setState] = useState<any>(null);
   const [screen, setScreen] = useState<Screen>('landing');
   const [view, setView] = useState<View>('predict');
@@ -25,32 +25,41 @@ export function App() {
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
 
   useEffect(() => {
-    loadState(player?.id).then(setState).catch((err) => setError(errorEt(err.message)));
-  }, [player?.id]);
+    Promise.all([currentSession().catch(() => null), loadState()]).then(([session, loadedState]) => {
+      setPlayer(session);
+      setState(loadedState);
+    }).catch((err) => setError(errorEt(err.message)));
+  }, []);
 
   const competitionState = useMemo(() => deriveCompetitionState(state), [state]);
   const locked = state ? state.competition.predictions_locked === 1 || Date.now() > new Date(state.competition.prediction_deadline).getTime() : false;
 
   async function signIn(form: FormData) {
     setError('');
-    const next = await login(String(form.get('name')), String(form.get('inviteCode')), String(form.get('contact') ?? ''));
-    localStorage.setItem('wc-player', JSON.stringify(next));
+    const mode = String(form.get('mode') ?? 'login');
+    const password = String(form.get('password') ?? '');
+    if (mode === 'register' && password !== String(form.get('repeatPassword') ?? '')) throw new Error('Paroolid ei kattu');
+    const next = mode === 'admin'
+      ? await adminLogin(String(form.get('username') ?? ''), password)
+      : mode === 'register'
+        ? await register(String(form.get('firstName') ?? ''), String(form.get('lastName') ?? ''), String(form.get('contact') ?? ''), String(form.get('inviteCode') ?? ''), password)
+        : await login(String(form.get('firstName') ?? ''), String(form.get('lastName') ?? ''), password);
     setPlayer(next);
-    const nextState = await loadState(next.id);
+    const nextState = await loadState();
     setState(nextState);
-    setView(defaultPlayerView(deriveCompetitionState(nextState)));
+    setView(next.role === 'admin' ? 'admin' : defaultPlayerView(deriveCompetitionState(nextState)));
     setScreen('app');
   }
 
   async function refresh(nextState?: any) {
-    setState(nextState ?? await loadState(player?.id));
+    setState(nextState ?? await loadState());
   }
 
   async function saveMatches(predictions: MatchPrediction[]) {
-    setSaving('Salvestan ennustusi...');
+    setSaving('Salvestan mustandit...');
     try {
-      await refresh(await savePredictions(player.id, predictions));
-      setSaving('Salvestatud');
+      await refresh(await savePredictions(predictions));
+      setSaving('Mustand salvestatud');
     } catch (err) {
       setError(errorEt((err as Error).message));
     } finally {
@@ -59,14 +68,26 @@ export function App() {
   }
 
   async function saveBonuses(groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) {
-    setSaving('Salvestan boonusennustusi...');
+    setSaving('Salvestan boonusmustandit...');
     try {
-      await refresh(await saveBonusPrediction(player.id, groups, knockout));
-      setSaving('Salvestatud');
+      await refresh(await saveBonusPrediction(groups, knockout));
+      setSaving('Mustand salvestatud');
     } catch (err) {
       setError(errorEt((err as Error).message));
     } finally {
       setTimeout(() => setSaving(''), 1200);
+    }
+  }
+
+  async function submitFinal() {
+    setSaving('Kinnitan lõplikku ennustust...');
+    try {
+      await refresh(await finalSubmitPredictions());
+      setSaving('Lõplik ennustus kinnitatud');
+    } catch (err) {
+      setError(errorEt((err as Error).message));
+    } finally {
+      setTimeout(() => setSaving(''), 1600);
     }
   }
 
@@ -75,17 +96,18 @@ export function App() {
       setScreen('login');
       return;
     }
-    setView(defaultPlayerView(competitionState));
+    setView(player.role === 'admin' ? 'admin' : defaultPlayerView(competitionState));
     setScreen('app');
   }
 
   function logout() {
-    localStorage.removeItem('wc-player');
-    setPlayer(null);
-    setSelectedPlayerId('');
-    setView('predict');
-    setScreen('landing');
-    loadState().then(setState).catch((err) => setError(errorEt(err.message)));
+    logoutSession().finally(() => {
+      setPlayer(null);
+      setSelectedPlayerId('');
+      setView('predict');
+      setScreen('landing');
+      loadState().then(setState).catch((err) => setError(errorEt(err.message)));
+    });
   }
 
   if (screen === 'rules') return <StandaloneRules onBack={() => setScreen(player ? 'app' : 'landing')} />;
@@ -98,7 +120,7 @@ export function App() {
       {error && <div className="error">{error}</div>}
       {state.currentPlayer?.status === 'pending' && <div className="warning-box">{et.playerStatus.pending}</div>}
       {state.currentPlayer?.status === 'disabled' && <div className="error">{et.playerStatus.disabled}</div>}
-      {view === 'predict' && <MatchPredictions state={state} locked={locked} saving={saving} onSave={saveMatches} />}
+      {view === 'predict' && <MatchPredictions state={state} locked={locked} saving={saving} onSave={saveMatches} onFinalSubmit={submitFinal} />}
       {view === 'bonus' && <BonusPredictionPanel state={state} locked={locked} saving={saving} onSave={saveBonuses} />}
       {view === 'results' && <ResultsOverview state={state} player={player} onLeaderboard={() => setView('leaderboard')} onDetails={() => setView('details')} onPredictions={() => setView('predict')} />}
       {view === 'leaderboard' && <Leaderboard state={state} onSelect={(playerId) => { setSelectedPlayerId(playerId); setView('details'); }} />}
@@ -110,17 +132,36 @@ export function App() {
 }
 
 function LoginScreen({ error, onSubmit, onBack }: { error: string; onSubmit: React.FormEventHandler<HTMLFormElement>; onBack: () => void }) {
+  const [mode, setMode] = useState<'login' | 'register' | 'admin'>('login');
   return (
     <main className="login">
       <section className="login-panel">
         <p className="eyebrow">Privaatne sõprade liiga</p>
         <h1>MM 2026 ennustused</h1>
+        <div className="filters auth-tabs">
+          <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Logi sisse</button>
+          <button type="button" className={mode === 'register' ? 'active' : ''} onClick={() => setMode('register')}>Registreeru</button>
+          <button type="button" className={mode === 'admin' ? 'active' : ''} onClick={() => setMode('admin')}>Korraldajale</button>
+        </div>
         <form onSubmit={onSubmit}>
-          <label>Nimi<input name="name" required placeholder="Sinu nimi" /></label>
-          <label>Kontakt, valikuline<input name="contact" placeholder="E-post või telefon" /></label>
-          <label>Kutse kood või halduri PIN<input name="inviteCode" required placeholder="FRIENDS2026" /></label>
-          <p className="form-note">Osalustasu makstakse väljaspool rakendust isikliku ülekandega korraldajale. Kaardi-, panga- ega makseandmeid siin ei koguta.</p>
-          <button>Sisene liigasse</button>
+          <input type="hidden" name="mode" value={mode} />
+          {mode === 'admin' ? (
+            <>
+              <label>Kasutajanimi<input name="username" required placeholder="Kristo või Argo" /></label>
+              <label>Parool<input name="password" required type="password" /></label>
+            </>
+          ) : (
+            <>
+              <label>Eesnimi<input name="firstName" required placeholder="Eesnimi" /></label>
+              <label>Perekonnanimi<input name="lastName" required placeholder="Perekonnanimi" /></label>
+              {mode === 'register' && <label>Kontakt, soovi korral<input name="contact" placeholder="E-post või telefon" /></label>}
+              {mode === 'register' && <label>Liiga kutsekood<input name="inviteCode" required placeholder="FRIENDS2026" /></label>}
+              <label>Isiklik parool<input name="password" required type="password" minLength={6} /></label>
+              {mode === 'register' && <label>Korda parooli<input name="repeatPassword" required type="password" minLength={6} /></label>}
+              <p className="form-note">Osalustasu makstakse väljaspool rakendust isikliku ülekandega korraldajale. Ametlikku arvestusse pääsed pärast korraldaja kinnitust. Isiklik parool on vajalik hilisemaks sisselogimiseks.</p>
+            </>
+          )}
+          <button>{mode === 'register' ? 'Registreeru' : 'Logi sisse'}</button>
           <button type="button" className="ghost" onClick={onBack}>Tagasi</button>
         </form>
         {error && <div className="error">{error}</div>}
@@ -139,7 +180,7 @@ function Shell({ player, view, setView, onRules, onLogout, children }: { player:
     <div className="app-shell">
       <header>
         <div><p className="eyebrow">MM 2026 liiga</p><h1>{navLabel(view)}</h1></div>
-        <div className="player-menu"><span>{player?.name}</span><button className="ghost" onClick={onLogout}>Vaheta kasutajat</button></div>
+        <div className="player-menu"><span>{player?.name}</span><button className="ghost" onClick={onLogout}>Logi välja</button></div>
       </header>
       <nav>{views.map((item) => <button key={item} className={view === item ? 'active' : ''} onClick={() => item === 'rules' ? onRules() : setView(item)}>{navLabel(item)}</button>)}</nav>
       {children}

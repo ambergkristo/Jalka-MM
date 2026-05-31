@@ -4,17 +4,20 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 
 ## Current Features
 
-- Player login with name and invite code/PIN.
+- Player login with first name, surname, and personal password.
 - Public landing page with deadline-aware primary actions.
 - Mobile-readable Estonian rules view.
-- Public player registration with optional contact field and pending/approved/disabled approval status.
-- Mobile match prediction entry for all 104 World Cup 2026-shaped matches.
+- Public player registration with mandatory first name/surname, optional contact field, personal password, and pending/approved/disabled approval status.
+- Server-side HTTP-only sessions for player/admin authorization.
+- Mobile match prediction entry for all 104 World Cup 2026-shaped matches, including country selection for playoff bracket slots.
+- Draft saving plus separate final prediction confirmation for fair tie-break timestamps.
 - Bonus prediction flow for group winners, group second places, group qualifiers, knockout round participants, third-place winner, champion, and top scorer.
 - Results/overview screen for post-deadline match results, own prediction comparison, points, and leaderboard preview.
 - Admin match result entry.
 - Admin bonus-result entry, including multiple tied top scorers.
 - Admin lock/unlock and deadline configuration.
-- Admin player approval screen. Only approved players appear in the official leaderboard.
+- Named admin login for `Kristo` and `Argo`; admin actions are audited with the acting organizer identity.
+- Admin player approval screen. Only approved players with final submitted predictions appear in the official leaderboard.
 - Admin-only selected test-user removal for cleaning deployment test data before launch.
 - Runtime config boundary for `local`, `staging`, and `production` modes.
 - SQLite backup command and explicit destructive reset guardrails.
@@ -62,9 +65,9 @@ Commands:
 ## Demo Access
 
 - Player invite code: `FRIENDS2026`
-- Admin PIN: `ADMIN2026`
+- Admin accounts: `Kristo` and `Argo`. Set `BOOTSTRAP_ADMIN_KRISTO_PASSWORD` and `BOOTSTRAP_ADMIN_ARGO_PASSWORD` locally before `npm run db:migrate` or server startup.
 
-New player registrations start as `pending`. Pending players may enter and save predictions, but they do not appear in the official leaderboard until the admin approves them.
+New player registrations start as `pending`. Pending players may save drafts and confirm a final prediction, but they do not appear in the official leaderboard until the admin approves them.
 
 ## Architecture
 
@@ -74,7 +77,7 @@ New player registrations start as `pending`. Pending players may enter and save 
 - `src/client`: React + Vite PWA UI for landing, rules, prediction entry, results overview, leaderboard, and admin result entry.
 - `data/worldcup2026.sqlite`: local SQLite database created at runtime.
 
-The database schema includes `users`, `players`, `competitions`, `teams`, `groups`, `matches`, `predictions`, `prediction_submissions`, `actual_results`, `bonus_predictions`, `bonus_results`, `score_breakdowns`, `leaderboard_snapshots`, and `admin_audit_log`.
+The database schema includes `users`, `players`, `admin_accounts`, `sessions`, `competitions`, `teams`, `groups`, `matches`, `predictions`, `prediction_submissions`, `actual_results`, `bonus_predictions`, `bonus_results`, `score_breakdowns`, `leaderboard_snapshots`, and `admin_audit_log`.
 
 ## Scoring
 
@@ -93,15 +96,15 @@ The database schema includes `users`, `players`, `competitions`, `teams`, `group
 - Champion: 100 points
 - Top scorer: 50 points split evenly across tied top scorers
 
-Knockout match score points are based on the home-away bracket slot score. Team identity is handled by bonus/progression scoring.
+Knockout match score points are based on the home-away bracket slot score. Players also select predicted countries for bracket slots so playoff predictions are understandable and progression can be checked. Team identity is handled by bonus/progression scoring.
 
 ## Admin Flow
 
-Use `ADMIN2026`, open the Admin tab, enter match results, edit the prediction deadline, lock/unlock predictions, enter bonus results, approve/disable players, and trigger recalculation. Every result, deadline, bonus-result, and player-status change is written to `admin_audit_log`.
+Log in through `Korraldajale` as `Kristo` or `Argo`, open the Admin tab, enter match results, edit the prediction deadline, lock/unlock predictions, enter bonus results, approve/disable players, and trigger recalculation. Every result, deadline, bonus-result, deletion, and player-status change is written to `admin_audit_log` with the acting admin identity.
 
-The admin approval action requires the admin PIN in the admin screen and is enforced by the backend. Normal players do not see the Admin tab, and non-admin approval requests are rejected server-side.
+Admin actions require a server-side authenticated admin session. Normal players do not see the Admin tab, and non-admin admin requests are rejected server-side.
 
-Before inviting real players, remove only explicitly identified deployment test users from the Admin tab with `Eemalda testkasutaja`. The action requires the admin PIN, selecting one specific player, and typing the exact player display name before the final delete button is enabled. It deletes only the selected player's user row, match predictions, bonus predictions, submission timestamp, and score rows, then writes `player.deleted` to `admin_audit_log`. It does not reset tournament data, results, other players, or the production database.
+Before inviting real players, remove only explicitly identified deployment test users from the Admin tab with `Eemalda testkasutaja`. The action requires an authenticated named admin session, selecting one specific player, and typing the exact player display name before the final delete button is enabled. It deletes only the selected player's user row, match predictions, bonus predictions, submission timestamp, and score rows, then writes `player.deleted` to `admin_audit_log` with the acting admin identity. It does not reset tournament data, results, other players, or the production database.
 
 ## Landing, Rules, And Results Flow
 
@@ -116,15 +119,15 @@ The app derives player-facing state from the prediction deadline, manual lock fl
 
 The `Tulemused` view uses only stored manual results and score breakdowns. It shows `Tulemus sisestamata` until the admin enters a result and does not claim automated live data.
 
-Players can use `Vaheta kasutajat` to clear only the local browser identity. This does not delete the player record or any predictions.
+Players can use `Logi välja` to end the server session. This does not delete the player record or any predictions.
 
 ## Public Registration And Approval
 
 The public flow is intentionally simple for a private friends league:
 
 1. Admin shares the app URL.
-2. Player registers with name, optional contact, and the league invite code.
-3. Player can immediately fill and save match and bonus predictions.
+2. Player registers with first name, surname, optional contact, league invite code, and personal password.
+3. Player can immediately fill drafts and confirm a final match/bonus prediction.
 4. Player pays the entry fee outside the app by personal transfer to the admin.
 5. Admin confirms payment manually and approves the player in the Admin tab.
 
@@ -133,10 +136,16 @@ The app does not collect money, process card payments, connect to banks, or stor
 Player statuses:
 
 - `pending`: default for new players; predictions are saved but excluded from the official leaderboard.
-- `approved`: included in official leaderboard and ranking.
+- `approved`: included in official leaderboard and ranking only after a final prediction has been submitted.
 - `disabled`: excluded from official leaderboard and scoring views.
 
-If a pending player submits predictions before the deadline and is approved later, the original prediction submission timestamp remains the leaderboard tie-break timestamp. Approval time is not used as the tie-breaker.
+If a pending player confirms a final prediction before the deadline and is approved later, the final submission timestamp remains the leaderboard tie-break timestamp. Approval time is not used as the tie-breaker. Saving a draft alone does not create a tie-break timestamp; if a player edits after final confirmation, they must confirm again and the timestamp updates.
+
+## Match Prediction Flow
+
+Players can save progress with `Salvesta mustand`. The official entry is created only with `Kinnita lõplik ennustus`; all match predictions, required bonus fields, playoff country selections, and penalty winners for tied playoff scores must be complete.
+
+For playoff matches, players choose the predicted country for each bracket slot from the tournament team registry, then enter the score. Technical bracket labels are shown only as helper text, for example `A-grupi teine koht` or `Parim 3. koha meeskond`. Deterministic later-round slots are populated from earlier predicted winners where the bracket references a previous match.
 
 ## Bonus Prediction Flow
 
@@ -188,7 +197,7 @@ or run:
 npm run backup:db
 ```
 
-Before hosting publicly, replace simple invite-code auth, configure backups, put the API behind HTTPS, set an explicit deployment database path, and avoid treating local SQLite/demo mode as production-safe.
+Before hosting publicly, configure backups, use Postgres/Supabase, keep `SESSION_SECRET` stable, and avoid treating local SQLite/demo mode as production-safe.
 
 ## Runtime Configuration
 
@@ -198,7 +207,10 @@ Configuration is read from environment variables:
 - `DATABASE_MODE`: `sqlite` or `postgres`. Use `postgres` on Render/Supabase.
 - `SQLITE_DB_PATH` or `WORLDCUP_DB_PATH`: local SQLite file path. Defaults to `data/worldcup2026.sqlite`.
 - `DATABASE_URL`: required when `DATABASE_MODE=postgres`. Use the Supabase pooled Postgres connection string.
-- `ADMIN_SECRET` or `ADMIN_PIN`: admin secret. Required in production. Local mode falls back to the unsafe documented `ADMIN2026`.
+- `SESSION_SECRET`: required in production; signs HTTP-only server session cookies.
+- `LEAGUE_INVITE_CODE`: private registration invite code. Defaults to `FRIENDS2026` for local use.
+- `BOOTSTRAP_ADMIN_KRISTO_PASSWORD`: creates or updates the named `Kristo` admin account during migration/startup.
+- `BOOTSTRAP_ADMIN_ARGO_PASSWORD`: creates or updates the named `Argo` admin account during migration/startup.
 - `PUBLIC_APP_BASE_URL`: public URL shown in status/config contexts.
 - `TOURNAMENT_DATA_MODE`: `seeded`, `partial_official`, or `official`.
 - `ALLOW_DESTRUCTIVE_COMMANDS`: allows destructive local reset commands outside production.
@@ -219,7 +231,7 @@ npm run build
 Start API:
 
 ```bash
-APP_ENV=production ADMIN_SECRET=replace-me DATABASE_MODE=postgres DATABASE_URL=postgres://... node dist/server/index.js
+APP_ENV=production SESSION_SECRET=replace-me DATABASE_MODE=postgres DATABASE_URL=postgres://... node dist/server/index.js
 ```
 
 Render Free setup:
@@ -233,7 +245,10 @@ Render Free setup:
   - `APP_ENV=production`
   - `DATABASE_MODE=postgres`
   - `DATABASE_URL=<Supabase pooled Postgres connection string>`
-  - `ADMIN_SECRET=<strong admin secret>`
+  - `SESSION_SECRET=<strong random secret>`
+  - `LEAGUE_INVITE_CODE=<private league invite code>`
+  - `BOOTSTRAP_ADMIN_KRISTO_PASSWORD=<strong private password>`
+  - `BOOTSTRAP_ADMIN_ARGO_PASSWORD=<different strong private password>`
   - `PUBLIC_APP_BASE_URL=<Render URL>`
   - `TOURNAMENT_DATA_MODE=partial_official`
 
@@ -246,26 +261,31 @@ npm run seed:tournament-data
 
 Both commands are idempotent and non-destructive for player predictions/results. `seed:tournament-data` only updates tournament structure tables.
 
+After `db:migrate` creates the named admin accounts, remove the `BOOTSTRAP_ADMIN_*` variables from Render if you do not want future deploys to rotate those passwords. Keep `SESSION_SECRET` unchanged across deploys; changing it logs everyone out.
+
 Verify deployment:
 
 - Open `<Render URL>/api/health`.
 - Confirm `databaseMode` is `postgres`.
 - Confirm `databaseConnectivity` is `true`.
-- Confirm `adminSecretConfigured` is `true`.
+- Confirm `sessionSecretConfigured` is `true` and `namedAdminAccounts` is `2`.
 - Open the app URL and register a test player.
 - Confirm the landing page and `Reeglid` view are visible.
+- Confirm returning login requires the personal password, not only the shared invite code.
 - Save match and bonus predictions.
+- Confirm final prediction submission and timestamp.
 - Approve the player as admin.
 - Enter one manual match result and confirm `Tulemused` shows the result, own prediction, and points.
 - Restart/redeploy the Render service.
 - Confirm the player and predictions still exist.
 
-If deployment fails, check Render logs first for missing `ADMIN_SECRET`, missing `DATABASE_URL`, or Supabase connection errors. The health endpoint never returns secret values.
+If deployment fails, check Render logs first for missing `SESSION_SECRET`, missing `DATABASE_URL`, or Supabase connection errors. The health endpoint never returns secret values.
 
 Pre-launch checklist:
 
 - `APP_ENV` is not accidentally `local` in production.
-- `ADMIN_SECRET` is configured outside source code.
+- `SESSION_SECRET` is configured outside source code.
+- Kristo and Argo can each log in with separate passwords.
 - Database persistence is confirmed across deploys/restarts.
 - Backup command has been run and restore procedure is understood.
 - `npm run audit:tournament-data` passes and unresolved kickoff times are reviewed.
@@ -324,7 +344,7 @@ The app is fully functional with manual admin updates. Future adapters for API-F
 - Knockout bracket slots are structurally seeded; automatic bracket progression is only foundational.
 - External live-score providers are not implemented yet.
 - Local SQLite mode needs backups and hosting hardening before public production use.
-- Authentication is simple invite-code/PIN based for private league MVP use.
+- Authentication is simple private-league MVP auth: a shared league invite code allows registration, but returning access requires the player's own password and a server-side session.
 - Node prints an experimental warning for built-in SQLite on Node 24.
 
 ## Git Status

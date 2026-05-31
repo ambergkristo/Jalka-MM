@@ -41,6 +41,9 @@ export interface Scoreline {
 export interface MatchPrediction extends Scoreline {
   matchId: number;
   penaltyWinner?: SlotSide;
+  homeTeamPredictionId?: string;
+  awayTeamPredictionId?: string;
+  predictedWinnerTeamId?: string;
 }
 
 export interface MatchResult extends Scoreline {

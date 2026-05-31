@@ -9,20 +9,20 @@ export interface RuntimeConfig {
   databaseMode: DatabaseMode;
   sqlitePath: string;
   databaseUrl?: string;
-  adminSecret?: string;
+  sessionSecret?: string;
+  bootstrapAdminPasswords: Record<string, string | undefined>;
   publicAppBaseUrl: string;
+  leagueInviteCode: string;
   tournamentDataMode: TournamentDataMode;
   allowDestructiveCommands: boolean;
   allowUnsafeProductionSqlite: boolean;
 }
 
-const localAdminSecret = 'ADMIN2026';
-
 export function getRuntimeConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig {
   const appEnv = parseAppEnv(env.APP_ENV ?? env.WORLDCUP_MODE ?? 'local');
   const databaseMode = parseDatabaseMode(env.DATABASE_MODE ?? (env.DATABASE_URL ? 'postgres' : 'sqlite'));
-  const adminSecret = env.ADMIN_SECRET ?? env.ADMIN_PIN ?? (appEnv === 'local' ? localAdminSecret : undefined);
-  if (appEnv === 'production' && !adminSecret) throw new Error('ADMIN_SECRET is required in production mode');
+  const sessionSecret = env.SESSION_SECRET ?? (appEnv === 'local' ? 'local-dev-session-secret-change-me' : undefined);
+  if (appEnv === 'production' && !sessionSecret) throw new Error('SESSION_SECRET is required in production mode');
   if (databaseMode === 'postgres' && !env.DATABASE_URL) throw new Error('DATABASE_URL is required when DATABASE_MODE=postgres');
   const allowUnsafeProductionSqlite = env.ALLOW_UNSAFE_PRODUCTION_SQLITE === 'true';
   if (appEnv === 'production' && databaseMode === 'sqlite' && !allowUnsafeProductionSqlite) {
@@ -34,8 +34,13 @@ export function getRuntimeConfig(env: NodeJS.ProcessEnv = process.env): RuntimeC
     databaseMode,
     sqlitePath: env.SQLITE_DB_PATH ?? env.WORLDCUP_DB_PATH ?? join(process.cwd(), 'data', 'worldcup2026.sqlite'),
     databaseUrl: env.DATABASE_URL,
-    adminSecret,
+    sessionSecret,
+    bootstrapAdminPasswords: {
+      Kristo: env.BOOTSTRAP_ADMIN_KRISTO_PASSWORD,
+      Argo: env.BOOTSTRAP_ADMIN_ARGO_PASSWORD
+    },
     publicAppBaseUrl: env.PUBLIC_APP_BASE_URL ?? 'http://localhost:5174',
+    leagueInviteCode: env.LEAGUE_INVITE_CODE ?? 'FRIENDS2026',
     tournamentDataMode: parseTournamentDataMode(env.TOURNAMENT_DATA_MODE ?? 'partial_official'),
     allowDestructiveCommands: env.ALLOW_DESTRUCTIVE_COMMANDS === 'true' || env.ALLOW_PRODUCTION_RESET === 'true',
     allowUnsafeProductionSqlite

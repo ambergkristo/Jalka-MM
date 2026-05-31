@@ -16,7 +16,6 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
   const [deadlineValue, setDeadlineValue] = useState(toLocalDateTime(state.competition.prediction_deadline));
   const groupIds = state.groups.map((group: any) => String(group.id));
   const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds));
-  const [adminCode, setAdminCode] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState('');
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
 
@@ -37,7 +36,7 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
       return;
     }
     setDeleteConfirmId('');
-    run(deletePlayer(player.id, adminCode, playerId, deleteConfirmName));
+    run(deletePlayer(playerId, deleteConfirmName));
     setDeleteConfirmName('');
   };
 
@@ -52,10 +51,10 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
           <dt>Olek</dt><dd>{competitionStateLabel(competitionState)}</dd>
           <dt>Vaikimisi vaade</dt><dd>{defaultPlayerView(competitionState) === 'results' ? 'Tulemused' : 'Ennustused'}</dd>
         </dl>
+        <LaunchReadiness rows={state.playerAdmin ?? []} status={state.tournamentDataStatus} />
       </div>
       <div className="panel wide">
         <h2>Osalejate kinnitamine</h2>
-        <label>Halduri kood<input type="password" value={adminCode} onChange={(event) => setAdminCode(event.target.value)} placeholder="Halduri PIN" /></label>
         {['pending', 'approved', 'disabled'].map((status) => (
           <div className="admin-group" key={status}>
             <h3>{statusLabel(status)}</h3>
@@ -65,11 +64,11 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
                 <span>{row.contact || 'Kontakt puudub'}</span>
                 <span>{row.prediction_count}/104</span>
                 <span>{row.has_bonus_prediction ? 'Boonus salvestatud' : 'Boonus puudu'}</span>
-                <span>{row.submitted_at ? new Date(row.submitted_at).toLocaleString('et-EE') : 'Esitamata'}</span>
+                <span>{row.final_submitted_at ? new Date(row.final_submitted_at).toLocaleString('et-EE') : 'Lõplikult esitamata'}</span>
                 <span>{row.updated_at ? `Uuendatud ${new Date(row.updated_at).toLocaleDateString('et-EE')}` : 'Uuendust pole'}</span>
                 {Number(row.duplicate_name_count) > 1 && <span>Topeltnimi</span>}
-                <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'approved'))}>Kinnita</button>
-                <button className="ghost" onClick={() => run(updatePlayerStatus(player.id, adminCode, row.id, 'disabled'))}>Keela</button>
+                <button className="ghost" onClick={() => run(updatePlayerStatus(row.id, 'approved'))}>Kinnita</button>
+                <button className="ghost" onClick={() => run(updatePlayerStatus(row.id, 'disabled'))}>Keela</button>
                 {deleteConfirmId === row.id && (
                   <label className="delete-confirm">
                     Kustutamiseks sisesta täpne nimi: {row.display_name}
@@ -89,15 +88,15 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
           {state.matches.map((item: Match) => <option key={item.id} value={item.id}>#{item.id} {item.homeSlot} v {item.awaySlot}</option>)}
         </select>
         {match && <MatchCard match={match} teamsById={teamsById} value={result} disabled={false} onChange={setResult} />}
-        <button onClick={() => run(saveResult(player.id, adminCode, result))}>Salvesta tulemus</button>
+        <button onClick={() => run(saveResult(result))}>Salvesta tulemus</button>
       </div>
       <div className="panel">
         <h2>Tähtaja juhtimine</h2>
         <label>Ennustuste tähtaeg<input type="datetime-local" value={deadlineValue} onChange={(event) => setDeadlineValue(event.target.value)} /></label>
-        <button onClick={() => run(setDeadline(player.id, adminCode, new Date(deadlineValue).toISOString()))}>Salvesta tähtaeg</button>
-        <button onClick={() => run(setLock(player.id, adminCode, true))}>Lukusta ennustused</button>
-        <button onClick={() => run(setLock(player.id, adminCode, false))}>Ava ennustused</button>
-        <button onClick={() => run(recalculate(player.id, adminCode))}>Arvuta punktid uuesti</button>
+        <button onClick={() => run(setDeadline(new Date(deadlineValue).toISOString()))}>Salvesta tähtaeg</button>
+        <button onClick={() => run(setLock(true))}>Lukusta ennustused</button>
+        <button onClick={() => run(setLock(false))}>Ava ennustused</button>
+        <button onClick={() => run(recalculate())}>Arvuta punktid uuesti</button>
       </div>
       <div className="panel wide">
         <h2>Boonustulemused</h2>
@@ -121,9 +120,23 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
         <label>Maailmameister<TeamSelect disabled={false} teams={state.teams} value={bonus.knockout.championTeamId} onChange={(championTeamId) => updateKnockout({ championTeamId })} /></label>
         <label>Suurim väravakütt<input value={bonus.knockout.topScorer} onChange={(event) => updateKnockout({ topScorer: event.target.value })} placeholder="Peamine väravakütt" /></label>
         <label>Jagatud parimad väravakütid<textarea value={bonus.knockout.topScorersText ?? ''} onChange={(event) => updateKnockout({ topScorersText: event.target.value })} placeholder="Üks rea kohta või komaga eraldatud" /></label>
-        <button onClick={() => run(saveBonusResults(player.id, adminCode, bonus.groups, { ...bonus.knockout, topScorers: splitTopScorers(bonus.knockout.topScorersText || bonus.knockout.topScorer) }))}>Salvesta boonustulemused</button>
+        <button onClick={() => run(saveBonusResults(bonus.groups, { ...bonus.knockout, topScorers: splitTopScorers(bonus.knockout.topScorersText || bonus.knockout.topScorer) }))}>Salvesta boonustulemused</button>
       </div>
     </section>
+  );
+}
+
+function LaunchReadiness({ rows, status }: { rows: any[]; status: any }) {
+  const pending = rows.filter((row) => row.status === 'pending').length;
+  const approved = rows.filter((row) => row.status === 'approved').length;
+  const approvedFinal = rows.filter((row) => row.status === 'approved' && row.is_final === 1).length;
+  const incomplete = rows.filter((row) => row.status !== 'disabled' && row.is_final !== 1).length;
+  return (
+    <div className="warning-box">
+      <strong>Stardivalmiduse kontroll</strong>
+      <p>Ootel: {pending} · kinnitatud: {approved} · lõplikult esitanud kinnitatud: {approvedFinal} · esitamata/pooleli: {incomplete}</p>
+      <p>Turniiriandmed: {status?.metadata?.verificationStatus ?? 'teadmata'}. Enne lingi jagamist eemalda testkasutajad ükshaaval.</p>
+    </div>
   );
 }
 

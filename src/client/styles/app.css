@@ -179,6 +179,23 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
   box-shadow: 0 18px 42px rgba(50, 182, 106, .22);
   z-index: 10;
 }
+.sticky-actions {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  z-index: 10;
+}
+.sticky-actions button {
+  min-height: 54px;
+  box-shadow: 0 18px 42px rgba(50, 182, 106, .22);
+}
+.knockout-team-selects { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 10px; }
+.slot-helper { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; color: #f0d59a; font-size: .82rem; margin-bottom: 8px; }
+.auth-tabs { padding-top: 0; }
 .leaderboard { display: grid; gap: 8px; }
 .leader-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; padding: 12px; align-items: center; }
 .leader-row span:nth-child(3), .leader-row span:nth-child(4), .leader-row small { color: #9ca99f; font-size: .82rem; }
@@ -242,11 +259,14 @@ nav button.active, .filters button.active { background: #d7f76f; color: #07110d;
   .match-meta { font-size: .76rem; }
   .result-detail { display: grid; }
   .results-summary span { max-width: none; }
+  .sticky-actions { grid-template-columns: 1fr; }
+  .knockout-team-selects { grid-template-columns: 1fr; }
 }
 
 @media (min-width: 760px) {
   .admin-grid { grid-template-columns: 1.4fr .8fr; }
   .sticky-save { position: sticky; width: 100%; margin-top: 14px; }
+  .sticky-actions { position: sticky; width: 100%; margin-top: 14px; }
   .leader-row { grid-template-columns: 42px 1fr 120px 120px 80px 100px; }
   .check-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 }

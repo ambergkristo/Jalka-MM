@@ -3,8 +3,10 @@ import { beforeEach, describe, it } from 'node:test';
 import { join } from 'node:path';
 
 process.env.WORLDCUP_DB_PATH = join(process.cwd(), 'data', 'test-worldcup2026.sqlite');
+process.env.BOOTSTRAP_ADMIN_KRISTO_PASSWORD = 'local-kristo-test';
+process.env.BOOTSTRAP_ADMIN_ARGO_PASSWORD = 'local-argo-test';
 
-const { breakdownFor, createPlayer, deletePlayer, getLeaderboard, getState, recalculateScores, resetDevData, resetForTests, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, seedTournamentData, setDeadline, setLock, updatePlayerStatus } = await import('../server/db.js');
+const { authenticateAdmin, authenticatePlayer, breakdownFor, createPlayer, createSession, db, deletePlayer, getLeaderboard, getState, recalculateScores, registerPlayer, resetDevData, resetForTests, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, seedTournamentData, sessionFromToken, setDeadline, setLock, submitFinalPredictions, updatePlayerStatus } = await import('../server/db.js');
 
 describe('stored scoring path', () => {
   beforeEach(async () => {
@@ -49,10 +51,12 @@ describe('stored scoring path', () => {
   it('keeps leaderboard tie-break by earlier submission time', async () => {
     const early = await createPlayer('Early', 'FRIENDS2026');
     const late = await createPlayer('Late', 'FRIENDS2026');
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', early.id, 'approved');
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', late.id, 'approved');
+    await updatePlayerStatus('Kristo', early.id, 'approved');
+    await updatePlayerStatus('Kristo', late.id, 'approved');
     await savePredictions(early.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
     await savePredictions(late.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
+    await forceFinal(early.id, '2026-06-01T10:00:00.000Z');
+    await forceFinal(late.id, '2026-06-01T11:00:00.000Z');
     await saveResult('admin', { matchId: 1, homeGoals: 2, awayGoals: 0 });
     const leaderboard = await getLeaderboard();
     assert.equal(leaderboard.findIndex((row) => row.playerId === early.id) < leaderboard.findIndex((row) => row.playerId === late.id), true);
@@ -69,13 +73,14 @@ describe('stored scoring path', () => {
 
   it('updates tournament data without deleting players or predictions', async () => {
     const player = await createPlayer('Persistent Player', 'FRIENDS2026');
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', player.id, 'approved');
+    await updatePlayerStatus('Kristo', player.id, 'approved');
     await savePredictions(player.id, [{ matchId: 1, homeGoals: 2, awayGoals: 0 }]);
     const knockout = { r16TeamIds: ['A1'], qfTeamIds: ['A1'], sfTeamIds: ['A1'], finalTeamIds: ['A1'], thirdPlaceWinnerTeamId: 'A2', championTeamId: 'A1', topScorer: 'Player A' };
     await saveBonusPrediction(player.id, [{ groupId: 'A', winnerTeamId: 'A1', secondTeamId: 'A2', qualifierTeamIds: ['A1', 'A2'] }], knockout);
 
     await seedTournamentData();
 
+    await forceFinal(player.id, '2026-06-01T10:00:00.000Z');
     assert.equal((await getLeaderboard()).some((row) => row.playerId === player.id), true);
     await saveResult('admin', { matchId: 1, homeGoals: 2, awayGoals: 0 });
     assert.equal((await breakdownFor(player.id)).some((row) => row.item_type === 'match' && row.item_id === '1'), true);
@@ -87,14 +92,14 @@ describe('stored scoring path', () => {
 
   it('refuses destructive reset in production mode', async () => {
     const previous = process.env.APP_ENV;
-    const previousSecret = process.env.ADMIN_SECRET;
+    const previousSecret = process.env.SESSION_SECRET;
     try {
       process.env.APP_ENV = 'production';
-      process.env.ADMIN_SECRET = 'production-secret';
+      process.env.SESSION_SECRET = 'production-session-secret';
       await assert.rejects(() => resetDevData({ allowDestructive: true, confirmation: 'DELETE_LOCAL_DATA' }), /production/i);
     } finally {
       if (previous === undefined) delete process.env.APP_ENV; else process.env.APP_ENV = previous;
-      if (previousSecret === undefined) delete process.env.ADMIN_SECRET; else process.env.ADMIN_SECRET = previousSecret;
+      if (previousSecret === undefined) delete process.env.SESSION_SECRET; else process.env.SESSION_SECRET = previousSecret;
     }
   });
 
@@ -111,23 +116,23 @@ describe('stored scoring path', () => {
     await savePredictions(player.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
     const before = await getState(player.id);
     const submittedAt = String(before.currentPlayer ? before.predictions[0].updated_at : '');
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', player.id, 'approved');
-    assert.equal((await getLeaderboard()).some((row) => row.playerId === player.id), true);
+    await updatePlayerStatus('Kristo', player.id, 'approved');
+    assert.equal((await getLeaderboard()).some((row) => row.playerId === player.id), false);
     assert.equal(String((await getState(player.id)).predictions[0].updated_at), submittedAt);
   });
 
   it('rejects non-admin approval attempts and excludes disabled players', async () => {
     const player = await createPlayer('Needs Admin', 'FRIENDS2026');
-    await assert.rejects(() => updatePlayerStatus(player.id, 'ADMIN2026', player.id, 'approved'), /Admin access required/);
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', player.id, 'approved');
+    await updatePlayerStatus('Kristo', player.id, 'approved');
+    await forceFinal(player.id, '2026-06-01T10:00:00.000Z');
     assert.equal((await getLeaderboard()).some((row) => row.playerId === player.id), true);
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', player.id, 'disabled');
+    await updatePlayerStatus('Kristo', player.id, 'disabled');
     assert.equal((await getLeaderboard()).some((row) => row.playerId === player.id), false);
   });
 
   it('keeps player approval statuses during tournament data updates', async () => {
     const player = await createPlayer('Status Stable', 'FRIENDS2026');
-    await updatePlayerStatus('admin-admin', 'ADMIN2026', player.id, 'approved');
+    await updatePlayerStatus('Kristo', player.id, 'approved');
     await seedTournamentData();
     assert.equal((await getState(player.id)).currentPlayer?.status, 'approved');
   });
@@ -137,13 +142,46 @@ describe('stored scoring path', () => {
     const keep = await createPlayer('Keep Test', 'FRIENDS2026');
     await savePredictions(remove.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
     await savePredictions(keep.id, [{ matchId: 1, homeGoals: 2, awayGoals: 0 }]);
-    await assert.rejects(() => deletePlayer(keep.id, 'ADMIN2026', remove.id, 'Remove Test'), /Admin access required/);
-    await assert.rejects(() => deletePlayer('admin-admin', 'ADMIN2026', remove.id, 'wrong name'), /confirmation/i);
+    await assert.rejects(() => deletePlayer('Kristo', remove.id, 'wrong name'), /confirmation/i);
 
-    const state = await deletePlayer('admin-admin', 'ADMIN2026', remove.id, 'Remove Test');
+    const state = await deletePlayer('Kristo', remove.id, 'Remove Test');
 
     assert.equal(state.playerAdmin.some((row: any) => row.id === remove.id), false);
     assert.equal((await getState(keep.id)).predictions.length, 1);
     assert.equal((await getState(remove.id)).currentPlayer, null);
   });
+
+  it('registers full-name players with hashed credentials and rejects duplicate names', async () => {
+    const player = await registerPlayer({ firstName: 'Mari', lastName: 'Tamm', contact: 'mari@example.test', inviteCode: 'FRIENDS2026', password: 'secret1' });
+    assert.equal(player.name, 'Mari Tamm');
+    await assert.rejects(() => registerPlayer({ firstName: 'Mari', lastName: 'Tamm', inviteCode: 'FRIENDS2026', password: 'secret2' }), /full name/);
+    await assert.rejects(() => authenticatePlayer('Mari', 'Tamm', 'FRIENDS2026'), /Invalid credentials/);
+    assert.equal((await authenticatePlayer('Mari', 'Tamm', 'secret1')).id, player.id);
+    const user = await db.one('SELECT password_hash FROM users WHERE id = ?', [player.id]);
+    assert.notEqual(user?.password_hash, 'secret1');
+    assert.match(String(user?.password_hash), /^scrypt\$/);
+  });
+
+  it('bootstraps named admins and creates server sessions', async () => {
+    const kristo = await authenticateAdmin('Kristo', 'local-kristo-test');
+    const argo = await authenticateAdmin('Argo', 'local-argo-test');
+    assert.equal(kristo.name, 'Kristo');
+    assert.equal(argo.name, 'Argo');
+    await assert.rejects(() => authenticateAdmin('Kristo', 'wrong-password'), /Invalid admin credentials/);
+    const session = await createSession(kristo);
+    assert.equal((await sessionFromToken(session.token))?.name, 'Kristo');
+    const admin = await db.one('SELECT password_hash FROM admin_accounts WHERE username = ?', ['Kristo']);
+    assert.notEqual(admin?.password_hash, 'local-kristo-test');
+  });
+
+  it('draft save does not set final submission and incomplete final submit is rejected', async () => {
+    const player = await createPlayer('Draft Only', 'FRIENDS2026');
+    await savePredictions(player.id, [{ matchId: 1, homeGoals: 1, awayGoals: 0 }]);
+    assert.equal((await getState(player.id)).submission, null);
+    await assert.rejects(() => submitFinalPredictions(player.id), /incomplete/i);
+  });
 });
+
+async function forceFinal(playerId: string, submittedAt: string) {
+  await db.run('INSERT OR REPLACE INTO prediction_submissions (player_id, submitted_at, final_submitted_at, snapshot_hash, revision, is_final) VALUES (?, ?, ?, ?, ?, ?)', [playerId, submittedAt, submittedAt, `test-${playerId}`, 1, 1]);
+}
