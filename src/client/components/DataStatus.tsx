@@ -4,9 +4,10 @@ export function UserDataStatus({ status }: { status: any }) {
   const warning = metadata.verificationStatus === 'official' ? '' : 'Turniiriandmed ei ole veel täielikult ametlikult lõplikud.';
   return (
     <div className={`data-status ${metadata.verificationStatus === 'official' ? 'official' : 'warning'}`} title={warning}>
-      Turniiriandmed: <strong>{statusLabel(metadata.verificationStatus)}</strong>
-      {metadata.sourceRetrievedAt ? ` · uuendatud ${new Date(metadata.sourceRetrievedAt).toLocaleDateString('et-EE')}` : ''}
-      {warning && <span> · {warning}</span>}
+      <span>Turniiriandmed</span>
+      <strong>{statusLabel(metadata.verificationStatus)}</strong>
+      {metadata.sourceRetrievedAt && <small>uuendatud {new Date(metadata.sourceRetrievedAt).toLocaleDateString('et-EE')}</small>}
+      {warning && <small>{warning}</small>}
     </div>
   );
 }
@@ -17,8 +18,13 @@ export function AdminDataStatus({ status }: { status: any }) {
   if (!metadata || !validation) return <div className="empty">Turniiriandmete staatust ei ole saadaval.</div>;
   return (
     <article className="panel data-panel">
-      <h2>Turniiriandmete staatus</h2>
-      <div className={`status-pill ${metadata.verificationStatus === 'official' ? 'official' : 'warning'}`}>{statusLabel(metadata.verificationStatus)}</div>
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Andmed</p>
+          <h2>Turniiriandmete staatus</h2>
+        </div>
+        <div className={`status-pill ${metadata.verificationStatus === 'official' ? 'official' : 'warning'}`}>{statusLabel(metadata.verificationStatus)}</div>
+      </div>
       <dl className="status-grid">
         <dt>Allikas</dt><dd>{metadata.sourceName}</dd>
         <dt>Viide</dt><dd>{metadata.sourceReference}</dd>
