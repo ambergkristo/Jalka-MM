@@ -180,8 +180,75 @@ describe('stored scoring path', () => {
     assert.equal((await getState(player.id)).submission, null);
     await assert.rejects(() => submitFinalPredictions(player.id), /incomplete/i);
   });
+
+  it('accepts a complete intentionally inconsistent playoff country prediction', async () => {
+    const player = await createPlayer('Independent Playoff', 'FRIENDS2026');
+    await savePredictions(player.id, await completePredictions());
+    const { groups, knockout } = await completeBonus();
+    await saveBonusPrediction(player.id, groups, knockout);
+
+    await submitFinalPredictions(player.id);
+
+    assert.equal((await getState(player.id)).submission?.is_final, 1);
+  });
+
+  it('rejects same-country and missing-penalty knockout final submissions', async () => {
+    const duplicate = await createPlayer('Duplicate Knockout', 'FRIENDS2026');
+    const duplicatePredictions = await completePredictions();
+    const firstKnockout = duplicatePredictions.find((prediction) => prediction.matchId === 73)!;
+    firstKnockout.awayTeamPredictionId = firstKnockout.homeTeamPredictionId;
+    firstKnockout.predictedWinnerTeamId = undefined;
+    await savePredictions(duplicate.id, duplicatePredictions);
+    const duplicateBonus = await completeBonus();
+    await saveBonusPrediction(duplicate.id, duplicateBonus.groups, duplicateBonus.knockout);
+    await assert.rejects(() => submitFinalPredictions(duplicate.id), /Same country/);
+
+    const tied = await createPlayer('Missing Penalty', 'FRIENDS2026');
+    const tiedPredictions = await completePredictions();
+    const tiedKnockout = tiedPredictions.find((prediction) => prediction.matchId === 73)!;
+    tiedKnockout.homeGoals = 1;
+    tiedKnockout.awayGoals = 1;
+    tiedKnockout.penaltyWinner = undefined;
+    tiedKnockout.predictedWinnerTeamId = undefined;
+    await savePredictions(tied.id, tiedPredictions);
+    const tiedBonus = await completeBonus();
+    await saveBonusPrediction(tied.id, tiedBonus.groups, tiedBonus.knockout);
+    await assert.rejects(() => submitFinalPredictions(tied.id), /Penalty winner/);
+  });
 });
 
 async function forceFinal(playerId: string, submittedAt: string) {
   await db.run('INSERT OR REPLACE INTO prediction_submissions (player_id, submitted_at, final_submitted_at, snapshot_hash, revision, is_final) VALUES (?, ?, ?, ?, ?, ?)', [playerId, submittedAt, submittedAt, `test-${playerId}`, 1, 1]);
+}
+
+async function completePredictions(): Promise<any[]> {
+  const matches = await db.all('SELECT id, stage FROM matches ORDER BY id');
+  const teamIds = (await db.all('SELECT id FROM teams ORDER BY id')).map((row) => String(row.id));
+  return matches.map((match, index) => {
+    if (String(match.stage) === 'GROUP') return { matchId: Number(match.id), homeGoals: 1, awayGoals: 0 };
+    const homeTeamPredictionId = teamIds[(index * 3) % teamIds.length];
+    const awayTeamPredictionId = teamIds[(index * 3 + 7) % teamIds.length];
+    return { matchId: Number(match.id), homeGoals: 1, awayGoals: 0, homeTeamPredictionId, awayTeamPredictionId, predictedWinnerTeamId: homeTeamPredictionId };
+  });
+}
+
+async function completeBonus() {
+  const groups = [];
+  for (const group of await db.all('SELECT id FROM groups ORDER BY id')) {
+    const teams = await db.all('SELECT id FROM teams WHERE group_id = ? ORDER BY id LIMIT 4', [String(group.id)]);
+    groups.push({ groupId: String(group.id), winnerTeamId: String(teams[0].id), secondTeamId: String(teams[1].id), qualifierTeamIds: [String(teams[0].id), String(teams[1].id)] });
+  }
+  const teamIds = (await db.all('SELECT id FROM teams ORDER BY id')).map((row) => String(row.id));
+  return {
+    groups,
+    knockout: {
+      r16TeamIds: teamIds.slice(0, 16),
+      qfTeamIds: teamIds.slice(8, 16),
+      sfTeamIds: teamIds.slice(16, 20),
+      finalTeamIds: teamIds.slice(20, 22),
+      thirdPlaceWinnerTeamId: teamIds[23],
+      championTeamId: teamIds[24],
+      topScorer: 'Test Player'
+    }
+  };
 }

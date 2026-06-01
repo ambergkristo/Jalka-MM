@@ -96,7 +96,7 @@ The database schema includes `users`, `players`, `admin_accounts`, `sessions`, `
 - Champion: 100 points
 - Top scorer: 50 points split evenly across tied top scorers
 
-Knockout match score points are based on the home-away bracket slot score. Players also select predicted countries for bracket slots so playoff predictions are understandable and progression can be checked. Team identity is handled by bonus/progression scoring.
+Knockout match score points are based on the home-away bracket slot score. Players also select predicted countries for each playoff match card so the prediction is readable, but these match-card country choices do not affect match-score points and are not forced to form a coherent bracket tree. Team identity points are handled separately in the bonus/progression scoring categories.
 
 ## Admin Flow
 
@@ -145,7 +145,7 @@ If a pending player confirms a final prediction before the deadline and is appro
 
 Players can save progress with `Salvesta mustand`. The official entry is created only with `Kinnita lõplik ennustus`; all match predictions, required bonus fields, playoff country selections, and penalty winners for tied playoff scores must be complete.
 
-For playoff matches, players choose the predicted country for each bracket slot from the tournament team registry, then enter the score. Technical bracket labels are shown only as helper text, for example `A-grupi teine koht` or `Parim 3. koha meeskond`. Deterministic later-round slots are populated from earlier predicted winners where the bracket references a previous match.
+For playoff matches, players choose the predicted country for each match-side slot from the tournament team registry, then enter the score. Technical bracket labels are shown only as helper text, for example `A-grupi teine koht`, `Mängu 73 võitja`, or `Parim 3. koha meeskond`. Every playoff match from `1/16-finaalid` through `Finaal` is independently editable: later-round country choices are not auto-populated from earlier predicted winners and are not required to be logically consistent with earlier rounds or bonus selections.
 
 ## Bonus Prediction Flow
 

@@ -473,10 +473,16 @@ async function assertCompletePrediction(playerId: string) {
   const matchCount = Number((await one('SELECT COUNT(*) AS count FROM matches'))?.count ?? 0);
   const predictionCount = Number((await one('SELECT COUNT(*) AS count FROM predictions WHERE player_id = ?', [playerId]))?.count ?? 0);
   if (matchCount === 0 || predictionCount < matchCount) throw new Error('Final prediction is incomplete');
-  const missingKnockoutTeams = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND (home_team_prediction_id IS NULL OR away_team_prediction_id IS NULL OR predicted_winner_team_id IS NULL)", [playerId]))?.count ?? 0);
+  const missingKnockoutTeams = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND (home_team_prediction_id IS NULL OR away_team_prediction_id IS NULL)", [playerId]))?.count ?? 0);
   if (missingKnockoutTeams > 0) throw new Error('Final prediction is incomplete');
+  const duplicateKnockoutTeam = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND home_team_prediction_id = away_team_prediction_id", [playerId]))?.count ?? 0);
+  if (duplicateKnockoutTeam > 0) throw new Error('Same country cannot be selected twice in one knockout match');
   const tiedWithoutWinner = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND home_goals = away_goals AND penalty_winner IS NULL", [playerId]))?.count ?? 0);
   if (tiedWithoutWinner > 0) throw new Error('Penalty winner is required');
+  const invalidPenaltyWinner = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND home_goals = away_goals AND penalty_winner IS NOT NULL AND penalty_winner NOT IN ('HOME', 'AWAY')", [playerId]))?.count ?? 0);
+  if (invalidPenaltyWinner > 0) throw new Error('Penalty winner must be one of the selected match teams');
+  const missingPredictedWinner = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND predicted_winner_team_id IS NULL", [playerId]))?.count ?? 0);
+  if (missingPredictedWinner > 0) throw new Error('Final prediction is incomplete');
   const bonus = await one('SELECT * FROM bonus_predictions WHERE player_id = ?', [playerId]);
   if (!bonus) throw new Error('Final prediction is incomplete');
   const groups: GroupBonusPrediction[] = JSON.parse(String(bonus.group_json));

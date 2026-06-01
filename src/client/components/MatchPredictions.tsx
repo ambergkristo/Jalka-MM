@@ -2,15 +2,15 @@ import { useMemo, useState } from 'react';
 import type { Match, MatchPrediction, Team } from '../../domain/types.js';
 import { formatEstoniaKickoffTime, formatMatchDate } from '../lib/date.js';
 import { et, teamNameEt } from '../lib/messages.js';
-import { UserDataStatus } from './DataStatus.js';
 import { DeadlineBanner } from './DeadlineBanner.js';
+import { UserDataStatus } from './DataStatus.js';
 import { TeamBadge } from './TeamBadge.js';
 
 export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit }: { state: any; locked: boolean; saving: string; onSave: (predictions: MatchPrediction[]) => void; onFinalSubmit: () => void }) {
   const existing = new Map(state.predictions.map((row: any) => [Number(row.match_id), row]));
   const [stage, setStage] = useState('GROUP');
   const teamsById = useMemo(() => new Map(state.teams.map((team: any) => [team.id, team as Team])), [state.teams]);
-  const [draft, setDraft] = useState<Record<number, MatchPrediction>>(() => applyPropagation(Object.fromEntries(state.matches.map((match: Match | any) => [match.id, {
+  const [draft, setDraft] = useState<Record<number, MatchPrediction>>(() => Object.fromEntries(state.matches.map((match: Match | any) => [match.id, normalizeMatchPrediction({
     matchId: match.id,
     homeGoals: Number(existing.get(match.id)?.home_goals ?? 0),
     awayGoals: Number(existing.get(match.id)?.away_goals ?? 0),
@@ -18,14 +18,14 @@ export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit 
     homeTeamPredictionId: existing.get(match.id)?.home_team_prediction_id ?? match.homeTeamId ?? match.home_team_id ?? undefined,
     awayTeamPredictionId: existing.get(match.id)?.away_team_prediction_id ?? match.awayTeamId ?? match.away_team_id ?? undefined,
     predictedWinnerTeamId: existing.get(match.id)?.predicted_winner_team_id ?? undefined
-  }])) as Record<number, MatchPrediction>, state.matches));
+  })])) as Record<number, MatchPrediction>);
   const matches = state.matches.filter((match: Match) => match.stage === stage);
   const completed = Object.values(draft).filter((prediction) => Number.isInteger(prediction.homeGoals) && Number.isInteger(prediction.awayGoals)).length;
   const groupedMatches = stage === 'GROUP' ? groupMatches(matches) : [[stageLabel(stage), matches]] as Array<[string, Match[]]>;
   const submission = state.submission;
 
   function updateMatch(matchId: number, value: MatchPrediction) {
-    setDraft((current) => applyPropagation({ ...current, [matchId]: value }, state.matches));
+    setDraft((current) => ({ ...current, [matchId]: normalizeMatchPrediction(value) }));
   }
 
   return (
@@ -70,6 +70,8 @@ export function MatchCard({ match, value, disabled, onChange, teams, teamsById =
   const groupId = match.groupId ?? match.group_id;
   const helperHome = slotLabelEt(match.homeSlot ?? match.home_slot);
   const helperAway = slotLabelEt(match.awaySlot ?? match.away_slot);
+  const validation = isKnockout ? knockoutValidation(value) : [];
+
   return (
     <article className="match-card">
       <div className="match-meta">
@@ -79,8 +81,8 @@ export function MatchCard({ match, value, disabled, onChange, teams, teamsById =
       {isKnockout && <div className="slot-helper"><span>{helperHome}</span><span>{helperAway}</span></div>}
       {isKnockout && teams && (
         <div className="knockout-team-selects">
-          <TeamSearch label="Kodutiim" teams={teams} value={value.homeTeamPredictionId} disabled={disabled || isPreviousMatchSlot(match.homeSlot ?? match.home_slot)} onChange={(teamId) => onChange({ ...value, homeTeamPredictionId: teamId, penaltyWinner: undefined, predictedWinnerTeamId: undefined })} />
-          <TeamSearch label="Võõrsiltiim" teams={teams} value={value.awayTeamPredictionId} disabled={disabled || isPreviousMatchSlot(match.awaySlot ?? match.away_slot)} onChange={(teamId) => onChange({ ...value, awayTeamPredictionId: teamId, penaltyWinner: undefined, predictedWinnerTeamId: undefined })} />
+          <CountryPicker label="Kodumeeskond" teams={teams} value={value.homeTeamPredictionId} disabled={disabled} onChange={(teamId) => onChange({ ...value, homeTeamPredictionId: teamId, penaltyWinner: clearPenaltyIfMissingSide({ ...value, homeTeamPredictionId: teamId }) })} />
+          <CountryPicker label="Võõrsilmeeskond" teams={teams} value={value.awayTeamPredictionId} disabled={disabled} onChange={(teamId) => onChange({ ...value, awayTeamPredictionId: teamId, penaltyWinner: clearPenaltyIfMissingSide({ ...value, awayTeamPredictionId: teamId }) })} />
         </div>
       )}
       <div className="score-row">
@@ -89,79 +91,101 @@ export function MatchCard({ match, value, disabled, onChange, teams, teamsById =
         <input disabled={disabled} type="number" min="0" value={value.awayGoals} onChange={(event) => onChange({ ...value, awayGoals: Number(event.target.value), penaltyWinner: undefined })} />
         <TeamBadge team={awayTeam} slotLabel={helperAway} align="right" />
       </div>
-      {tiedKnockout && <select disabled={disabled} value={value.penaltyWinner ?? ''} onChange={(event) => onChange({ ...value, penaltyWinner: event.target.value as MatchPrediction['penaltyWinner'] })}>
+      {validation.length > 0 && <div className="field-note missing">{validation[0]}</div>}
+      {tiedKnockout && <select disabled={disabled || !value.homeTeamPredictionId || !value.awayTeamPredictionId || value.homeTeamPredictionId === value.awayTeamPredictionId} value={value.penaltyWinner ?? ''} onChange={(event) => onChange({ ...value, penaltyWinner: event.target.value as MatchPrediction['penaltyWinner'] })}>
         <option value="">Penaltiseeria võitja</option><option value="HOME">{homeTeam ? teamNameEt(homeTeam) : helperHome}</option><option value="AWAY">{awayTeam ? teamNameEt(awayTeam) : helperAway}</option>
       </select>}
-      {isKnockout && value.predictedWinnerTeamId && <p className="field-note">Edasipääseja: {teamNameEt(teamsById.get(value.predictedWinnerTeamId))}</p>}
+      {isKnockout && value.predictedWinnerTeamId && <p className="field-note">Edasipääseja selles mängus: {teamNameEt(teamsById.get(value.predictedWinnerTeamId))}</p>}
     </article>
   );
 }
 
-function TeamSearch({ label, teams, value, disabled, onChange }: { label: string; teams: Team[]; value?: string; disabled: boolean; onChange: (teamId: string | undefined) => void }) {
+function CountryPicker({ label, teams, value, disabled, onChange }: { label: string; teams: Team[]; value?: string; disabled: boolean; onChange: (teamId: string | undefined) => void }) {
   const selected = teams.find((team: any) => team.id === value);
-  const listId = `${label.replace(/\s+/g, '-')}-teams`;
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const options = useMemo(() => {
+    const text = query.trim().toLocaleLowerCase('et-EE');
+    const filtered = text ? teams.filter((team: any) => `${teamNameEt(team)} ${team.code}`.toLocaleLowerCase('et-EE').includes(text)) : teams;
+    return filtered.slice(0, 14);
+  }, [query, teams]);
+
   return (
-    <label>{label}
-      <input disabled={disabled} list={listId} value={selected ? `${teamNameEt(selected)} (${selected.code})` : ''} placeholder="Otsi riiki" onChange={(event) => {
-        const text = event.target.value.toLocaleLowerCase('et-EE');
-        const team = teams.find((item: any) => `${teamNameEt(item)} (${item.code})`.toLocaleLowerCase('et-EE') === text || teamNameEt(item).toLocaleLowerCase('et-EE') === text);
-        onChange(team?.id);
-      }} />
-      <datalist id={listId}>{teams.map((team: any) => <option key={team.id} value={`${teamNameEt(team)} (${team.code})`} />)}</datalist>
-      {selected && <TeamBadge team={selected} />}
+    <label className="country-picker">{label}
+      <button type="button" className="country-picker-trigger ghost" disabled={disabled} onClick={() => setOpen((current) => !current)}>
+        {selected ? <TeamBadge team={selected} /> : <span>Vali riik</span>}
+      </button>
+      {open && !disabled && (
+        <div className="country-picker-menu">
+          <input
+            value={query}
+            autoFocus
+            placeholder="Otsi riiki"
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setOpen(false);
+              if (event.key === 'Enter' && options[0]) {
+                event.preventDefault();
+                onChange(options[0].id);
+                setOpen(false);
+                setQuery('');
+              }
+            }}
+          />
+          <div className="country-picker-options">
+            {options.map((team: any) => (
+              <button key={team.id} type="button" className="country-option ghost" onClick={() => { onChange(team.id); setOpen(false); setQuery(''); }}>
+                <TeamBadge team={team} />
+              </button>
+            ))}
+            {options.length === 0 && <p className="muted">Riiki ei leitud.</p>}
+          </div>
+        </div>
+      )}
     </label>
   );
 }
 
-function applyPropagation(draft: Record<number, MatchPrediction>, matches: any[]): Record<number, MatchPrediction> {
-  const next = { ...draft };
-  const matchById = new Map(matches.map((match) => [Number(match.id), match]));
-  for (const match of matches.filter((item) => item.stage !== 'GROUP').sort((a, b) => Number(a.id) - Number(b.id))) {
-    const current = next[match.id];
-    if (!current) continue;
-    next[match.id] = { ...current, predictedWinnerTeamId: predictedWinner(current) };
-    for (const later of matches.filter((item) => Number(item.id) > Number(match.id))) {
-      const laterPrediction = next[later.id];
-      if (!laterPrediction) continue;
-      if (slotReferences(later.homeSlot ?? later.home_slot, match.id, 'Winner')) next[later.id] = { ...laterPrediction, homeTeamPredictionId: next[match.id].predictedWinnerTeamId };
-      if (slotReferences(later.awaySlot ?? later.away_slot, match.id, 'Winner')) next[later.id] = { ...next[later.id], awayTeamPredictionId: next[match.id].predictedWinnerTeamId };
-      if (slotReferences(later.homeSlot ?? later.home_slot, match.id, 'Loser')) next[later.id] = { ...laterPrediction, homeTeamPredictionId: predictedLoser(next[match.id]) };
-      if (slotReferences(later.awaySlot ?? later.away_slot, match.id, 'Loser')) next[later.id] = { ...next[later.id], awayTeamPredictionId: predictedLoser(next[match.id]) };
-    }
-    if (!matchById.has(match.id)) continue;
+// Playoff country selections are independent prediction fields. They make the
+// match card understandable, but they are not a bracket tree and are not used
+// for match-score points; those remain home/away slot score points.
+export function normalizeMatchPrediction(prediction: MatchPrediction): MatchPrediction {
+  const next = { ...prediction };
+  if (next.homeTeamPredictionId && next.awayTeamPredictionId && next.homeTeamPredictionId === next.awayTeamPredictionId) {
+    next.predictedWinnerTeamId = undefined;
+    return next;
   }
+  if (next.homeGoals > next.awayGoals) next.predictedWinnerTeamId = next.homeTeamPredictionId;
+  else if (next.awayGoals > next.homeGoals) next.predictedWinnerTeamId = next.awayTeamPredictionId;
+  else if (next.penaltyWinner === 'HOME') next.predictedWinnerTeamId = next.homeTeamPredictionId;
+  else if (next.penaltyWinner === 'AWAY') next.predictedWinnerTeamId = next.awayTeamPredictionId;
+  else next.predictedWinnerTeamId = undefined;
   return next;
 }
 
-function predictedWinner(prediction: MatchPrediction): string | undefined {
-  if (prediction.homeGoals > prediction.awayGoals) return prediction.homeTeamPredictionId;
-  if (prediction.awayGoals > prediction.homeGoals) return prediction.awayTeamPredictionId;
-  if (prediction.penaltyWinner === 'HOME') return prediction.homeTeamPredictionId;
-  if (prediction.penaltyWinner === 'AWAY') return prediction.awayTeamPredictionId;
-  return undefined;
+function clearPenaltyIfMissingSide(prediction: MatchPrediction): MatchPrediction['penaltyWinner'] {
+  if (prediction.penaltyWinner === 'HOME' && !prediction.homeTeamPredictionId) return undefined;
+  if (prediction.penaltyWinner === 'AWAY' && !prediction.awayTeamPredictionId) return undefined;
+  return prediction.penaltyWinner;
 }
 
-function predictedLoser(prediction: MatchPrediction): string | undefined {
-  const winner = predictedWinner(prediction);
-  if (!winner) return undefined;
-  return winner === prediction.homeTeamPredictionId ? prediction.awayTeamPredictionId : prediction.homeTeamPredictionId;
+export function knockoutValidation(prediction: MatchPrediction): string[] {
+  const errors: string[] = [];
+  if (!prediction.homeTeamPredictionId) errors.push('Vali selle mängu kodumeeskond.');
+  if (!prediction.awayTeamPredictionId) errors.push('Vali selle mängu võõrsilmeeskond.');
+  if (prediction.homeTeamPredictionId && prediction.awayTeamPredictionId && prediction.homeTeamPredictionId === prediction.awayTeamPredictionId) errors.push('Samas mängus ei saa mõlemal poolel olla sama riik.');
+  if (prediction.homeGoals === prediction.awayGoals && !prediction.penaltyWinner) errors.push('Viigilise tulemuse korral vali penaltiseeria võitja.');
+  if (prediction.homeGoals === prediction.awayGoals && prediction.penaltyWinner && !['HOME', 'AWAY'].includes(prediction.penaltyWinner)) errors.push('Penaltiseeria võitja peab olema üks selle mängu riikidest.');
+  return errors;
 }
 
-function slotReferences(slot: string, matchId: number, type: 'Winner' | 'Loser') {
-  return String(slot).toLowerCase() === `${type.toLowerCase()} match ${matchId}`;
-}
-
-function isPreviousMatchSlot(slot: string) {
-  return /^(Winner|Loser) Match \d+$/i.test(String(slot));
-}
-
-function isComplete(draft: Record<number, MatchPrediction>, matches: any[]): boolean {
+export function isComplete(draft: Record<number, MatchPrediction>, matches: any[]): boolean {
   return matches.every((match) => {
     const prediction = draft[match.id];
     if (!prediction || !Number.isInteger(prediction.homeGoals) || !Number.isInteger(prediction.awayGoals)) return false;
     if (match.stage !== 'GROUP') {
-      if (!prediction.homeTeamPredictionId || !prediction.awayTeamPredictionId || !prediction.predictedWinnerTeamId) return false;
-      if (prediction.homeGoals === prediction.awayGoals && !prediction.penaltyWinner) return false;
+      if (knockoutValidation(prediction).length > 0) return false;
+      if (!normalizeMatchPrediction(prediction).predictedWinnerTeamId) return false;
     }
     return true;
   });
