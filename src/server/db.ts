@@ -493,7 +493,8 @@ async function predictionSnapshotHash(playerId: string): Promise<string> {
 
 async function getPlayerAdminRows() {
   return all(`
-    SELECT players.id, players.display_name, players.created_at, players.updated_at, players.approved_at, players.status, players.contact, players.admin_note,
+    SELECT players.id, players.display_name, players.first_name, players.last_name, players.normalized_full_name, players.legacy_name_only,
+      players.created_at, players.updated_at, players.approved_at, players.status, players.contact, players.admin_note,
       prediction_submissions.final_submitted_at,
       prediction_submissions.is_final,
       prediction_submissions.revision,
