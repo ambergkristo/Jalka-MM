@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { DeletePlayerDialog, ParticipantManagement } from '../client/components/AdminPanel.js';
+import { AdminResultEditor, DeletePlayerDialog, ParticipantManagement } from '../client/components/AdminPanel.js';
 
 const rows = [
   {
@@ -73,5 +73,40 @@ describe('admin participant management UI', () => {
     expect(html).toContain('Kinnita kustutamine');
     expect(html).toContain('disabled=""');
     expect(html).toContain('Mari Mets');
+  });
+});
+
+describe('admin result entry UI', () => {
+  it('does not treat empty score fields as an accidental 0:0 result', () => {
+    const html = renderToStaticMarkup(
+      <AdminResultEditor
+        match={{ id: 1, stage: 'GROUP', home_team_id: 'A1', away_team_id: 'B2', home_slot: 'A1', away_slot: 'B2' }}
+        teamsById={new Map()}
+        result={{ matchId: 1, homeGoals: '', awayGoals: '', penaltyWinner: '' }}
+        hasResult={false}
+        onChange={() => undefined}
+        onSave={() => undefined}
+        onClear={() => undefined}
+      />
+    );
+    expect(html).toContain('Tulemus sisestamata');
+    expect(html).toContain('disabled=""');
+    expect(html).not.toContain('Sisestatud tulemus: 0 : 0');
+  });
+
+  it('shows a real 0:0 result as completed and clearable', () => {
+    const html = renderToStaticMarkup(
+      <AdminResultEditor
+        match={{ id: 1, stage: 'GROUP', home_team_id: 'A1', away_team_id: 'B2', home_slot: 'A1', away_slot: 'B2' }}
+        teamsById={new Map()}
+        result={{ matchId: 1, homeGoals: '0', awayGoals: '0', penaltyWinner: '' }}
+        hasResult
+        onChange={() => undefined}
+        onSave={() => undefined}
+        onClear={() => undefined}
+      />
+    );
+    expect(html).toContain('Sisestatud tulemus: 0 : 0');
+    expect(html).toContain('Tühjenda tulemus');
   });
 });

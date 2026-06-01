@@ -358,6 +358,19 @@ nav button.active, .filters button.active {
 .mini-leader { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--border); }
 .mini-leader strong { color: #d7f76f; }
 .panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-result-editor { display: grid; gap: 12px; }
+.admin-result-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(8, 17, 13, .56);
+}
+.admin-result-teams > span { color: var(--muted-2); font-weight: 900; }
+.admin-result-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .section-heading h2, .section-heading h3 { margin: 0; }
 .count-pill {
@@ -524,6 +537,7 @@ nav button.active, .filters button.active {
   .sticky-actions { grid-template-columns: 1fr; }
   .knockout-team-selects { grid-template-columns: 1fr; }
   .country-picker-menu { position: relative; top: auto; }
+  .admin-result-inputs { grid-template-columns: 1fr; }
   .section-heading { align-items: start; }
   .participant-group summary { display: grid; }
   .participant-group summary small { text-align: left; }

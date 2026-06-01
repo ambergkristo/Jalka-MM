@@ -284,8 +284,18 @@ export async function saveBonusPrediction(playerId: string, groups: GroupBonusPr
 }
 
 export async function saveResult(actor: string, result: MatchResult) {
+  if (!Number.isInteger(result.matchId)) throw new Error('Invalid match');
+  if (!Number.isInteger(result.homeGoals) || !Number.isInteger(result.awayGoals)) throw new Error('Both result scores are required');
+  if (result.homeGoals < 0 || result.awayGoals < 0) throw new Error('Result scores cannot be negative');
   await upsert('actual_results', ['match_id', 'home_goals', 'away_goals', 'penalty_winner', 'updated_at'], [result.matchId, result.homeGoals, result.awayGoals, result.penaltyWinner ?? null, new Date().toISOString()], ['match_id']);
   await audit(actor, 'result.updated', result);
+  await recalculateScores();
+}
+
+export async function clearResult(actor: string, matchId: number) {
+  if (!Number.isInteger(matchId)) throw new Error('Invalid match');
+  await db.run('DELETE FROM actual_results WHERE match_id = ?', [matchId]);
+  await audit(actor, 'match_result.cleared', { matchId });
   await recalculateScores();
 }
 
@@ -530,11 +540,11 @@ async function storeBreakdown(playerId: string, itemType: string, itemId: string
 }
 
 function toPrediction(row: Record<string, unknown>): MatchPrediction {
-  return { matchId: Number(row.match_id), homeGoals: Number(row.home_goals), awayGoals: Number(row.away_goals), penaltyWinner: row.penalty_winner as MatchPrediction['penaltyWinner'], homeTeamPredictionId: row.home_team_prediction_id ? String(row.home_team_prediction_id) : undefined, awayTeamPredictionId: row.away_team_prediction_id ? String(row.away_team_prediction_id) : undefined, predictedWinnerTeamId: row.predicted_winner_team_id ? String(row.predicted_winner_team_id) : undefined };
+  return { matchId: Number(row.match_id), homeGoals: Number(row.home_goals), awayGoals: Number(row.away_goals), penaltyWinner: row.penalty_winner ? row.penalty_winner as MatchPrediction['penaltyWinner'] : undefined, homeTeamPredictionId: row.home_team_prediction_id ? String(row.home_team_prediction_id) : undefined, awayTeamPredictionId: row.away_team_prediction_id ? String(row.away_team_prediction_id) : undefined, predictedWinnerTeamId: row.predicted_winner_team_id ? String(row.predicted_winner_team_id) : undefined };
 }
 
 function toResult(row: Record<string, unknown>): MatchResult {
-  return { matchId: Number(row.match_id), homeGoals: Number(row.home_goals), awayGoals: Number(row.away_goals), penaltyWinner: row.penalty_winner as MatchResult['penaltyWinner'] };
+  return { matchId: Number(row.match_id), homeGoals: Number(row.home_goals), awayGoals: Number(row.away_goals), penaltyWinner: row.penalty_winner ? row.penalty_winner as MatchResult['penaltyWinner'] : undefined };
 }
 
 function all(sql: string, values: QueryValue[] = []): Promise<Record<string, unknown>[]> {

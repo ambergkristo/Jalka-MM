@@ -54,4 +54,21 @@ describe('RM9 player views', () => {
     expect(html).toContain('Minu ennustus: 2:1');
     expect(html).toContain('6 punkti');
   });
+
+  it('renders missing actual result without awarding match points', () => {
+    const state = {
+      ...baseState,
+      teams: [
+        { id: 'MEX', code: 'MEX', name: 'Mexico', name_et: 'Mehhiko' },
+        { id: 'RSA', code: 'RSA', name: 'South Africa', name_et: 'Lõuna-Aafrika' }
+      ],
+      matches: [{ id: 1, stage: 'GROUP', group_id: 'A', kickoff_at: '2026-06-11T19:00:00.000Z', home_team_id: 'MEX', away_team_id: 'RSA', home_slot: 'Mehhiko', away_slot: 'Lõuna-Aafrika' }],
+      predictions: [{ match_id: 1, home_goals: 2, away_goals: 1 }],
+      results: []
+    };
+    const html = renderToStaticMarkup(<ResultsOverview state={state} player={{ id: 'p1' }} initialBreakdown={[]} onLeaderboard={() => undefined} onDetails={() => undefined} onPredictions={() => undefined} />);
+    expect(html).toContain('Tulemus sisestamata');
+    expect(html).toContain('Punktid ootavad tulemust');
+    expect(html).not.toContain('<span>0 punkti</span>');
+  });
 });

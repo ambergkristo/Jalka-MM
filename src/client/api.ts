@@ -19,6 +19,7 @@ export const savePredictions = (predictions: MatchPrediction[]) => api<any>('/pr
 export const finalSubmitPredictions = () => api<any>('/final-submit', { method: 'POST', body: JSON.stringify({}) });
 export const saveBonusPrediction = (groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) => api<any>('/bonus-predictions', { method: 'POST', body: JSON.stringify({ groups, knockout }) });
 export const saveResult = (result: MatchPrediction) => api<any>('/admin/results', { method: 'POST', body: JSON.stringify({ result }) });
+export const clearResult = (matchId: number) => api<any>('/admin/clear-result', { method: 'POST', body: JSON.stringify({ matchId }) });
 export const saveBonusResults = (groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction & { topScorers: string[] }) => api<any>('/admin/bonus-results', { method: 'POST', body: JSON.stringify({ groups, knockout }) });
 export const setLock = (locked: boolean) => api<any>('/admin/lock', { method: 'POST', body: JSON.stringify({ locked }) });
 export const setDeadline = (deadline: string) => api<any>('/admin/deadline', { method: 'POST', body: JSON.stringify({ deadline }) });

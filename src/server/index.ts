@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { authenticateAdmin, authenticatePlayer, breakdownFor, createSession, deletePlayer, deleteSession, getState, healthCheck, recalculateScores, registerPlayer, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedTournamentData, sessionFromToken, setDeadline, setLock, submitFinalPredictions, updatePlayerStatus } from './db.js';
+import { authenticateAdmin, authenticatePlayer, breakdownFor, clearResult, createSession, deletePlayer, deleteSession, getState, healthCheck, recalculateScores, registerPlayer, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedTournamentData, sessionFromToken, setDeadline, setLock, submitFinalPredictions, updatePlayerStatus } from './db.js';
 import { getRuntimeConfig } from './config.js';
 
 await seedTournamentData();
@@ -67,6 +67,12 @@ createServer(async (request, response) => {
       const admin = requireAdmin(session);
       const body = await readJson(request);
       await saveResult(admin.name, body.result);
+      return json(response, 200, await getState(undefined, true));
+    }
+    if (request.method === 'POST' && url.pathname === '/api/admin/clear-result') {
+      const admin = requireAdmin(session);
+      const body = await readJson(request);
+      await clearResult(admin.name, Number(body.matchId));
       return json(response, 200, await getState(undefined, true));
     }
     if (request.method === 'POST' && url.pathname === '/api/admin/lock') {

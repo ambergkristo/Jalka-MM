@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GroupBonusPrediction, KnockoutBonusPrediction, Match, MatchPrediction, Team } from '../../domain/types.js';
-import { deletePlayer, recalculate, saveBonusResults, saveResult, setDeadline, setLock, updatePlayerStatus } from '../api.js';
+import { clearResult, deletePlayer, recalculate, saveBonusResults, saveResult, setDeadline, setLock, updatePlayerStatus } from '../api.js';
 import { competitionStateLabel, defaultPlayerView, type CompetitionState } from '../lib/competitionState.js';
 import { errorEt } from '../lib/messages.js';
 import { readBonusDraft, splitTopScorers } from './bonusDraft.js';
 import { TeamSelect } from './BonusPredictionPanel.js';
 import { AdminDataStatus } from './DataStatus.js';
-import { MatchCard } from './MatchPredictions.js';
+import { TeamBadge } from './TeamBadge.js';
 
 type ParticipantStatus = 'pending' | 'approved' | 'disabled';
 
@@ -31,12 +31,24 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
   const [matchId, setMatchId] = useState(1);
   const match = useMemo(() => state.matches.find((item: Match) => item.id === matchId), [state.matches, matchId]);
   const teamsById = useMemo(() => new Map(state.teams.map((team: any) => [team.id, team as Team])), [state.teams]);
-  const [result, setResult] = useState<MatchPrediction>({ matchId: 1, homeGoals: 0, awayGoals: 0 });
+  const currentResult = useMemo(() => state.results?.find((item: any) => Number(item.match_id) === matchId), [state.results, matchId]);
+  const [result, setResult] = useState({ matchId: 1, homeGoals: '', awayGoals: '', penaltyWinner: '' });
   const [deadlineValue, setDeadlineValue] = useState(toLocalDateTime(state.competition.prediction_deadline));
   const groupIds = state.groups.map((group: any) => String(group.id));
   const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds));
   const [deleteConfirmId, setDeleteConfirmId] = useState('');
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    setResult({
+      matchId,
+      homeGoals: currentResult ? String(currentResult.home_goals) : '',
+      awayGoals: currentResult ? String(currentResult.away_goals) : '',
+      penaltyWinner: currentResult?.penalty_winner ?? ''
+    });
+    setClearConfirmOpen(false);
+  }, [matchId, currentResult?.home_goals, currentResult?.away_goals, currentResult?.penalty_winner]);
 
   const updateGroup = (groupId: string, patch: Partial<GroupBonusPrediction>) => {
     setBonus((current) => ({ ...current, groups: current.groups.map((group) => group.groupId === groupId ? { ...group, ...patch } : group) }));
@@ -91,12 +103,29 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
 
       <div className="panel">
         <h2>Mängu tulemus</h2>
-        <select value={matchId} onChange={(event) => { const next = Number(event.target.value); setMatchId(next); setResult({ matchId: next, homeGoals: 0, awayGoals: 0 }); }}>
+        <select value={matchId} onChange={(event) => setMatchId(Number(event.target.value))}>
           {state.matches.map((item: Match) => <option key={item.id} value={item.id}>#{item.id} {item.homeSlot} v {item.awaySlot}</option>)}
         </select>
-        {match && <MatchCard match={match} teamsById={teamsById} value={result} disabled={false} onChange={setResult} />}
-        <button onClick={() => run(saveResult(result))}>Salvesta tulemus</button>
+        {match && (
+          <AdminResultEditor
+            match={match}
+            teamsById={teamsById}
+            result={result}
+            hasResult={Boolean(currentResult)}
+            onChange={setResult}
+            onSave={(payload) => run(saveResult(payload as MatchPrediction))}
+            onClear={() => setClearConfirmOpen(true)}
+          />
+        )}
       </div>
+
+      {clearConfirmOpen && match && (
+        <ClearResultDialog
+          matchId={matchId}
+          onCancel={() => setClearConfirmOpen(false)}
+          onConfirm={() => { setClearConfirmOpen(false); run(clearResult(matchId)); }}
+        />
+      )}
 
       <div className="panel">
         <h2>Tähtaja juhtimine</h2>
@@ -133,6 +162,75 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
       </div>
     </section>
   );
+}
+
+export function AdminResultEditor({ match, teamsById, result, hasResult, onChange, onSave, onClear }: { match: any; teamsById: Map<string, Team>; result: { matchId: number; homeGoals: string; awayGoals: string; penaltyWinner: string }; hasResult: boolean; onChange: (result: { matchId: number; homeGoals: string; awayGoals: string; penaltyWinner: string }) => void; onSave: (result: { matchId: number; homeGoals: number; awayGoals: number; penaltyWinner?: 'HOME' | 'AWAY' }) => void; onClear: () => void }) {
+  const homeTeam = match.homeTeamId || match.home_team_id ? teamsById.get(match.homeTeamId ?? match.home_team_id) : null;
+  const awayTeam = match.awayTeamId || match.away_team_id ? teamsById.get(match.awayTeamId ?? match.away_team_id) : null;
+  const homeReady = isScoreText(result.homeGoals);
+  const awayReady = isScoreText(result.awayGoals);
+  const homeGoals = homeReady ? Number(result.homeGoals) : null;
+  const awayGoals = awayReady ? Number(result.awayGoals) : null;
+  const tiedKnockout = match.stage !== 'GROUP' && homeGoals !== null && awayGoals !== null && homeGoals === awayGoals;
+  const canSave = homeReady && awayReady && (!tiedKnockout || result.penaltyWinner === 'HOME' || result.penaltyWinner === 'AWAY');
+  const status = hasResult ? `Sisestatud tulemus: ${result.homeGoals} : ${result.awayGoals}` : 'Tulemus sisestamata';
+
+  return (
+    <div className="admin-result-editor">
+      <p className={hasResult ? 'field-note' : 'field-note missing'}>{status}</p>
+      <div className="admin-result-teams">
+        <TeamBadge team={homeTeam} slotLabel={match.homeSlot ?? match.home_slot} />
+        <span>vs</span>
+        <TeamBadge team={awayTeam} slotLabel={match.awaySlot ?? match.away_slot} align="right" />
+      </div>
+      <div className="admin-result-inputs">
+        <label>Kodumeeskond
+          <input inputMode="numeric" pattern="[0-9]*" value={result.homeGoals} placeholder="-" onChange={(event) => onChange({ ...result, homeGoals: onlyDigits(event.target.value), penaltyWinner: '' })} />
+        </label>
+        <label>Võõrsilmeeskond
+          <input inputMode="numeric" pattern="[0-9]*" value={result.awayGoals} placeholder="-" onChange={(event) => onChange({ ...result, awayGoals: onlyDigits(event.target.value), penaltyWinner: '' })} />
+        </label>
+      </div>
+      {tiedKnockout && (
+        <label>Penaltiseeria võitja
+          <select value={result.penaltyWinner} onChange={(event) => onChange({ ...result, penaltyWinner: event.target.value })}>
+            <option value="">Vali võitja</option>
+            <option value="HOME">Kodumeeskond</option>
+            <option value="AWAY">Võõrsilmeeskond</option>
+          </select>
+        </label>
+      )}
+      {!canSave && <p className="muted">Tulemuse salvestamiseks sisesta mõlema poole skoor. Päris 0 : 0 tulemus on lubatud.</p>}
+      <div className="panel-actions">
+        <button disabled={!canSave} onClick={() => onSave({ matchId: result.matchId, homeGoals: Number(result.homeGoals), awayGoals: Number(result.awayGoals), penaltyWinner: result.penaltyWinner ? result.penaltyWinner as 'HOME' | 'AWAY' : undefined })}>Salvesta tulemus</button>
+        {hasResult && <button className="ghost danger" onClick={onClear}>Tühjenda tulemus</button>}
+      </div>
+    </div>
+  );
+}
+
+function ClearResultDialog({ matchId, onCancel, onConfirm }: { matchId: number; onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="dialog-backdrop" role="presentation">
+      <section className="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="clear-result-title">
+        <p className="eyebrow">Tulemuse eemaldamine</p>
+        <h2 id="clear-result-title">Kas eemaldad selle mängu sisestatud tulemuse?</h2>
+        <p>Mäng {matchId} kuvatakse pärast eemaldamist taas olekus „Tulemus sisestamata“ ning selle mängu punktid arvutatakse ümber.</p>
+        <div className="dialog-actions">
+          <button className="ghost" onClick={onCancel}>Tühista</button>
+          <button className="ghost danger" onClick={onConfirm}>Kinnita eemaldamine</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function isScoreText(value: string): boolean {
+  return /^(0|[1-9]\d*)$/.test(value);
+}
+
+function onlyDigits(value: string): string {
+  return value.replace(/\D+/g, '');
 }
 
 export function ParticipantManagement({ rows, onStatus, onDeleteStart }: { rows: ParticipantRow[]; onStatus: (playerId: string, status: ParticipantStatus) => void; onDeleteStart: (row: ParticipantRow) => void }) {

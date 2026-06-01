@@ -6,7 +6,7 @@ process.env.WORLDCUP_DB_PATH = join(process.cwd(), 'data', 'test-worldcup2026.sq
 process.env.BOOTSTRAP_ADMIN_KRISTO_PASSWORD = 'local-kristo-test';
 process.env.BOOTSTRAP_ADMIN_ARGO_PASSWORD = 'local-argo-test';
 
-const { authenticateAdmin, authenticatePlayer, breakdownFor, createPlayer, createSession, db, deletePlayer, getLeaderboard, getState, recalculateScores, registerPlayer, resetDevData, resetForTests, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, seedTournamentData, sessionFromToken, setDeadline, setLock, submitFinalPredictions, updatePlayerStatus } = await import('../server/db.js');
+const { authenticateAdmin, authenticatePlayer, breakdownFor, clearResult, createPlayer, createSession, db, deletePlayer, getLeaderboard, getState, recalculateScores, registerPlayer, resetDevData, resetForTests, saveBonusPrediction, saveBonusResults, savePredictions, saveResult, seedDemo, seedTournamentData, sessionFromToken, setDeadline, setLock, submitFinalPredictions, updatePlayerStatus } = await import('../server/db.js');
 
 describe('stored scoring path', () => {
   beforeEach(async () => {
@@ -35,6 +35,45 @@ describe('stored scoring path', () => {
       (await breakdownFor(player.id)).some((row) => row.item_type === 'match' && row.item_id === '1' && row.points === 6 && row.explanation === '6p: exact score correct'),
       true
     );
+  });
+
+  it('clears one actual result, audits the admin actor, and recalculates points', async () => {
+    const player = await createPlayer('Clear Result Player', 'FRIENDS2026');
+    await updatePlayerStatus('Kristo', player.id, 'approved');
+    await savePredictions(player.id, [
+      { matchId: 1, homeGoals: 0, awayGoals: 0 },
+      { matchId: 2, homeGoals: 1, awayGoals: 0 }
+    ]);
+    await forceFinal(player.id, '2026-06-01T10:00:00.000Z');
+    await saveResult('Kristo', { matchId: 1, homeGoals: 0, awayGoals: 0 });
+    await saveResult('Kristo', { matchId: 2, homeGoals: 1, awayGoals: 0 });
+    assert.equal((await breakdownFor(player.id)).some((row) => row.item_type === 'match' && row.item_id === '1'), true);
+
+    await clearResult('Argo', 1);
+
+    const state = await getState(player.id);
+    assert.equal(state.results.some((row: any) => Number(row.match_id) === 1), false);
+    assert.equal(state.results.some((row: any) => Number(row.match_id) === 2), true);
+    assert.equal(state.predictions.length, 2);
+    assert.equal((await breakdownFor(player.id)).some((row) => row.item_type === 'match' && row.item_id === '1'), false);
+    assert.equal((await breakdownFor(player.id)).some((row) => row.item_type === 'match' && row.item_id === '2'), true);
+    const audit = await db.one("SELECT * FROM admin_audit_log WHERE action = 'match_result.cleared' ORDER BY id DESC LIMIT 1");
+    assert.equal(audit?.actor, 'Argo');
+    assert.match(String(audit?.payload_json), /"matchId":1/);
+  });
+
+  it('preserves a real entered 0:0 result as scoreable data', async () => {
+    const player = await createPlayer('Nil Nil Player', 'FRIENDS2026');
+    await updatePlayerStatus('Kristo', player.id, 'approved');
+    await savePredictions(player.id, [{ matchId: 1, homeGoals: 0, awayGoals: 0 }]);
+    await forceFinal(player.id, '2026-06-01T10:00:00.000Z');
+    await saveResult('Kristo', { matchId: 1, homeGoals: 0, awayGoals: 0 });
+
+    const result = (await getState(player.id)).results.find((row: any) => Number(row.match_id) === 1);
+    assert.ok(result);
+    assert.equal(Number(result.home_goals), 0);
+    assert.equal(Number(result.away_goals), 0);
+    assert.equal((await breakdownFor(player.id)).some((row) => row.item_type === 'match' && row.item_id === '1' && Number(row.points) === 6), true);
   });
 
   it('scores bonus predictions through stored data including split top scorer points', async () => {
