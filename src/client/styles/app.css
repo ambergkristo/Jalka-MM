@@ -327,6 +327,40 @@ nav button.active, .filters button.active {
 .data-status > span { color: var(--muted-2); font-weight: 850; }
 .data-status strong { color: #dce8dc; }
 .data-status small { color: var(--muted-2); }
+.completion-summary { display: grid; align-items: stretch; }
+.completion-lines { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 7px; width: 100%; }
+.completion-lines button {
+  display: grid;
+  gap: 3px;
+  min-height: 54px;
+  justify-items: start;
+  text-align: left;
+}
+.completion-lines button strong { color: #f7ffe7; }
+.completion-ok { border-color: rgba(80, 211, 126, .24); }
+.group-standings-panel { margin-bottom: 12px; }
+.group-standings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.group-standing-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(8, 17, 13, .56);
+}
+.group-standing-card h3 { margin: 0; }
+.standings-table { display: grid; gap: 6px; }
+.standing-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 42px 42px minmax(74px, auto);
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(17, 31, 24, .68);
+}
+.standing-row > span, .standing-row > small { color: var(--muted); font-weight: 850; }
+.derived-third-summary { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: rgba(17, 31, 24, .62); }
 .data-status.warning, .status-pill.warning, .warning-box {
   border-color: rgba(224, 180, 93, .25);
   color: #e8c77d;
@@ -552,6 +586,11 @@ nav button.active, .filters button.active {
   .deadline-banner { padding: 10px 12px; margin-bottom: 10px; }
   .data-status { padding: 8px 10px; margin-bottom: 10px; font-size: .78rem; }
   .data-status small { display: none; }
+  .completion-lines { grid-template-columns: 1fr 1fr; }
+  .completion-lines button { min-height: 48px; padding-inline: 10px; }
+  .group-standings-grid { grid-template-columns: 1fr; }
+  .standing-row { grid-template-columns: 22px minmax(0, 1fr) 34px 34px; }
+  .standing-row small { grid-column: 2 / -1; }
   .panel { padding: 13px; }
   .match-list { gap: 11px; }
   .match-section h2 { font-size: 1.05rem; margin-top: 8px; }

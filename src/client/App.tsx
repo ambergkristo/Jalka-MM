@@ -8,7 +8,7 @@ import { ResultsOverview } from './components/ResultsOverview.js';
 import { RulesView } from './components/RulesView.js';
 import { ScoreDetails } from './components/ScoreDetails.js';
 import { adminLogin, currentSession, finalSubmitPredictions, loadState, login, logoutSession, register, saveBonusPrediction, savePredictions } from './api.js';
-import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction } from '../domain/types.js';
+import type { GroupBonusPrediction, GroupTieResolution, KnockoutBonusPrediction, MatchPrediction } from '../domain/types.js';
 import { defaultPlayerView, deriveCompetitionState, type PlayerView } from './lib/competitionState.js';
 import { et, errorEt } from './lib/messages.js';
 
@@ -55,10 +55,10 @@ export function App() {
     setState(nextState ?? await loadState());
   }
 
-  async function saveMatches(predictions: MatchPrediction[]) {
+  async function saveMatches(predictions: MatchPrediction[], tieResolutions: GroupTieResolution[] = []) {
     setSaving('Salvestan mustandit...');
     try {
-      await refresh(await savePredictions(predictions));
+      await refresh(await savePredictions(predictions, tieResolutions));
       setSaving('Mustand salvestatud');
     } catch (err) {
       setError(errorEt((err as Error).message));
@@ -68,7 +68,7 @@ export function App() {
   }
 
   async function saveBonuses(groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) {
-    setSaving('Salvestan boonusmustandit...');
+    setSaving('Salvestan eriennustusi...');
     try {
       await refresh(await saveBonusPrediction(groups, knockout));
       setSaving('Mustand salvestatud');

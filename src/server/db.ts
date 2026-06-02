@@ -1,9 +1,10 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createMatches, createTeams } from '../domain/seed.js';
+import { derivePredictedGroupOutcomes } from '../domain/predictedGroups.js';
 import { rankParticipants, scoreGroupBonus, scoreKnockoutBonus, scoreMatch, sumPoints } from '../domain/scoring.js';
 import { getTournamentData } from '../domain/tournamentData.js';
 import { validateTournamentData } from '../domain/tournamentValidation.js';
-import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction, MatchResult, ParticipantScore } from '../domain/types.js';
+import type { GroupBonusPrediction, GroupTieResolution, KnockoutBonusPrediction, MatchPrediction, MatchResult, ParticipantScore } from '../domain/types.js';
 import { assertSecret, hashSecret, newSessionToken, hashSessionToken, normalizeNamePart, normalizedFullName, verifySecret } from './auth.js';
 import { getRuntimeConfig, requireDestructiveConfirmation } from './config.js';
 import { createDatabase, type QueryValue } from './databaseAdapter.js';
@@ -28,6 +29,7 @@ async function migrateSqlite(): Promise<void> {
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS matches (id INTEGER PRIMARY KEY, stage TEXT NOT NULL, group_id TEXT, kickoff_at TEXT NOT NULL, home_team_id TEXT, away_team_id TEXT, home_slot TEXT NOT NULL, away_slot TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS predictions (player_id TEXT NOT NULL, match_id INTEGER NOT NULL, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL, home_team_prediction_id TEXT, away_team_prediction_id TEXT, predicted_winner_team_id TEXT, needs_final_confirmation INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (player_id, match_id));
+    CREATE TABLE IF NOT EXISTS group_tie_resolutions (player_id TEXT NOT NULL, group_id TEXT NOT NULL, team_order_json TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (player_id, group_id));
     CREATE TABLE IF NOT EXISTS prediction_submissions (player_id TEXT PRIMARY KEY, submitted_at TEXT, final_submitted_at TEXT, snapshot_hash TEXT, revision INTEGER NOT NULL DEFAULT 0, is_final INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS actual_results (match_id INTEGER PRIMARY KEY, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS bonus_predictions (player_id TEXT PRIMARY KEY, group_json TEXT NOT NULL, knockout_json TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -75,6 +77,7 @@ async function migratePostgres(): Promise<void> {
     CREATE TABLE IF NOT EXISTS groups (id TEXT PRIMARY KEY, name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS matches (id INTEGER PRIMARY KEY, stage TEXT NOT NULL, group_id TEXT, kickoff_at TEXT NOT NULL, home_team_id TEXT, away_team_id TEXT, home_slot TEXT NOT NULL, away_slot TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS predictions (player_id TEXT NOT NULL, match_id INTEGER NOT NULL, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL, home_team_prediction_id TEXT, away_team_prediction_id TEXT, predicted_winner_team_id TEXT, needs_final_confirmation INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (player_id, match_id));
+    CREATE TABLE IF NOT EXISTS group_tie_resolutions (player_id TEXT NOT NULL, group_id TEXT NOT NULL, team_order_json TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (player_id, group_id));
     CREATE TABLE IF NOT EXISTS prediction_submissions (player_id TEXT PRIMARY KEY, submitted_at TEXT, final_submitted_at TEXT, snapshot_hash TEXT, revision INTEGER NOT NULL DEFAULT 0, is_final INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS actual_results (match_id INTEGER PRIMARY KEY, home_goals INTEGER NOT NULL, away_goals INTEGER NOT NULL, penalty_winner TEXT, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS bonus_predictions (player_id TEXT PRIMARY KEY, group_json TEXT NOT NULL, knockout_json TEXT NOT NULL, updated_at TEXT NOT NULL);
@@ -130,6 +133,7 @@ export async function resetDevData(options: { allowDestructive?: boolean; confir
     DELETE FROM score_breakdowns;
     DELETE FROM bonus_results;
     DELETE FROM bonus_predictions;
+    DELETE FROM group_tie_resolutions;
     DELETE FROM actual_results;
     DELETE FROM prediction_submissions;
     DELETE FROM predictions;
@@ -239,6 +243,7 @@ export async function getState(playerId?: string, admin = false) {
     groups: await all('SELECT * FROM groups ORDER BY id'),
     matches: await all('SELECT * FROM matches ORDER BY id'),
     predictions: playerId ? await all('SELECT * FROM predictions WHERE player_id = ? ORDER BY match_id', [playerId]) : [],
+    tieResolutions: playerId ? await all('SELECT * FROM group_tie_resolutions WHERE player_id = ? ORDER BY group_id', [playerId]) : [],
     submission: playerId ? await one('SELECT * FROM prediction_submissions WHERE player_id = ?', [playerId]) : null,
     bonusPrediction: playerId ? await one('SELECT * FROM bonus_predictions WHERE player_id = ?', [playerId]) : null,
     bonusResult: await one('SELECT * FROM bonus_results WHERE competition_id = ?', ['wc2026']),
@@ -257,10 +262,15 @@ export async function getTournamentDataStatus() {
   return { metadata: tournamentData.metadata, validation, counts: validation.counts, unresolved: validation.unresolved, riskLevel: validation.riskLevel, storage: getStorageStatus() };
 }
 
-export async function savePredictions(playerId: string, predictions: MatchPrediction[]) {
+export async function savePredictions(playerId: string, predictions: MatchPrediction[], tieResolutions: GroupTieResolution[] = []) {
   await assertUnlocked();
   const now = new Date().toISOString();
   for (const prediction of predictions) await upsert('predictions', ['player_id', 'match_id', 'home_goals', 'away_goals', 'penalty_winner', 'updated_at', 'home_team_prediction_id', 'away_team_prediction_id', 'predicted_winner_team_id', 'needs_final_confirmation'], [playerId, prediction.matchId, prediction.homeGoals, prediction.awayGoals, prediction.penaltyWinner ?? null, now, (prediction as any).homeTeamPredictionId ?? null, (prediction as any).awayTeamPredictionId ?? null, (prediction as any).predictedWinnerTeamId ?? null, 1], ['player_id', 'match_id']);
+  await db.run('DELETE FROM group_tie_resolutions WHERE player_id = ?', [playerId]);
+  for (const resolution of tieResolutions) {
+    if (!resolution.groupId || !Array.isArray(resolution.teamOrder) || resolution.teamOrder.length === 0) continue;
+    await upsert('group_tie_resolutions', ['player_id', 'group_id', 'team_order_json', 'updated_at'], [playerId, resolution.groupId, JSON.stringify(resolution.teamOrder), now], ['player_id', 'group_id']);
+  }
   await db.run('UPDATE prediction_submissions SET is_final = 0 WHERE player_id = ?', [playerId]);
   await recalculateScores();
 }
@@ -333,6 +343,7 @@ export async function deletePlayer(actor: string, playerId: string, confirmation
   await db.transaction(async (tx) => {
     await tx.run('DELETE FROM score_breakdowns WHERE player_id = ?', [playerId]);
     await tx.run('DELETE FROM bonus_predictions WHERE player_id = ?', [playerId]);
+    await tx.run('DELETE FROM group_tie_resolutions WHERE player_id = ?', [playerId]);
     await tx.run('DELETE FROM prediction_submissions WHERE player_id = ?', [playerId]);
     await tx.run('DELETE FROM predictions WHERE player_id = ?', [playerId]);
     await tx.run('DELETE FROM players WHERE id = ?', [playerId]);
@@ -349,8 +360,11 @@ export async function recalculateScores() {
   const bonusResultRow = await one('SELECT * FROM bonus_results WHERE competition_id = ?', ['wc2026']);
   const groupResults: GroupBonusPrediction[] = bonusResultRow ? JSON.parse(String(bonusResultRow.group_json)) : [];
   const knockoutResult = bonusResultRow ? JSON.parse(String(bonusResultRow.knockout_json)) : null;
+  const teams = await all('SELECT id, name, name_et, code, flag, group_id FROM teams ORDER BY id');
+  const matches = await all('SELECT id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot FROM matches ORDER BY id');
   for (const player of await all('SELECT id FROM players')) {
-    for (const prediction of await all('SELECT * FROM predictions WHERE player_id = ?', [String(player.id)])) {
+    const storedPredictions = await all('SELECT * FROM predictions WHERE player_id = ?', [String(player.id)]);
+    for (const prediction of storedPredictions) {
       const actual = results.get(Number(prediction.match_id));
       if (actual) {
         const scored = scoreMatch(toPrediction(prediction), toResult(actual));
@@ -358,12 +372,15 @@ export async function recalculateScores() {
       }
     }
     const bonusPrediction = await one('SELECT * FROM bonus_predictions WHERE player_id = ?', [String(player.id)]);
-    if (bonusPrediction && bonusResultRow && knockoutResult) {
-      const predictedGroups: GroupBonusPrediction[] = JSON.parse(String(bonusPrediction.group_json));
+    if (bonusResultRow) {
+      const tieResolutions = await tieResolutionsFor(String(player.id));
+      const predictedGroups = derivePredictedGroupOutcomes(teams as any, matches as any, storedPredictions.map(toPrediction), tieResolutions).groupBonuses;
       for (const actualGroup of groupResults) {
         const predictedGroup = predictedGroups.find((group) => group.groupId === actualGroup.groupId);
         if (predictedGroup) for (const item of scoreGroupBonus(predictedGroup, actualGroup)) await storeBreakdown(String(player.id), 'bonus', item.code, item.points, item.explanation);
       }
+    }
+    if (bonusPrediction && bonusResultRow && knockoutResult) {
       const predictedKnockout: KnockoutBonusPrediction = JSON.parse(String(bonusPrediction.knockout_json));
       for (const item of scoreKnockoutBonus(predictedKnockout, knockoutResult)) await storeBreakdown(String(player.id), 'bonus', item.code, item.points, item.explanation);
     }
@@ -399,6 +416,7 @@ export async function resetForTests() {
     DELETE FROM score_breakdowns;
     DELETE FROM bonus_results;
     DELETE FROM bonus_predictions;
+    DELETE FROM group_tie_resolutions;
     DELETE FROM actual_results;
     DELETE FROM prediction_submissions;
     DELETE FROM predictions;
@@ -493,18 +511,28 @@ async function assertCompletePrediction(playerId: string) {
   if (invalidPenaltyWinner > 0) throw new Error('Penalty winner must be one of the selected match teams');
   const missingPredictedWinner = Number((await one("SELECT COUNT(*) AS count FROM predictions JOIN matches ON matches.id = predictions.match_id WHERE predictions.player_id = ? AND matches.stage <> 'GROUP' AND predicted_winner_team_id IS NULL", [playerId]))?.count ?? 0);
   if (missingPredictedWinner > 0) throw new Error('Final prediction is incomplete');
+  const teams = await all('SELECT id, name, name_et, code, flag, group_id FROM teams ORDER BY id');
+  const matches = await all('SELECT id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot FROM matches ORDER BY id');
+  const storedPredictions = await all('SELECT * FROM predictions WHERE player_id = ? ORDER BY match_id', [playerId]);
+  const derivedGroups = derivePredictedGroupOutcomes(teams as any, matches as any, storedPredictions.map(toPrediction), await tieResolutionsFor(playerId));
+  if (derivedGroups.groupBonuses.length < 12 || derivedGroups.advancingThirdPlaceTeamIds.length !== 8 || derivedGroups.unresolvedTies.length > 0) throw new Error('Group tie resolution is required');
   const bonus = await one('SELECT * FROM bonus_predictions WHERE player_id = ?', [playerId]);
   if (!bonus) throw new Error('Final prediction is incomplete');
-  const groups: GroupBonusPrediction[] = JSON.parse(String(bonus.group_json));
   const knockout: KnockoutBonusPrediction = JSON.parse(String(bonus.knockout_json));
-  if (groups.length < 12 || groups.some((group) => !group.winnerTeamId || !group.secondTeamId || group.qualifierTeamIds.length < 2)) throw new Error('Final prediction is incomplete');
+  if (knockout.r16TeamIds.length < 16 || knockout.qfTeamIds.length < 8 || knockout.sfTeamIds.length < 4 || knockout.finalTeamIds.length < 2) throw new Error('Final prediction is incomplete');
   if (!knockout.championTeamId || !knockout.thirdPlaceWinnerTeamId || !knockout.topScorer) throw new Error('Final prediction is incomplete');
 }
 
 async function predictionSnapshotHash(playerId: string): Promise<string> {
   const predictions = await all('SELECT * FROM predictions WHERE player_id = ? ORDER BY match_id', [playerId]);
   const bonus = await one('SELECT * FROM bonus_predictions WHERE player_id = ?', [playerId]);
-  return createHash('sha256').update(JSON.stringify({ predictions, bonus })).digest('hex');
+  const tieResolutions = await tieResolutionsFor(playerId);
+  return createHash('sha256').update(JSON.stringify({ predictions, bonus, tieResolutions })).digest('hex');
+}
+
+async function tieResolutionsFor(playerId: string): Promise<GroupTieResolution[]> {
+  return (await all('SELECT group_id, team_order_json FROM group_tie_resolutions WHERE player_id = ? ORDER BY group_id', [playerId]))
+    .map((row) => ({ groupId: String(row.group_id), teamOrder: JSON.parse(String(row.team_order_json)) }));
 }
 
 async function getPlayerAdminRows() {

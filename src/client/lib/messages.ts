@@ -1,7 +1,7 @@
 export const et = {
   nav: {
     predict: 'Ennustused',
-    bonus: 'Boonused',
+    bonus: 'Eriennustused',
     results: 'Tulemused',
     leaderboard: 'Edetabel',
     details: 'Punktid',
@@ -34,6 +34,7 @@ export const et = {
     accessDenied: 'Ligipääs puudub',
     duplicateFullName: 'Selle täisnimega osaleja on juba olemas. Võta ühendust korraldajaga.',
     incompleteFinal: 'Lõplik ennustus on puudulik',
+    groupTieRequired: 'Tee vajalikud valikud võrdse tabeliseisu lahendamiseks.',
     penaltyRequired: 'Viigilise playoff-ennustuse korral vali penaltiseeria võitja',
     invalidInvite: 'Liiga kutsekood ei ole õige'
   }
@@ -54,6 +55,7 @@ export function errorEt(message: string): string {
     'Access denied': et.errors.accessDenied,
     'Player with this full name already exists': et.errors.duplicateFullName,
     'Final prediction is incomplete': et.errors.incompleteFinal,
+    'Group tie resolution is required': et.errors.groupTieRequired,
     'Penalty winner is required': et.errors.penaltyRequired,
     'Invalid invite code': et.errors.invalidInvite
   } as Record<string, string>)[message] ?? message;

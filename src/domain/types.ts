@@ -67,6 +67,11 @@ export interface GroupBonusPrediction {
 
 export interface GroupBonusResult extends GroupBonusPrediction {}
 
+export interface GroupTieResolution {
+  groupId: string;
+  teamOrder: string[];
+}
+
 export interface KnockoutBonusPrediction {
   r16TeamIds: string[];
   qfTeamIds: string[];

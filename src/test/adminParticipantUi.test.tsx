@@ -60,7 +60,7 @@ describe('admin participant management UI', () => {
     expect(html).toContain('Kinnita osaleja');
     expect(html).toContain('Eemalda testkasutaja');
     expect(html).toContain('Mängud: 104/104');
-    expect(html).toContain('Boonused: täidetud');
+    expect(html).toContain('Eriennustused: täidetud');
   });
 
   it('marks legacy participant records clearly', () => {

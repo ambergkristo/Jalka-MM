@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
+import { derivePredictedGroupOutcomes, type GroupTieIssue } from '../../domain/predictedGroups.js';
 import type { Match, MatchPrediction, Team } from '../../domain/types.js';
 import { formatEstoniaKickoffTime, formatMatchDate } from '../lib/date.js';
 import { et, teamNameEt } from '../lib/messages.js';
+import { countMissingBonus, readBonusDraft } from './bonusDraft.js';
 import { DeadlineBanner } from './DeadlineBanner.js';
 import { UserDataStatus } from './DataStatus.js';
 import { TeamBadge } from './TeamBadge.js';
 
-export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit }: { state: any; locked: boolean; saving: string; onSave: (predictions: MatchPrediction[]) => void; onFinalSubmit: () => void }) {
+export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit }: { state: any; locked: boolean; saving: string; onSave: (predictions: MatchPrediction[], tieResolutions: any[]) => void; onFinalSubmit: () => void }) {
   const existing = new Map(state.predictions.map((row: any) => [Number(row.match_id), row]));
   const [stage, setStage] = useState('GROUP');
   const teamsById = useMemo(() => new Map(state.teams.map((team: any) => [team.id, team as Team])), [state.teams]);
@@ -19,10 +21,14 @@ export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit 
     awayTeamPredictionId: existing.get(match.id)?.away_team_prediction_id ?? match.awayTeamId ?? match.away_team_id ?? undefined,
     predictedWinnerTeamId: existing.get(match.id)?.predicted_winner_team_id ?? undefined
   })])) as Record<number, MatchPrediction>);
+  const [tieResolutions, setTieResolutions] = useState(() => (state.tieResolutions ?? []).map((row: any) => ({ groupId: String(row.group_id ?? row.groupId), teamOrder: JSON.parse(String(row.team_order_json ?? '[]')) })));
   const matches = state.matches.filter((match: Match) => match.stage === stage);
-  const completed = Object.values(draft).filter((prediction) => Number.isInteger(prediction.homeGoals) && Number.isInteger(prediction.awayGoals)).length;
   const groupedMatches = stage === 'GROUP' ? groupMatches(matches) : [[stageLabel(stage), matches]] as Array<[string, Match[]]>;
   const submission = state.submission;
+  const groupOutcomes = useMemo(() => derivePredictedGroupOutcomes(state.teams, state.matches, Object.values(draft), tieResolutions), [state.teams, state.matches, draft, tieResolutions]);
+  const bonusDraft = useMemo(() => readBonusDraft(state.bonusPrediction, state.groups.map((group: any) => String(group.id))), [state.bonusPrediction, state.groups]);
+  const bonusMissing = countMissingBonus(bonusDraft);
+  const completion = useMemo(() => predictionCompletion(state.matches, draft, groupOutcomes.unresolvedTies.length, bonusMissing, state.currentPlayer, submission), [state.matches, draft, groupOutcomes.unresolvedTies.length, bonusMissing, state.currentPlayer, submission]);
 
   function updateMatch(matchId: number, value: MatchPrediction) {
     setDraft((current) => ({ ...current, [matchId]: normalizeMatchPrediction(value) }));
@@ -31,13 +37,15 @@ export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit 
   return (
     <section>
       <div className="summary">
-        <strong>{completed}/104</strong>
-        <span>{locked ? 'Ennustused on lukus' : saving || 'Ennustusi saab muuta'}</span>
+        <strong>{completion.percent}%</strong>
+        <span>{locked ? 'Ennustused on lukus' : saving || completion.message}</span>
       </div>
       <DeadlineBanner deadline={state.competition.prediction_deadline} locked={locked} />
       <SubmissionStatus submission={submission} draft={draft} />
+      <CompletionSummary completion={completion} setStage={setStage} />
       <UserDataStatus status={state.tournamentDataStatus} />
       <div className="filters">{['GROUP', 'R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL'].map((item) => <button key={item} className={stage === item ? 'active' : ''} onClick={() => setStage(item)}>{stageLabel(item)}</button>)}</div>
+      {stage === 'GROUP' && <PredictedGroupTables outcomes={groupOutcomes} teamsById={teamsById} resolutions={tieResolutions} onResolve={(issue, selectedTeamId) => selectedTeamId && setTieResolutions((current: any[]) => upsertTieResolution(current, issue.groupId, [selectedTeamId, ...issue.teamIds.filter((id) => id !== selectedTeamId)]))} />}
       <div className="match-list">
         {groupedMatches.map(([heading, sectionMatches]) => (
           <section className="match-section" key={heading}>
@@ -47,10 +55,87 @@ export function MatchPredictions({ state, locked, saving, onSave, onFinalSubmit 
         ))}
       </div>
       <div className="sticky-actions">
-        <button disabled={locked} onClick={() => onSave(Object.values(draft))}>Salvesta mustand</button>
-        <button disabled={locked || !isComplete(draft, state.matches)} onClick={onFinalSubmit}>Kinnita lõplik ennustus</button>
+        <button disabled={locked} onClick={() => onSave(Object.values(draft), tieResolutions)}>Salvesta mustand</button>
+        <button disabled={locked || !isComplete(draft, state.matches) || groupOutcomes.unresolvedTies.length > 0 || bonusMissing > 0} onClick={onFinalSubmit}>Kinnita lõplik ennustus</button>
       </div>
     </section>
+  );
+}
+
+interface CompletionLine {
+  key: string;
+  label: string;
+  value: string;
+  missing: number;
+  stage?: string;
+}
+
+function CompletionSummary({ completion, setStage }: { completion: { percent: number; message: string; lines: CompletionLine[] }; setStage: (stage: string) => void }) {
+  return (
+    <div className={completion.percent === 100 ? 'data-status official completion-summary' : 'data-status warning completion-summary'}>
+      <strong>Ennustuse valmidus: {completion.percent}%</strong>
+      <div className="completion-lines">
+        {completion.lines.map((line) => (
+          <button key={line.key} type="button" className={line.missing ? 'ghost' : 'ghost completion-ok'} onClick={() => line.stage && setStage(line.stage)}>
+            <span>{line.label}</span>
+            <strong>{line.value}</strong>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PredictedGroupTables({ outcomes, teamsById, resolutions, onResolve }: { outcomes: any; teamsById: Map<string, Team>; resolutions: any[]; onResolve: (issue: GroupTieIssue, selectedTeamId: string) => void }) {
+  return (
+    <div className="panel group-standings-panel">
+      <h2>Minu alagrupitabelid</h2>
+      <p className="muted">Alagrupi võitja, teine koht ja edasipääsejad arvutatakse sinu mänguskooridest. Playoffi riigivalikud jäävad endiselt sõltumatuks.</p>
+      {outcomes.unresolvedTies.length > 0 && (
+        <div className="warning-box">
+          <strong>Võrdne seis vajab otsust</strong>
+          <p>Sinu ennustuse järgi on mõni tabelikoht veel lahendamata. Vali, kumb lõpetab kõrgemal.</p>
+          {outcomes.unresolvedTies.map((issue: GroupTieIssue) => (
+            <label key={`${issue.groupId}:${issue.teamIds.join('-')}`}>
+              {issue.groupId === 'THIRD_PLACE' ? 'Parimate kolmandate järjestus' : `Alagrupp ${issue.groupId}`}
+              <select value={(resolutions.find((item) => item.groupId === issue.groupId)?.teamOrder ?? [])[0] ?? ''} onChange={(event) => onResolve(issue, event.target.value)}>
+                <option value="">Vali kõrgemal lõpetav riik</option>
+                {issue.teamIds.map((teamId) => <option key={teamId} value={teamId}>{teamNameEt(teamsById.get(teamId))}</option>)}
+              </select>
+            </label>
+          ))}
+        </div>
+      )}
+      <div className="derived-third-summary">
+        <strong>Parimad kolmandad, kes sinu ennustuse järgi edasi pääsevad</strong>
+        <div className="participant-progress">
+          {outcomes.advancingThirdPlaceTeamIds.length === 8 ? outcomes.advancingThirdPlaceTeamIds.map((teamId: string) => <TeamBadge key={teamId} team={teamsById.get(teamId)} />) : <span className="muted">Selgub pärast alagrupitabelite lahendamist.</span>}
+        </div>
+      </div>
+      <div className="group-standings-grid">
+        {outcomes.groups.map((group: any) => (
+          <article className="group-standing-card" key={group.groupId}>
+            <h3>Alagrupp {group.groupId}</h3>
+            <div className="standings-table">
+              {group.standings.map((standing: any) => <StandingRow key={standing.teamId} standing={standing} team={teamsById.get(standing.teamId)} />)}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StandingRow({ standing, team }: { standing: any; team?: Team }) {
+  const statusLabel = standing.status === 'advanced' ? 'Edasi' : standing.status === 'third_possible' ? 'Võimalik parim 3. koht' : standing.status === 'unresolved' ? 'Otsus puudu' : 'Väljas';
+  return (
+    <div className="standing-row">
+      <span>{standing.rank ?? '-'}</span>
+      <TeamBadge team={team} />
+      <span>{standing.points}p</span>
+      <span>{standing.goalDifference >= 0 ? `+${standing.goalDifference}` : standing.goalDifference}</span>
+      <small>{statusLabel}</small>
+    </div>
   );
 }
 
@@ -189,6 +274,36 @@ export function isComplete(draft: Record<number, MatchPrediction>, matches: any[
     }
     return true;
   });
+}
+
+function predictionCompletion(matches: any[], draft: Record<number, MatchPrediction>, unresolvedTieCount: number, bonusMissing: number, player: any, submission: any) {
+  const groupMatches = matches.filter((match) => match.stage === 'GROUP');
+  const knockoutMatches = matches.filter((match) => match.stage !== 'GROUP');
+  const missingGroups = groupMatches.filter((match) => !draft[match.id] || !Number.isInteger(draft[match.id].homeGoals) || !Number.isInteger(draft[match.id].awayGoals)).length;
+  const missingKnockout = knockoutMatches.filter((match) => !draft[match.id] || knockoutValidation(draft[match.id]).length > 0 || !normalizeMatchPrediction(draft[match.id]).predictedWinnerTeamId).length;
+  const specialRequired = 33;
+  const totalRequired = groupMatches.length + knockoutMatches.length + specialRequired + unresolvedTieCount;
+  const completedRequired = (groupMatches.length - missingGroups) + (knockoutMatches.length - missingKnockout) + Math.max(0, specialRequired - bonusMissing);
+  const percent = totalRequired === 0 ? 0 : Math.max(0, Math.min(100, Math.round((completedRequired / totalRequired) * 100)));
+  let message = 'Ennustusi saab muuta';
+  if (percent === 100 && submission?.is_final !== 1) message = 'Ennustus on 100% valmis. Kinnita lõplik ennustus.';
+  if (submission?.is_final === 1 && player?.status === 'pending') message = 'Ennustus on lõplikult esitatud. Sinu osalus ootab korraldaja kinnitust.';
+  if (submission?.is_final === 1 && player?.status === 'approved') message = 'Ennustus kinnitatud. Oled ametlikus arvestuses.';
+  if (submission?.is_final === 1 && Object.values(draft).some((prediction: any) => prediction.needs_final_confirmation === 1)) message = 'Oled ennustust muutnud. Kinnita lõplik ennustus uuesti.';
+  return {
+    percent,
+    message,
+    lines: [
+      { key: 'groups', label: 'Alagrupimängud', value: missingGroups ? `${missingGroups} puudu` : 'valmis', missing: missingGroups, stage: 'GROUP' },
+      { key: 'knockout', label: 'Playoff-mängud', value: missingKnockout ? `${missingKnockout} valikut puudu` : 'valmis', missing: missingKnockout, stage: 'R32' },
+      { key: 'bonus', label: 'Eriennustused', value: bonusMissing ? `${bonusMissing} valikut puudu` : 'valmis', missing: bonusMissing },
+      { key: 'ties', label: 'Võrdsete seisude otsused', value: unresolvedTieCount ? `${unresolvedTieCount} puudu` : 'valmis', missing: unresolvedTieCount, stage: 'GROUP' }
+    ]
+  };
+}
+
+function upsertTieResolution(current: any[], groupId: string, teamOrder: string[]) {
+  return [...current.filter((item) => item.groupId !== groupId), { groupId, teamOrder }];
 }
 
 function groupMatches(matches: Match[]): Array<[string, Match[]]> {

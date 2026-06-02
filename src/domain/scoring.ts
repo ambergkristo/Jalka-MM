@@ -47,11 +47,11 @@ function explain(matchId: number, points: number, explanation: string): MatchSco
 
 export function scoreGroupBonus(prediction: GroupBonusPrediction, actual: GroupBonusResult): BonusScoreBreakdown[] {
   const breakdowns: BonusScoreBreakdown[] = [];
-  if (prediction.winnerTeamId === actual.winnerTeamId) breakdowns.push({ code: `${actual.groupId}:winner`, points: 10, explanation: '10p: correct group winner' });
-  if (prediction.secondTeamId === actual.secondTeamId) breakdowns.push({ code: `${actual.groupId}:second`, points: 5, explanation: '5p: correct group second place' });
+  if (prediction.winnerTeamId === actual.winnerTeamId) breakdowns.push({ code: `${actual.groupId}:winner`, points: 10, explanation: `${actual.groupId}-grupi võitja tuletatud mänguennustustest: õige` });
+  if (prediction.secondTeamId === actual.secondTeamId) breakdowns.push({ code: `${actual.groupId}:second`, points: 5, explanation: `${actual.groupId}-grupi teine koht tuletatud mänguennustustest: õige` });
   const actualQualifiers = new Set(actual.qualifierTeamIds);
   for (const teamId of unique(prediction.qualifierTeamIds)) {
-    if (actualQualifiers.has(teamId)) breakdowns.push({ code: `${actual.groupId}:qualifier:${teamId}`, points: 3, explanation: '3p: correct advancing team' });
+    if (actualQualifiers.has(teamId)) breakdowns.push({ code: `${actual.groupId}:qualifier:${teamId}`, points: 3, explanation: 'Edasipääseja tuletatud alagrupimängude ennustustest: õige' });
   }
   return breakdowns;
 }

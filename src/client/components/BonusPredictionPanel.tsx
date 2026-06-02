@@ -10,33 +10,20 @@ export function BonusPredictionPanel({ state, locked, saving, onSave }: { state:
   const [draft, setDraft] = useState(() => readBonusDraft(state.bonusPrediction, groupIds));
   const missing = countMissingBonus(draft);
 
-  function updateGroup(groupId: string, patch: Partial<GroupBonusPrediction>) {
-    setDraft((current) => ({ ...current, groups: current.groups.map((group) => group.groupId === groupId ? { ...group, ...patch } : group) }));
-  }
-
   return (
     <section>
       <div className="summary">
         <strong>{missing === 0 ? 'Valmis' : `${missing} puudu`}</strong>
-        <span>{locked ? 'Boonusennustused on lukus' : saving || 'Boonusennustusi saab muuta'}</span>
+        <span>{locked ? 'Eriennustused on lukus' : saving || 'Eriennustusi saab muuta'}</span>
       </div>
       <DeadlineBanner deadline={state.competition.prediction_deadline} locked={locked} />
+      <div className="data-status official">
+        <strong>Alagrupi boonused arvutatakse mänguennustustest.</strong>
+        <small>Alagrupi võitjat, teist kohta ja edasipääsejaid ei pea siin käsitsi kordama.</small>
+      </div>
       <div className="stack">
-        {groupIds.map((groupId: string) => {
-          const group = draft.groups.find((item) => item.groupId === groupId)!;
-          const teams = state.teams.filter((team: any) => team.group_id === groupId || team.groupId === groupId);
-          return (
-            <article className="panel" key={groupId}>
-              <h2>Alagrupp {groupId}</h2>
-              <label>Alagrupi võitja<TeamSelect disabled={locked} teams={teams} value={group.winnerTeamId} onChange={(winnerTeamId) => updateGroup(groupId, { winnerTeamId })} /></label>
-              <label>Teine koht<TeamSelect disabled={locked} teams={teams} value={group.secondTeamId} onChange={(secondTeamId) => updateGroup(groupId, { secondTeamId })} /></label>
-              <FieldLabel text={`Edasipääsejad (${group.qualifierTeamIds.length}/2)`} missing={group.qualifierTeamIds.length < 2} />
-              <TeamChecks disabled={locked} teams={teams} values={group.qualifierTeamIds} max={2} onChange={(qualifierTeamIds) => updateGroup(groupId, { qualifierTeamIds })} />
-            </article>
-          );
-        })}
         <article className="panel">
-          <h2>Playoff’i boonused</h2>
+          <h2>Eriennustused</h2>
           <RoundChecks label="Kaheksandikfinaali jõudjad" max={16} teams={state.teams} values={draft.knockout.r16TeamIds} disabled={locked} onChange={(r16TeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, r16TeamIds } }))} />
           <RoundChecks label="Veerandfinaali jõudjad" max={8} teams={state.teams} values={draft.knockout.qfTeamIds} disabled={locked} onChange={(qfTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, qfTeamIds } }))} />
           <RoundChecks label="Poolfinaali jõudjad" max={4} teams={state.teams} values={draft.knockout.sfTeamIds} disabled={locked} onChange={(sfTeamIds) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, sfTeamIds } }))} />
@@ -46,7 +33,7 @@ export function BonusPredictionPanel({ state, locked, saving, onSave }: { state:
           <label>Suurim väravakütt<input disabled={locked} value={draft.knockout.topScorer} onChange={(event) => setDraft((current) => ({ ...current, knockout: { ...current.knockout, topScorer: event.target.value } }))} placeholder="Mängija nimi" /></label>
         </article>
       </div>
-      <button className="sticky-save" disabled={locked} onClick={() => onSave(draft.groups, draft.knockout)}>Salvesta boonusennustused</button>
+      <button className="sticky-save" disabled={locked} onClick={() => onSave([], draft.knockout)}>Salvesta eriennustused</button>
     </section>
   );
 }

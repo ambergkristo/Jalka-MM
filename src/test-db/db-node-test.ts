@@ -87,6 +87,23 @@ describe('stored scoring path', () => {
     assert.equal(breakdown.some((row) => row.item_type === 'bonus' && row.item_id === 'top-scorer:Player A' && row.points === 25), true);
   });
 
+  it('scores group bonuses from derived group-stage predictions without manual group bonus input', async () => {
+    const player = await createPlayer('Derived Group Bonus', 'FRIENDS2026');
+    const group = await db.one("SELECT id FROM groups WHERE id = 'A'");
+    const teams = await db.all('SELECT id FROM teams WHERE group_id = ? ORDER BY id LIMIT 4', [String(group?.id)]);
+    const groupMatches = await db.all("SELECT id, home_team_id, away_team_id FROM matches WHERE stage = 'GROUP' AND group_id = ? ORDER BY id", [String(group?.id)]);
+    const order = new Map(teams.map((team, index) => [String(team.id), index]));
+    await savePredictions(player.id, groupMatches.map((match) => {
+      const homeRank = order.get(String(match.home_team_id)) ?? 0;
+      const awayRank = order.get(String(match.away_team_id)) ?? 0;
+      return { matchId: Number(match.id), homeGoals: homeRank < awayRank ? 2 : 0, awayGoals: awayRank < homeRank ? 2 : 0 };
+    }));
+    await saveBonusResults('admin', [{ groupId: 'A', winnerTeamId: String(teams[0].id), secondTeamId: String(teams[1].id), qualifierTeamIds: [String(teams[0].id), String(teams[1].id), String(teams[2].id)] }], { r16TeamIds: [], qfTeamIds: [], sfTeamIds: [], finalTeamIds: [], thirdPlaceWinnerTeamId: '', championTeamId: '', topScorer: '', topScorers: [] });
+    const breakdown = await breakdownFor(player.id);
+    assert.equal(breakdown.some((row) => row.item_type === 'bonus' && row.item_id === 'A:winner'), true);
+    assert.equal(breakdown.some((row) => String(row.explanation).includes('tuletatud')), true);
+  });
+
   it('keeps leaderboard tie-break by earlier submission time', async () => {
     const early = await createPlayer('Early', 'FRIENDS2026');
     const late = await createPlayer('Late', 'FRIENDS2026');
@@ -222,7 +239,7 @@ describe('stored scoring path', () => {
 
   it('accepts a complete intentionally inconsistent playoff country prediction', async () => {
     const player = await createPlayer('Independent Playoff', 'FRIENDS2026');
-    await savePredictions(player.id, await completePredictions());
+    await savePredictions(player.id, await completePredictions(), await completeTieResolutions());
     const { groups, knockout } = await completeBonus();
     await saveBonusPrediction(player.id, groups, knockout);
 
@@ -261,10 +278,21 @@ async function forceFinal(playerId: string, submittedAt: string) {
 }
 
 async function completePredictions(): Promise<any[]> {
-  const matches = await db.all('SELECT id, stage FROM matches ORDER BY id');
+  const matches = await db.all('SELECT id, stage, group_id, home_team_id, away_team_id FROM matches ORDER BY id');
+  const groupOrder = new Map<string, Map<string, number>>();
+  for (const team of await db.all('SELECT id, group_id FROM teams ORDER BY group_id, id')) {
+    const groupId = String(team.group_id);
+    if (!groupOrder.has(groupId)) groupOrder.set(groupId, new Map());
+    groupOrder.get(groupId)!.set(String(team.id), groupOrder.get(groupId)!.size);
+  }
   const teamIds = (await db.all('SELECT id FROM teams ORDER BY id')).map((row) => String(row.id));
   return matches.map((match, index) => {
-    if (String(match.stage) === 'GROUP') return { matchId: Number(match.id), homeGoals: 1, awayGoals: 0 };
+    if (String(match.stage) === 'GROUP') {
+      const order = groupOrder.get(String(match.group_id))!;
+      const homeRank = order.get(String(match.home_team_id)) ?? 0;
+      const awayRank = order.get(String(match.away_team_id)) ?? 0;
+      return { matchId: Number(match.id), homeGoals: homeRank < awayRank ? 2 : 0, awayGoals: awayRank < homeRank ? 2 : 0 };
+    }
     const homeTeamPredictionId = teamIds[(index * 3) % teamIds.length];
     const awayTeamPredictionId = teamIds[(index * 3 + 7) % teamIds.length];
     return { matchId: Number(match.id), homeGoals: 1, awayGoals: 0, homeTeamPredictionId, awayTeamPredictionId, predictedWinnerTeamId: homeTeamPredictionId };
@@ -290,4 +318,13 @@ async function completeBonus() {
       topScorer: 'Test Player'
     }
   };
+}
+
+async function completeTieResolutions() {
+  const thirdSeeds = [];
+  for (const group of await db.all('SELECT id FROM groups ORDER BY id')) {
+    const teams = await db.all('SELECT id FROM teams WHERE group_id = ? ORDER BY id LIMIT 4', [String(group.id)]);
+    thirdSeeds.push(String(teams[2].id));
+  }
+  return [{ groupId: 'THIRD_PLACE', teamOrder: thirdSeeds }];
 }

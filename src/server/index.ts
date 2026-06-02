@@ -49,7 +49,7 @@ createServer(async (request, response) => {
     if (request.method === 'POST' && url.pathname === '/api/predictions') {
       const player = requirePlayer(session);
       const body = await readJson(request);
-      await savePredictions(player.id, body.predictions ?? []);
+      await savePredictions(player.id, body.predictions ?? [], body.tieResolutions ?? []);
       return json(response, 200, await getState(player.id));
     }
     if (request.method === 'POST' && url.pathname === '/api/bonus-predictions') {

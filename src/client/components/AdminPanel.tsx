@@ -35,7 +35,7 @@ export function AdminPanel({ state, player, competitionState, onRefresh, onError
   const [result, setResult] = useState({ matchId: 1, homeGoals: '', awayGoals: '', penaltyWinner: '' });
   const [deadlineValue, setDeadlineValue] = useState(toLocalDateTime(state.competition.prediction_deadline));
   const groupIds = state.groups.map((group: any) => String(group.id));
-  const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds));
+  const [bonus, setBonus] = useState(() => readBonusDraft(state.bonusResult, groupIds, true));
   const [deleteConfirmId, setDeleteConfirmId] = useState('');
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
@@ -295,7 +295,7 @@ function ParticipantCard({ row, onStatus, onDeleteStart }: { row: ParticipantRow
 
       <div className="participant-progress" aria-label={`${row.display_name} ennustuste seis`}>
         <span className={predictionCount >= 104 ? 'progress-chip ok' : 'progress-chip'}>Mängud: {predictionCount}/104</span>
-        <span className={hasBonus ? 'progress-chip ok' : 'progress-chip warning'}>Boonused: {hasBonus ? 'täidetud' : 'puudu'}</span>
+        <span className={hasBonus ? 'progress-chip ok' : 'progress-chip warning'}>Eriennustused: {hasBonus ? 'täidetud' : 'puudu'}</span>
         <span className={final ? 'progress-chip ok' : 'progress-chip warning'}>{final ? 'Lõplikult esitatud' : 'Lõplikult esitamata'}</span>
       </div>
 

@@ -11,7 +11,8 @@ Mobile-first PWA MVP for a private World Cup prediction league.
 - Server-side HTTP-only sessions for player/admin authorization.
 - Mobile match prediction entry for all 104 World Cup 2026-shaped matches, including country selection for playoff bracket slots.
 - Draft saving plus separate final prediction confirmation for fair tie-break timestamps.
-- Bonus prediction flow for group winners, group second places, group qualifiers, knockout round participants, third-place winner, champion, and top scorer.
+- Special prediction flow for independent knockout-round country bonuses, third-place winner, champion, and top scorer.
+- Predicted group winners, runner-ups, group third-place teams, and the eight best third-place qualifiers are derived from the player's group-stage score predictions.
 - Results/overview screen for post-deadline match results, own prediction comparison, points, and leaderboard preview.
 - Admin match result entry.
 - Admin bonus-result entry, including multiple tied top scorers.
@@ -77,7 +78,7 @@ New player registrations start as `pending`. Pending players may save drafts and
 - `src/client`: React + Vite PWA UI for landing, rules, prediction entry, results overview, leaderboard, and admin result entry.
 - `data/worldcup2026.sqlite`: local SQLite database created at runtime.
 
-The database schema includes `users`, `players`, `admin_accounts`, `sessions`, `competitions`, `teams`, `groups`, `matches`, `predictions`, `prediction_submissions`, `actual_results`, `bonus_predictions`, `bonus_results`, `score_breakdowns`, `leaderboard_snapshots`, and `admin_audit_log`.
+The database schema includes `users`, `players`, `admin_accounts`, `sessions`, `competitions`, `teams`, `groups`, `matches`, `predictions`, `group_tie_resolutions`, `prediction_submissions`, `actual_results`, `bonus_predictions`, `bonus_results`, `score_breakdowns`, `leaderboard_snapshots`, and `admin_audit_log`.
 
 ## Scoring
 
@@ -143,13 +144,17 @@ If a pending player confirms a final prediction before the deadline and is appro
 
 ## Match Prediction Flow
 
-Players can save progress with `Salvesta mustand`. The official entry is created only with `Kinnita lõplik ennustus`; all match predictions, required bonus fields, playoff country selections, and penalty winners for tied playoff scores must be complete.
+Players can save progress with `Salvesta mustand`. The official entry is created only with `Kinnita lõplik ennustus`; all match predictions, required special-prediction fields, playoff country selections, penalty winners for tied playoff scores, and required group-table tie decisions must be complete.
+
+The `Ennustused` screen now shows `Minu alagrupitabelid`. These tables are calculated from the player's predicted group-match scores. The app derives each group winner, runner-up, third-place team, and the eight best third-place teams advancing to the first knockout round. If points, goal difference, and goals scored still leave a relevant table position tied, the player must explicitly choose which tied team finishes higher. Those decisions are stored in `group_tie_resolutions` and are included in the final submission snapshot.
 
 For playoff matches, players choose the predicted country for each match-side slot from the tournament team registry, then enter the score. Technical bracket labels are shown only as helper text, for example `A-grupi teine koht`, `Mängu 73 võitja`, or `Parim 3. koha meeskond`. Every playoff match from `1/16-finaalid` through `Finaal` is independently editable: later-round country choices are not auto-populated from earlier predicted winners and are not required to be logically consistent with earlier rounds or bonus selections.
 
-## Bonus Prediction Flow
+## Eriennustused Flow
 
-Use the Bonus tab as a player. Select each group winner, group second place, and two qualifiers. Then select teams reaching Round of 16, quarter-finals, semi-finals, and the final, plus the third-place winner, champion, and top scorer. The screen shows how many required fields are still missing and saves through the API to `bonus_predictions`.
+Use the `Eriennustused` tab as a player. Group winner, second place, and advancing teams are no longer entered manually here because they are derived from group-match score predictions. The remaining independent special predictions are teams reaching the implemented knockout bonus rounds, the third-place match winner, champion, and top scorer. The screen shows how many required fields are still missing and saves through the API to `bonus_predictions`.
+
+The player completion summary on `Ennustused` separates missing work into group matches, playoff matches, special predictions, and unresolved group-table tie decisions. Removed manual group-bonus fields no longer count as missing work.
 
 ## Admin Bonus Results
 
@@ -324,7 +329,7 @@ Group-stage kickoff times are stored as UTC ISO timestamps and displayed in Esto
 
 `src/domain/bracket.ts` formats and resolves bracket slots for concrete teams, group winners, group runner-ups, best-third placeholders, previous-match winners, and previous-match losers.
 
-`src/domain/standings.ts` calculates basic group standings: played, wins, draws, losses, goals for, goals against, goal difference, and points. Sorting currently uses points, goal difference, and goals for. Full official tie-break rules are intentionally not claimed yet.
+`src/domain/standings.ts` calculates basic actual-result group standings: played, wins, draws, losses, goals for, goals against, goal difference, and points. `src/domain/predictedGroups.ts` derives player-predicted group outcomes from group-match score predictions and selects eight best third-place teams for the 2026 format. It handles points, goal difference, goals scored, and explicit user tie-resolution where the implemented deterministic criteria cannot safely decide a relevant position. Full official FIFA tie-break automation is still not claimed.
 
 ## Score Explanations
 

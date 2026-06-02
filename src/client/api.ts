@@ -1,4 +1,4 @@
-import type { GroupBonusPrediction, KnockoutBonusPrediction, MatchPrediction } from '../domain/types.js';
+import type { GroupBonusPrediction, GroupTieResolution, KnockoutBonusPrediction, MatchPrediction } from '../domain/types.js';
 
 const api = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`/api${path}`, { ...init, credentials: 'same-origin', headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
@@ -15,7 +15,7 @@ export const adminLogin = (username: string, password: string) => api<{ id: stri
 export const logoutSession = () => api<{ ok: boolean }>('/logout', { method: 'POST', body: JSON.stringify({}) });
 export const currentSession = () => api<any>('/session');
 export const loadState = () => api<any>('/state');
-export const savePredictions = (predictions: MatchPrediction[]) => api<any>('/predictions', { method: 'POST', body: JSON.stringify({ predictions }) });
+export const savePredictions = (predictions: MatchPrediction[], tieResolutions: GroupTieResolution[] = []) => api<any>('/predictions', { method: 'POST', body: JSON.stringify({ predictions, tieResolutions }) });
 export const finalSubmitPredictions = () => api<any>('/final-submit', { method: 'POST', body: JSON.stringify({}) });
 export const saveBonusPrediction = (groups: GroupBonusPrediction[], knockout: KnockoutBonusPrediction) => api<any>('/bonus-predictions', { method: 'POST', body: JSON.stringify({ groups, knockout }) });
 export const saveResult = (result: MatchPrediction) => api<any>('/admin/results', { method: 'POST', body: JSON.stringify({ result }) });
