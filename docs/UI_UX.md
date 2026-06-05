@@ -28,7 +28,7 @@ Use original abstract stadium, pitch, grid, light, and scoreboard patterns inste
 - No deadline countdown UX.
 - Public-facing UI copy must be Estonian.
 - Internal data status, API status, provider state, audit state, and `partial_official` labels must not be shown on public pages.
-- True left/right playoff bracket tree is deferred to Sprint 10; current play-off views should remain readable progression cards.
+- Tournament Center play-off must use a true left/right bracket tree with the final centered.
 
 ## Palette
 
@@ -122,6 +122,16 @@ Tournament Center should group:
 - Playoff bracket
 - Top scorer standings
 - All results
+
+The tournament play-off bracket must not be shown as disconnected stage cards. It should render:
+
+- Left bracket side.
+- Centered final.
+- Right bracket side.
+- Third-place match as a separate center/near-final match.
+- Slot labels such as `A1`, `B2`, `Parim 3. koht`, and `1/16-1 võitja` when teams are not known.
+
+On mobile, the bracket may use a contained horizontal scroll area or a segmented view. Page-level horizontal overflow is not acceptable.
 
 ## Visual Assets
 

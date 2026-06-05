@@ -78,6 +78,53 @@ export interface KnockoutStageData {
   matches: KnockoutMatch[];
 }
 
+export type BracketStage = 'R32' | 'R16' | 'QF' | 'SF' | 'FINAL' | 'THIRD_PLACE';
+export type BracketSideName = 'LEFT' | 'RIGHT' | 'CENTER';
+
+export interface BracketSlot {
+  id: string;
+  label: string;
+  source?: string;
+  teamId?: string;
+  teamName?: string;
+  teamCode?: string;
+  seedLabel?: string;
+}
+
+export interface BracketMatch {
+  id: string;
+  stage: BracketStage;
+  side: BracketSideName;
+  roundIndex: number;
+  order: number;
+  homeSlot: BracketSlot;
+  awaySlot: BracketSlot;
+  homeScore?: number;
+  awayScore?: number;
+  winnerTeamId?: string;
+  status: 'scheduled' | 'live' | 'finished' | 'extra-time' | 'penalties';
+  kickoffUtc?: string;
+}
+
+export interface BracketRound {
+  id: string;
+  label: string;
+  roundIndex: number;
+  matches: BracketMatch[];
+}
+
+export interface BracketSide {
+  side: Exclude<BracketSideName, 'CENTER'>;
+  rounds: BracketRound[];
+}
+
+export interface BracketTree {
+  left: BracketSide;
+  right: BracketSide;
+  final: BracketMatch;
+  thirdPlace: BracketMatch;
+}
+
 export interface TournamentTopScorer {
   rank: number;
   player: string;
@@ -310,6 +357,449 @@ export const knockoutStages: KnockoutStageData[] = [
     ]
   }
 ];
+
+const knownSlot = (id: string, teamName: string, teamCode: string, seedLabel?: string): BracketSlot => ({
+  id,
+  label: teamName,
+  teamId: teamCode.toLowerCase(),
+  teamName,
+  teamCode,
+  seedLabel
+});
+
+const pendingSlot = (id: string, label: string, source?: string): BracketSlot => ({
+  id,
+  label,
+  seedLabel: label,
+  source
+});
+
+export const playoffBracketTree: BracketTree = {
+  left: {
+    side: 'LEFT',
+    rounds: [
+      {
+        id: 'left-r32',
+        label: '1/16-finaalid',
+        roundIndex: 0,
+        matches: [
+          {
+            id: 'r32-1',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 1,
+            homeSlot: knownSlot('mex', 'Mehhiko', 'MEX', 'A1'),
+            awaySlot: knownSlot('chi', 'Tšiili', 'CHI', 'B3'),
+            homeScore: 2,
+            awayScore: 1,
+            winnerTeamId: 'mex',
+            status: 'finished',
+            kickoffUtc: '2026-06-29T20:00:00.000Z'
+          },
+          {
+            id: 'r32-2',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 2,
+            homeSlot: knownSlot('bra', 'Brasiilia', 'BRA', 'C1'),
+            awaySlot: knownSlot('nor', 'Norra', 'NOR', 'D3'),
+            homeScore: 3,
+            awayScore: 0,
+            winnerTeamId: 'bra',
+            status: 'finished',
+            kickoffUtc: '2026-06-30T00:00:00.000Z'
+          },
+          {
+            id: 'r32-3',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 3,
+            homeSlot: pendingSlot('a1', 'A1'),
+            awaySlot: pendingSlot('c2', 'C2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-06-30T20:00:00.000Z'
+          },
+          {
+            id: 'r32-4',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 4,
+            homeSlot: pendingSlot('e1', 'E1'),
+            awaySlot: pendingSlot('best-third-1', 'Parim 3. koht'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-01T00:00:00.000Z'
+          },
+          {
+            id: 'r32-9',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 5,
+            homeSlot: knownSlot('esp', 'Hispaania', 'ESP', 'H1'),
+            awaySlot: knownSlot('sen', 'Senegal', 'SEN', 'G2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-01T21:00:00.000Z'
+          },
+          {
+            id: 'r32-6',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 6,
+            homeSlot: knownSlot('can', 'Kanada', 'CAN', 'B1'),
+            awaySlot: knownSlot('sui', 'Šveits', 'SUI', 'A2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-02T01:00:00.000Z'
+          },
+          {
+            id: 'r32-7',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 7,
+            homeSlot: pendingSlot('i1', 'I1'),
+            awaySlot: pendingSlot('j2', 'J2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-02T21:00:00.000Z'
+          },
+          {
+            id: 'r32-8',
+            stage: 'R32',
+            side: 'LEFT',
+            roundIndex: 0,
+            order: 8,
+            homeSlot: pendingSlot('k1', 'K1'),
+            awaySlot: pendingSlot('l2', 'L2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-03T01:00:00.000Z'
+          }
+        ]
+      },
+      {
+        id: 'left-r16',
+        label: '1/8-finaalid',
+        roundIndex: 1,
+        matches: [
+          {
+            id: 'r16-1',
+            stage: 'R16',
+            side: 'LEFT',
+            roundIndex: 1,
+            order: 1,
+            homeSlot: knownSlot('mex', 'Mehhiko', 'MEX', '1/16-1 võitja'),
+            awaySlot: knownSlot('bra', 'Brasiilia', 'BRA', '1/16-2 võitja'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-04T21:00:00.000Z'
+          },
+          {
+            id: 'r16-2',
+            stage: 'R16',
+            side: 'LEFT',
+            roundIndex: 1,
+            order: 2,
+            homeSlot: pendingSlot('winner-r32-3', '1/16-3 võitja', 'r32-3'),
+            awaySlot: pendingSlot('winner-r32-4', '1/16-4 võitja', 'r32-4'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-05T01:00:00.000Z'
+          },
+          {
+            id: 'r16-3',
+            stage: 'R16',
+            side: 'LEFT',
+            roundIndex: 1,
+            order: 3,
+            homeSlot: pendingSlot('winner-r32-5', '1/16-5 võitja', 'r32-5'),
+            awaySlot: pendingSlot('winner-r32-6', '1/16-6 võitja', 'r32-6'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-05T21:00:00.000Z'
+          },
+          {
+            id: 'r16-4',
+            stage: 'R16',
+            side: 'LEFT',
+            roundIndex: 1,
+            order: 4,
+            homeSlot: pendingSlot('winner-r32-7', '1/16-7 võitja', 'r32-7'),
+            awaySlot: pendingSlot('winner-r32-8', '1/16-8 võitja', 'r32-8'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-06T01:00:00.000Z'
+          }
+        ]
+      },
+      {
+        id: 'left-qf',
+        label: 'Veerandfinaalid',
+        roundIndex: 2,
+        matches: [
+          {
+            id: 'qf-1',
+            stage: 'QF',
+            side: 'LEFT',
+            roundIndex: 2,
+            order: 1,
+            homeSlot: pendingSlot('winner-r16-1', '1/8-1 võitja', 'r16-1'),
+            awaySlot: pendingSlot('winner-r16-2', '1/8-2 võitja', 'r16-2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-09T22:00:00.000Z'
+          },
+          {
+            id: 'qf-2',
+            stage: 'QF',
+            side: 'LEFT',
+            roundIndex: 2,
+            order: 2,
+            homeSlot: pendingSlot('winner-r16-3', '1/8-3 võitja', 'r16-3'),
+            awaySlot: pendingSlot('winner-r16-4', '1/8-4 võitja', 'r16-4'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-10T02:00:00.000Z'
+          }
+        ]
+      },
+      {
+        id: 'left-sf',
+        label: 'Poolfinaal',
+        roundIndex: 3,
+        matches: [
+          {
+            id: 'sf-1',
+            stage: 'SF',
+            side: 'LEFT',
+            roundIndex: 3,
+            order: 1,
+            homeSlot: pendingSlot('winner-qf-1', 'VF-1 võitja', 'qf-1'),
+            awaySlot: pendingSlot('winner-qf-2', 'VF-2 võitja', 'qf-2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-14T22:00:00.000Z'
+          }
+        ]
+      }
+    ]
+  },
+  right: {
+    side: 'RIGHT',
+    rounds: [
+      {
+        id: 'right-r32',
+        label: '1/16-finaalid',
+        roundIndex: 0,
+        matches: [
+          {
+            id: 'r32-5',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 1,
+            homeSlot: knownSlot('eng', 'Inglismaa', 'ENG', 'I1'),
+            awaySlot: knownSlot('uru', 'Uruguay', 'URU', 'J2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-01T21:00:00.000Z'
+          },
+          {
+            id: 'r32-10',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 2,
+            homeSlot: knownSlot('fra', 'Prantsusmaa', 'FRA', 'G1'),
+            awaySlot: knownSlot('irn', 'Iraan', 'IRN', 'H3'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-02T01:00:00.000Z'
+          },
+          {
+            id: 'r32-11',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 3,
+            homeSlot: knownSlot('ned', 'Holland', 'NED', 'K1'),
+            awaySlot: knownSlot('pol', 'Poola', 'POL', 'L2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-02T21:00:00.000Z'
+          },
+          {
+            id: 'r32-12',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 4,
+            homeSlot: pendingSlot('best-third-2', 'Parim 3. koht'),
+            awaySlot: pendingSlot('f2', 'F2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-03T01:00:00.000Z'
+          },
+          {
+            id: 'r32-13',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 5,
+            homeSlot: knownSlot('arg', 'Argentina', 'ARG', 'J1'),
+            awaySlot: knownSlot('aut', 'Austria', 'AUT', 'I2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-03T21:00:00.000Z'
+          },
+          {
+            id: 'r32-14',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 6,
+            homeSlot: knownSlot('por', 'Portugal', 'POR', 'K1'),
+            awaySlot: knownSlot('col', 'Kolumbia', 'COL', 'L2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-04T01:00:00.000Z'
+          },
+          {
+            id: 'r32-15',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 7,
+            homeSlot: pendingSlot('g2', 'G2'),
+            awaySlot: pendingSlot('h2', 'H2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-04T21:00:00.000Z'
+          },
+          {
+            id: 'r32-16',
+            stage: 'R32',
+            side: 'RIGHT',
+            roundIndex: 0,
+            order: 8,
+            homeSlot: pendingSlot('best-third-3', 'Parim 3. koht'),
+            awaySlot: pendingSlot('e2', 'E2'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-05T01:00:00.000Z'
+          }
+        ]
+      },
+      {
+        id: 'right-r16',
+        label: '1/8-finaalid',
+        roundIndex: 1,
+        matches: [
+          {
+            id: 'r16-5',
+            stage: 'R16',
+            side: 'RIGHT',
+            roundIndex: 1,
+            order: 1,
+            homeSlot: pendingSlot('winner-r32-9', '1/16-9 võitja', 'r32-9'),
+            awaySlot: pendingSlot('winner-r32-10', '1/16-10 võitja', 'r32-10'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-05T21:00:00.000Z'
+          },
+          {
+            id: 'r16-6',
+            stage: 'R16',
+            side: 'RIGHT',
+            roundIndex: 1,
+            order: 2,
+            homeSlot: pendingSlot('winner-r32-11', '1/16-11 võitja', 'r32-11'),
+            awaySlot: pendingSlot('winner-r32-12', '1/16-12 võitja', 'r32-12'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-06T01:00:00.000Z'
+          },
+          {
+            id: 'r16-7',
+            stage: 'R16',
+            side: 'RIGHT',
+            roundIndex: 1,
+            order: 3,
+            homeSlot: pendingSlot('winner-r32-13', '1/16-13 võitja', 'r32-13'),
+            awaySlot: pendingSlot('winner-r32-14', '1/16-14 võitja', 'r32-14'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-06T21:00:00.000Z'
+          },
+          {
+            id: 'r16-8',
+            stage: 'R16',
+            side: 'RIGHT',
+            roundIndex: 1,
+            order: 4,
+            homeSlot: pendingSlot('winner-r32-15', '1/16-15 võitja', 'r32-15'),
+            awaySlot: pendingSlot('winner-r32-16', '1/16-16 võitja', 'r32-16'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-07T01:00:00.000Z'
+          }
+        ]
+      },
+      {
+        id: 'right-qf',
+        label: 'Veerandfinaalid',
+        roundIndex: 2,
+        matches: [
+          {
+            id: 'qf-3',
+            stage: 'QF',
+            side: 'RIGHT',
+            roundIndex: 2,
+            order: 1,
+            homeSlot: pendingSlot('winner-r16-5', '1/8-5 võitja', 'r16-5'),
+            awaySlot: pendingSlot('winner-r16-6', '1/8-6 võitja', 'r16-6'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-10T02:00:00.000Z'
+          },
+          {
+            id: 'qf-4',
+            stage: 'QF',
+            side: 'RIGHT',
+            roundIndex: 2,
+            order: 2,
+            homeSlot: pendingSlot('winner-r16-7', '1/8-7 võitja', 'r16-7'),
+            awaySlot: pendingSlot('winner-r16-8', '1/8-8 võitja', 'r16-8'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-11T02:00:00.000Z'
+          }
+        ]
+      },
+      {
+        id: 'right-sf',
+        label: 'Poolfinaal',
+        roundIndex: 3,
+        matches: [
+          {
+            id: 'sf-2',
+            stage: 'SF',
+            side: 'RIGHT',
+            roundIndex: 3,
+            order: 1,
+            homeSlot: pendingSlot('winner-qf-3', 'VF-3 võitja', 'qf-3'),
+            awaySlot: pendingSlot('winner-qf-4', 'VF-4 võitja', 'qf-4'),
+            status: 'scheduled',
+            kickoffUtc: '2026-07-15T22:00:00.000Z'
+          }
+        ]
+      }
+    ]
+  },
+  final: {
+    id: 'final',
+    stage: 'FINAL',
+    side: 'CENTER',
+    roundIndex: 4,
+    order: 1,
+    homeSlot: pendingSlot('winner-sf-1', 'PF-1 võitja', 'sf-1'),
+    awaySlot: pendingSlot('winner-sf-2', 'PF-2 võitja', 'sf-2'),
+    status: 'scheduled',
+    kickoffUtc: '2026-07-19T22:00:00.000Z'
+  },
+  thirdPlace: {
+    id: 'third-place',
+    stage: 'THIRD_PLACE',
+    side: 'CENTER',
+    roundIndex: 4,
+    order: 2,
+    homeSlot: pendingSlot('loser-sf-1', 'PF-1 kaotaja', 'sf-1'),
+    awaySlot: pendingSlot('loser-sf-2', 'PF-2 kaotaja', 'sf-2'),
+    status: 'scheduled',
+    kickoffUtc: '2026-07-18T22:00:00.000Z'
+  }
+};
 
 export const tournamentTopScorers: TournamentTopScorer[] = [
   { rank: 1, player: 'Kylian Mbappe', team: 'France', goals: 5, assists: 2 },

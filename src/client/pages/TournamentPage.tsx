@@ -1,13 +1,13 @@
 import { Card } from '../components/Card.js';
 import { GroupStandingsGrid } from '../components/GroupStandingsGrid.js';
-import { KnockoutStage } from '../components/KnockoutStage.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { TopScorersTable } from '../components/TopScorersTable.js';
 import { TournamentStatsCards } from '../components/TournamentStatsCards.js';
 import { TournamentSummaryCards } from '../components/TournamentSummaryCards.js';
+import { TrueBracket } from '../components/TrueBracket.js';
 import {
   groupStandings,
-  knockoutStages,
+  playoffBracketTree,
   tournamentProgressByStage,
   tournamentStats,
   tournamentSummary,
@@ -48,12 +48,8 @@ export function TournamentPage() {
         <GroupStandingsGrid groups={groupStandings} />
       </Card>
 
-      <Card title="Play-off" eyebrow="Edenemise vaade" className="tournament-section">
-        <section className="knockout-progression" aria-label="Play-off edenemine">
-          {knockoutStages.map((stage) => (
-            <KnockoutStage stage={stage} key={stage.stage} />
-          ))}
-        </section>
+      <Card title="Play-off" eyebrow="Tabelipuu" className="tournament-section bracket-section">
+        <TrueBracket tree={playoffBracketTree} />
       </Card>
 
       <section className="tournament-secondary-grid">
