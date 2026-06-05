@@ -85,6 +85,31 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       provider TEXT NOT NULL,
       mode TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS group_standings (
+      group_id TEXT NOT NULL,
+      team_id TEXT NOT NULL,
+      rank INTEGER NOT NULL,
+      played INTEGER NOT NULL,
+      wins INTEGER NOT NULL,
+      draws INTEGER NOT NULL,
+      losses INTEGER NOT NULL,
+      goals_for INTEGER NOT NULL,
+      goals_against INTEGER NOT NULL,
+      goal_difference INTEGER NOT NULL,
+      points INTEGER NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (group_id, team_id)
+    );
+    CREATE TABLE IF NOT EXISTS top_scorer_standings (
+      id TEXT PRIMARY KEY,
+      rank INTEGER NOT NULL,
+      player_name TEXT NOT NULL,
+      team_id TEXT,
+      goals INTEGER NOT NULL,
+      assists INTEGER,
+      minutes_played INTEGER,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   await ensureColumn(db, 'match_results', 'minute', 'INTEGER');

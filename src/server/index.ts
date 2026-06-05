@@ -4,6 +4,8 @@ import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPublicState, healthCheck, seedTournamentData } from './db.js';
+import { db } from './db.js';
+import { getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
 import { getCurrentLeaderboard, getResultsAgentRunPermission, getResultsAgentStatus, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 
 await seedTournamentData();
@@ -19,6 +21,7 @@ createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/state') return json(response, 200, await getPublicState());
     if (request.method === 'GET' && (url.pathname === '/api/health' || url.pathname === '/api/health/db')) return json(response, 200, await healthCheck());
     if (request.method === 'GET' && url.pathname === '/api/leaderboard') return json(response, 200, await getCurrentLeaderboard());
+    if (request.method === 'GET' && url.pathname === '/api/public-dashboard') return json(response, 200, await getPublicTournamentSnapshot(db));
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
     if (request.method === 'POST' && url.pathname === '/api/results-agent/run') {
       const permission = getResultsAgentRunPermission({

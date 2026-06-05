@@ -12,6 +12,7 @@ export function TopScorersTable({ scorers }: { scorers: TournamentTopScorer[] })
         <span>V</span>
         <span>S</span>
       </div>
+      {scorers.length === 0 && <p className="empty-state">Väravalööjaid veel ei ole.</p>}
       {scorers.map((scorer) => (
         <div className={`top-scorer-row rank-${scorer.rank}`} key={`${scorer.rank}-${scorer.player}`}>
           <b>{scorer.rank}</b>

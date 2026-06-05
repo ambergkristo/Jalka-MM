@@ -142,6 +142,7 @@ This is a lightweight keepalive helper. GitHub scheduled workflows can be delaye
 - `GET /api/state`: public read-only app state metadata.
 - `GET /api/health`: public health check.
 - `GET /api/leaderboard`: persisted leaderboard entries when available; seed leaderboard fallback before the first rebuild.
+- `GET /api/public-dashboard`: confirmed public results, recalculated group standings, group leaders, top scorers, tournament summary, and stage progress.
 - `GET /api/results-agent/status`: mock-default results-agent status with persisted stale-match and leaderboard rebuild metadata.
 - `POST /api/results-agent/run`: mock-default catch-up/update cycle endpoint that upserts match results and persisted leaderboard rows; must be protected before any real provider or production writes are connected.
 
@@ -173,8 +174,13 @@ Useful provider operations:
 
 ```bash
 npm run validate:provider-match-map
+npm run simulate:reset
+npm run simulate:matchday1
+npm run simulate:matchday1:disagreement
 ```
 
 Live result-agent writes require `x-results-agent-secret: <RESULTS_AGENT_SECRET>` on `POST /api/results-agent/run`. Mock mode remains simple for local development.
 
 Public results follow a confirmed-results-only policy. Provider final scores are first treated as provisional unless two independent providers agree immediately, or the same provider repeats the same final score after `RESULT_CONFIRMATION_DELAY_MINUTES`. The leaderboard rebuilds only from confirmed final scores.
+
+The matchday simulation is a developer workflow for proving the full confirmed-result path without external APIs. See `docs/E2E_SIMULATION.md`.

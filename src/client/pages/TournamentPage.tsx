@@ -13,8 +13,16 @@ import {
   tournamentSummary,
   tournamentTopScorers
 } from '../data/mock.js';
+import { usePublicDashboardSnapshot } from '../lib/publicApi.js';
 
 export function TournamentPage() {
+  const dashboardSnapshot = usePublicDashboardSnapshot();
+  const visibleSummary = dashboardSnapshot?.tournamentSummary ?? tournamentSummary;
+  const visibleProgress = dashboardSnapshot?.tournamentProgressByStage ?? tournamentProgressByStage;
+  const visibleGroups = dashboardSnapshot?.groupStandings ?? groupStandings;
+  const visibleTopScorers = dashboardSnapshot ? dashboardSnapshot.topScorers : tournamentTopScorers;
+  const visibleStats = dashboardSnapshot?.tournamentStats ?? tournamentStats;
+
   return (
     <section className="tournament-center-page">
       <PageHeader
@@ -24,9 +32,9 @@ export function TournamentPage() {
       />
 
       <Card title="Turniiri kokkuvõte" eyebrow="Hetkeseis" className="tournament-section">
-        <TournamentSummaryCards metrics={tournamentSummary} />
+        <TournamentSummaryCards metrics={visibleSummary} />
         <div className="stage-progress-list" aria-label="Mängude edenemine etappide kaupa">
-          {tournamentProgressByStage.map((stage) => {
+          {visibleProgress.map((stage) => {
             const percent = Math.round((stage.completed / stage.total) * 100);
             return (
               <article className="stage-progress-row" key={stage.stage}>
@@ -45,7 +53,7 @@ export function TournamentPage() {
       </Card>
 
       <Card title="Alagrupitabelid" eyebrow="Alagrupid A-L" className="tournament-section">
-        <GroupStandingsGrid groups={groupStandings} />
+        <GroupStandingsGrid groups={visibleGroups} />
       </Card>
 
       <Card title="Play-off" eyebrow="Tabelipuu" className="tournament-section bracket-section">
@@ -54,11 +62,11 @@ export function TournamentPage() {
 
       <section className="tournament-secondary-grid">
         <Card title="Väravalööjad" eyebrow="Väravaküttide seis" className="tournament-section">
-          <TopScorersTable scorers={tournamentTopScorers} />
+          <TopScorersTable scorers={visibleTopScorers} />
         </Card>
 
         <Card title="Turniiri statistika" eyebrow="Numbrid" className="tournament-section">
-          <TournamentStatsCards stats={tournamentStats} />
+          <TournamentStatsCards stats={visibleStats} />
         </Card>
       </section>
     </section>

@@ -3,10 +3,13 @@ import { MatchCard } from '../components/MatchCard.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { ResultCard } from '../components/ResultCard.js';
 import { confirmedLatestResults, getPublicMatchSection, upcomingFixtures } from '../data/publicDashboard.js';
+import { usePublicDashboardSnapshot } from '../lib/publicApi.js';
 
 export function ResultsPage() {
+  const dashboardSnapshot = usePublicDashboardSnapshot();
   const matchSection = getPublicMatchSection();
   const upcoming = upcomingFixtures(new Date(), 6);
+  const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
 
   return (
     <>
@@ -18,9 +21,9 @@ export function ResultsPage() {
           </div>
         </Card>
         <Card title="Viimased tulemused" eyebrow="Lõppenud">
-          {confirmedLatestResults.length > 0 ? (
+          {latestResults.length > 0 ? (
             <div className="result-card-grid">
-              {confirmedLatestResults.map((result) => <ResultCard result={result} key={result.id} />)}
+              {latestResults.map((result) => <ResultCard result={result} key={result.id} />)}
             </div>
           ) : (
             <p className="empty-state">Lõppenud mänge veel ei ole.</p>

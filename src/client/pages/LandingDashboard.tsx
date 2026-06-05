@@ -7,11 +7,15 @@ import { NavigationCards } from '../components/NavigationCards.js';
 import { ResultCard } from '../components/ResultCard.js';
 import { groupLeaders, heroMetrics, navigationCards } from '../data/mock.js';
 import { confirmedLatestResults, getPublicMatchSection } from '../data/publicDashboard.js';
+import { usePersistedLeaderboardRows, usePublicDashboardSnapshot } from '../lib/publicApi.js';
 import { getLeaderboardRows } from '../lib/predictionViewModels.js';
 
 export function LandingDashboard() {
-  const leaderboardPreview = getLeaderboardRows().slice(0, 5);
+  const dashboardSnapshot = usePublicDashboardSnapshot();
+  const leaderboardPreview = usePersistedLeaderboardRows(getLeaderboardRows()).slice(0, 5);
   const matchSection = getPublicMatchSection();
+  const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
+  const visibleGroupLeaders = dashboardSnapshot?.groupLeaders ?? groupLeaders;
 
   return (
     <div className="landing-dashboard">
@@ -37,9 +41,9 @@ export function LandingDashboard() {
             <h2>Viimased tulemused</h2>
           </div>
         </div>
-        {confirmedLatestResults.length > 0 ? (
+        {latestResults.length > 0 ? (
           <div className="result-card-grid">
-            {confirmedLatestResults.map((result) => <ResultCard result={result} key={result.id} />)}
+            {latestResults.map((result) => <ResultCard result={result} key={result.id} />)}
           </div>
         ) : (
           <p className="empty-state">Lõppenud mänge veel ei ole.</p>
@@ -56,7 +60,7 @@ export function LandingDashboard() {
           </div>
           <span className="section-count">A-L</span>
         </div>
-        <GroupLeaderGrid groups={groupLeaders} />
+        <GroupLeaderGrid groups={visibleGroupLeaders} />
       </Card>
 
       <Card>

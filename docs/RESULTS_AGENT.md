@@ -156,6 +156,30 @@ MVP catch-up strategy:
 
 No complex pending queue is needed for MVP. The database state and provider API are enough to recover missed polling intervals.
 
+## End-to-End Simulation
+
+Sprint 18 adds a controlled first-matchday simulation. It uses `SimulationResultProvider`, not external APIs.
+
+Commands:
+
+```bash
+npm run simulate:reset
+npm run simulate:matchday1
+npm run simulate:matchday1:disagreement
+```
+
+The simulation proves:
+
+- first final observations become provisional and do not rebuild the leaderboard
+- repeated matching final observations become confirmed after the configured fallback delay
+- confirmed results persist through `match_results`
+- leaderboard rows persist through `leaderboard_entries`
+- public latest results only show confirmed final scores
+- derived group standings and simulation top scorers refresh after confirmation
+- provider disagreement becomes `NEEDS_REVIEW` and does not rebuild the leaderboard
+
+See `docs/E2E_SIMULATION.md` for the exact simulated matches and expected output.
+
 Sprint 5 adds catch-up endpoints that remain mock-default:
 
 - `GET /api/results-agent/status`
