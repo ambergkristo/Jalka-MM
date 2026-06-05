@@ -1,0 +1,33 @@
+name: Render keepalive
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: render-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping public Render app
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Ping Render URL
+        env:
+          RENDER_KEEPALIVE_URL: https://jalka-mm.onrender.com
+          RENDER_KEEPALIVE_TIMEOUT_MS: 30000
+          RENDER_KEEPALIVE_ATTEMPTS: 3
+        run: node scripts/ping-render.mjs

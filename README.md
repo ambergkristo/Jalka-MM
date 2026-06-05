@@ -103,9 +103,28 @@ npm test
 npm run build
 npm run import:excel-seeds
 npm run validate:prediction-seeds
+npm run ping:render
 npm run validate:tournament-data
 npm run audit:tournament-data
 ```
+
+## Render Keepalive
+
+The repository includes a scheduled GitHub Actions workflow at `.github/workflows/render-keepalive.yml`.
+
+It pings the public Render URL every 14 minutes:
+
+```text
+https://jalka-mm.onrender.com
+```
+
+The same check can be run manually:
+
+```bash
+npm run ping:render
+```
+
+This is a lightweight keepalive helper. GitHub scheduled workflows can be delayed by GitHub's runner availability, so a paid always-on Render instance remains the most reliable option if zero hibernation is required.
 
 ## Routes
 

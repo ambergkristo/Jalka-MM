@@ -1,20 +1,15 @@
-# Sprint 9 - Estonian UI Cleanup
+# Render Keepalive Agent
 
-- [x] Read UI/UX, masterplan, sprint, data model, route pages, components, and flag utilities.
-- [x] Remove public data/API status strip.
-- [x] Remove public marketing/status copy blocks.
-- [x] Translate visible public UI copy to Estonian.
-- [x] Add flags to match cards, result cards, knockout cards, group leaders, group standings, and top scorers.
-- [x] Polish compact text layout for match cards, group tables, top scorers, and tournament stats.
-- [x] Document Estonian UI and no-public-debug-status rules.
-- [x] Run full verification commands.
+- [x] Add dependency-free ping script for `https://jalka-mm.onrender.com`.
+- [x] Add scheduled GitHub Actions workflow with a 14-minute cadence.
+- [x] Add manual npm script for immediate/local ping checks.
+- [x] Document reliability caveat for GitHub scheduled workflows.
+- [x] Run validation commands.
 - [x] Commit, push, and verify `HEAD == origin/main`.
 
 ## Review
 
-- Public UI must stay Estonian.
-- Internal status/debug labels belong in APIs, logs, or docs, not public pages.
-- True left/right playoff bracket tree remains deferred to Sprint 10.
-- Verification passed: `npm test`, `npm run build`, `npm run validate:prediction-seeds`, `npm run validate:tournament-data`, `npm run audit:tournament-data`, and production preview route smoke checks.
-- Tournament data audit still reports the existing terminal-only `partial_official` medium-risk warning for unresolved knockout dates and slots.
+- The workflow has no end date and runs on the default branch schedule.
+- GitHub Actions scheduling is best-effort and can be delayed; paid Render always-on hosting is the only strict guarantee against hibernation.
+- Validation passed: `npm run ping:render`, `npm test`, `npm run build`, `npm run validate:prediction-seeds`, `npm run validate:tournament-data`, and `npm run audit:tournament-data`.
 - Git publication completed after verification.
