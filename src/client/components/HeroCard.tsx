@@ -4,7 +4,10 @@ export function HeroCard({ metrics }: { metrics: DashboardMetric[] }) {
   return (
     <section className="hero-card" aria-labelledby="dashboard-title">
       <div className="hero-copy">
-        <h1 id="dashboard-title">MM 2026 Ennustusliiga</h1>
+        <h1 id="dashboard-title">
+          <span>MM 2026</span>
+          <span>Ennustusliiga</span>
+        </h1>
         <p className="hero-lead">Turniiri ja sõprade ennustusliiga ülevaade ühes kohas.</p>
       </div>
 

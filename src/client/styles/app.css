@@ -172,15 +172,15 @@ main {
 
 .team-badge {
   display: inline-grid;
-  grid-template-columns: 25px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   min-width: 0;
   max-width: 100%;
 }
 
 .team-badge.right {
-  grid-template-columns: minmax(0, 1fr) 25px;
+  grid-template-columns: minmax(0, 1fr) 24px;
   text-align: right;
 }
 
@@ -191,8 +191,8 @@ main {
 .team-flag {
   display: grid;
   place-items: center;
-  width: 25px;
-  height: 19px;
+  width: 24px;
+  height: 18px;
   overflow: hidden;
   border-radius: 3px;
   background: rgba(255, 255, 255, .10);
@@ -216,9 +216,11 @@ main {
 .team-copy strong {
   min-width: 0;
   color: var(--white);
-  font-size: .94rem;
-  line-height: 1.08;
-  overflow-wrap: anywhere;
+  font-size: .9rem;
+  line-height: 1.12;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-copy small {
@@ -353,12 +355,19 @@ main {
 
 .hero-copy h1 {
   margin: 0;
-  max-width: 760px;
+  max-width: 100%;
   font-family: "Archivo Black", "Arial Black", sans-serif;
-  font-size: clamp(2.7rem, 13vw, 6.4rem);
-  line-height: .88;
+  font-size: clamp(2rem, 9.6vw, 6.4rem);
+  line-height: .92;
   letter-spacing: 0;
   text-transform: uppercase;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.hero-copy h1 span {
+  display: block;
+  max-width: 100%;
 }
 
 .hero-lead {
@@ -449,8 +458,8 @@ main {
 .match-card-premium,
 .result-card {
   display: grid;
-  gap: 13px;
-  padding: 13px;
+  gap: 12px;
+  padding: 12px;
 }
 
 .match-card-topline {
@@ -463,6 +472,14 @@ main {
   text-transform: uppercase;
 }
 
+.match-card-topline span,
+.match-card-topline em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .match-card-topline em {
   color: var(--gold);
   font-style: normal;
@@ -470,20 +487,26 @@ main {
 
 .match-teams {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
-.match-teams span {
+.match-teams > .team-badge {
+  min-width: 0;
+}
+
+.match-kickoff {
   display: grid;
   place-items: center;
-  min-width: 64px;
-  min-height: 44px;
+  min-width: 0;
+  min-height: 38px;
   border: 1px solid rgba(212, 175, 55, .38);
   border-radius: var(--radius);
   background: rgba(212, 175, 55, .12);
   color: #ffe996;
+  font-size: .86rem;
   font-weight: 950;
 }
 
@@ -497,9 +520,10 @@ main {
 
 .result-scoreline {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 30px 8px 30px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .result-team {
@@ -513,8 +537,8 @@ main {
 .result-scoreline > span:not(.result-team) {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 38px;
+  width: 30px;
+  height: 34px;
   border-radius: var(--radius);
   background: var(--white);
   color: #111827;
@@ -1723,6 +1747,39 @@ td a {
     grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
     align-items: end;
     padding: 26px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(3.4rem, 8vw, 6.4rem);
+  }
+  .team-badge {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .team-badge.right {
+    grid-template-columns: minmax(0, 1fr) 28px;
+  }
+  .team-flag {
+    width: 28px;
+    height: 21px;
+  }
+  .team-copy strong {
+    font-size: .96rem;
+  }
+  .match-teams {
+    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .match-kickoff {
+    min-height: 44px;
+    font-size: .9rem;
+  }
+  .result-scoreline {
+    grid-template-columns: minmax(0, 1fr) 34px 10px 34px minmax(0, 1fr);
+    gap: 7px;
+  }
+  .result-scoreline > span:not(.result-team) {
+    width: 34px;
+    height: 38px;
   }
   .match-card-grid,
   .result-card-grid,

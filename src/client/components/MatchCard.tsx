@@ -11,7 +11,7 @@ export function MatchCard({ match }: { match: DashboardMatch }) {
       </div>
       <div className="match-teams">
         <TeamBadge team={teamFromName(match.homeTeam)} />
-        <span>{match.kickoffTime}</span>
+        <span className="match-kickoff">{match.kickoffTime}</span>
         <TeamBadge team={teamFromName(match.awayTeam)} align="right" />
       </div>
       <p>{match.venue}</p>
