@@ -1,22 +1,22 @@
-# Sprint 1 - Repository Reset
+# Sprint 2 - Landing Dashboard
 
-- [x] Remove prediction submission UI.
-- [x] Remove login and registration UI.
-- [x] Remove admin UI.
-- [x] Remove deadline and lock UX.
-- [x] Remove old submission/auth/admin API handlers.
-- [x] Remove tests tied to old submission/auth/admin/deadline flows.
-- [x] Add public read-only route skeleton.
-- [x] Add landing dashboard placeholder.
-- [x] Add leaderboard, player, results, tournament, and not-found placeholders.
-- [x] Add basic mobile-first design system.
-- [x] Keep tournament data, validation, scoring, standings, bracket, Vite, and deploy foundations.
+- [x] Read Sprint 0 product and UI documentation.
+- [x] Replace placeholder landing page with a premium tournament dashboard.
+- [x] Add hero with tournament phase, matches completed, and matches remaining.
+- [x] Add Today's Matches section.
+- [x] Add Latest Results section.
+- [x] Add Top 5 Leaderboard preview with full leaderboard link.
+- [x] Add Group Leaders grid for Groups A-L.
+- [x] Add large touch-friendly Quick Navigation cards.
+- [x] Centralize landing mock data.
+- [x] Create reusable landing components.
+- [x] Improve mobile-first dashboard styling.
 - [x] Run verification commands.
 
 ## Review
 
-- Sprint scope is repository reset and application skeleton.
-- Active app is public/read-only with placeholder pages and no submission/auth/admin UI.
-- Active API exposes only public state and health endpoints.
+- Sprint scope is landing dashboard only; no live APIs or integrations were added.
+- Landing page now answers today's matches, latest results, league leader, and tournament situation using mock data.
+- Reusable components added for hero, match cards, result cards, leaderboard preview, group leaders, and navigation cards.
 - Verification passed: `npm test`, `npm run build`, `npm run validate:tournament-data`, and `npm run audit:tournament-data`.
 - Tournament data audit still reports existing `partial_official` status with medium risk because knockout fixture dates and slots remain unresolved.

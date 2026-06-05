@@ -45,7 +45,8 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 
 - Public React/Vite app shell
 - Mobile-first navigation
-- Placeholder dashboard pages
+- Premium Landing Dashboard with matchday, latest results, leaderboard, group leaders, and quick navigation sections
+- Placeholder secondary pages
 - Read-only API health/state endpoints
 - Tournament data seeding and validation
 - No login UI
@@ -77,7 +78,7 @@ npm run audit:tournament-data
 
 ## Routes
 
-- `/`: Landing dashboard with Today's Matches, Latest Results, Top 5 Leaderboard, and Group Leaders placeholders.
+- `/`: Premium mock-data landing dashboard with hero status, Today's Matches, Latest Results, Top 5 Leaderboard, Group Leaders, and Quick Navigation.
 - `/leaderboard`: Placeholder public leaderboard table.
 - `/player/:playerId`: Placeholder public player detail page.
 - `/results`: Placeholder matches and results page.

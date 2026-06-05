@@ -1,71 +1,64 @@
 import { Card } from '../components/Card.js';
-import { PageHeader } from '../components/PageHeader.js';
-import { groupLeaders, leaderboardPreview, matchRows } from '../data/mock.js';
+import { GroupLeaderGrid } from '../components/GroupLeaderGrid.js';
+import { HeroCard } from '../components/HeroCard.js';
+import { LeaderboardPreview } from '../components/LeaderboardPreview.js';
+import { MatchCard } from '../components/MatchCard.js';
+import { NavigationCards } from '../components/NavigationCards.js';
+import { ResultCard } from '../components/ResultCard.js';
+import { groupLeaders, heroMetrics, latestResults, leaderboardPreview, navigationCards, todaysMatches } from '../data/mock.js';
 
 export function LandingDashboard() {
   return (
-    <>
-      <PageHeader
-        eyebrow="Public read-only dashboard"
-        title="MM 2026 Tournament & Prediction Tracker"
-        description="A match-day home for results, table movement, and private league prediction standings."
-      />
+    <div className="landing-dashboard">
+      <HeroCard metrics={heroMetrics} />
 
-      <section className="quick-actions" aria-label="Main sections">
-        <a href="/results">Results</a>
-        <a href="/leaderboard">Leaderboard</a>
-        <a href="/tournament">Tournament</a>
-      </section>
-
-      <section className="dashboard-grid">
-        <Card title="Today's Matches" eyebrow="Matchday">
-          <div className="match-list">
-            {matchRows.slice(0, 2).map((match) => <MatchItem key={`${match.home}-${match.away}`} {...match} />)}
+      <Card className="today-card">
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">Today</p>
+            <h2>Today's Matches</h2>
           </div>
-        </Card>
+          <span className="section-count">{todaysMatches.length} matches</span>
+        </div>
+        <div className="match-card-grid">
+          {todaysMatches.map((match) => <MatchCard match={match} key={match.id} />)}
+        </div>
+      </Card>
 
-        <Card title="Latest Results" eyebrow="Final whistle">
-          <div className="match-list">
-            {matchRows.slice(2).map((match) => <MatchItem key={`${match.home}-${match.away}`} {...match} />)}
+      <Card>
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">Just happened</p>
+            <h2>Latest Results</h2>
           </div>
-        </Card>
+        </div>
+        <div className="result-card-grid">
+          {latestResults.map((result) => <ResultCard result={result} key={result.id} />)}
+        </div>
+      </Card>
 
-        <Card title="Top 5 Leaderboard" eyebrow="Prediction league">
-          <div className="leader-list">
-            {leaderboardPreview.map((row) => (
-              <a className="leader-item" href={`/player/${row.playerId}`} key={row.playerId}>
-                <b>{row.rank}</b>
-                <span>{row.player}</span>
-                <strong>{row.points}</strong>
-              </a>
-            ))}
+      <LeaderboardPreview rows={leaderboardPreview} />
+
+      <Card>
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">Tournament situation</p>
+            <h2>Group Leaders</h2>
           </div>
-        </Card>
+          <span className="section-count">A-L</span>
+        </div>
+        <GroupLeaderGrid groups={groupLeaders} />
+      </Card>
 
-        <Card title="Group Leaders" eyebrow="Tournament">
-          <div className="group-grid">
-            {groupLeaders.map((group) => (
-              <div className="stat-tile" key={group.group}>
-                <span>Group {group.group}</span>
-                <strong>{group.team}</strong>
-                <small>{group.points} pts</small>
-              </div>
-            ))}
+      <Card>
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">Move around</p>
+            <h2>Quick Navigation</h2>
           </div>
-        </Card>
-      </section>
-    </>
-  );
-}
-
-function MatchItem({ time, home, away, status }: { time: string; home: string; away: string; status: string }) {
-  return (
-    <div className="match-item">
-      <span>{time}</span>
-      <strong>{home}</strong>
-      <small>vs</small>
-      <strong>{away}</strong>
-      <em>{status}</em>
+        </div>
+        <NavigationCards items={navigationCards} />
+      </Card>
     </div>
   );
 }
