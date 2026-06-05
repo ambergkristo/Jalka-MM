@@ -27,6 +27,7 @@ Prediction submission is no longer in scope. The previous login, registration, p
 - Excel remains the initial source of truth for final player predictions.
 - A later import step will convert the final Excel file into JSON or seed data.
 - Prediction seed files live under `src/data/` and are loaded through `src/domain/predictionRepository.ts`.
+- Match prediction points are calculated by `src/domain/pointsEngine.ts` using the MVP scoring rules in `docs/SCORING_RULES.md`.
 - The database is the runtime source of truth after data is imported.
 - Match results will later be updated by a separate results agent or cron workflow.
 - Leaderboard entries will be rebuilt after result updates and saved to the database.
@@ -77,6 +78,7 @@ Planning documents live in `docs/`:
 
 - `docs/MASTERPLAN.md`
 - `docs/DATA_MODEL.md`
+- `docs/SCORING_RULES.md`
 - `docs/RESULTS_AGENT.md`
 - `docs/UI_UX.md`
 - `docs/SPRINTS.md`
@@ -107,6 +109,7 @@ npm run audit:tournament-data
 
 - `GET /api/state`: public read-only app state metadata.
 - `GET /api/health`: public health check.
+- `GET /api/leaderboard`: current leaderboard entries; currently seed data until the mock result agent produces an in-memory recalculation.
 - `GET /api/results-agent/status`: mock-only results-agent status for Sprint 5 groundwork.
 - `POST /api/results-agent/run`: mock-only catch-up/update cycle endpoint; must be protected before any real provider or production writes are connected.
 

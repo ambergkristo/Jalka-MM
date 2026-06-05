@@ -1,0 +1,12 @@
+[
+  { "playerId": "argo", "matchId": 4, "homeScore": 2, "awayScore": 1 },
+  { "playerId": "kristo", "matchId": 4, "homeScore": 1, "awayScore": 0 },
+  { "playerId": "martin", "matchId": 4, "homeScore": 0, "awayScore": 1 },
+  { "playerId": "mari", "matchId": 4, "homeScore": 2, "awayScore": 1 },
+  { "playerId": "liis", "matchId": 4, "homeScore": 1, "awayScore": 1 },
+  { "playerId": "taavi", "matchId": 4, "homeScore": 3, "awayScore": 1 },
+  { "playerId": "kadri", "matchId": 4, "homeScore": 0, "awayScore": 0 },
+  { "playerId": "juhan", "matchId": 4, "homeScore": 2, "awayScore": 0 },
+  { "playerId": "sander", "matchId": 4, "homeScore": 1, "awayScore": 2 },
+  { "playerId": "helen", "matchId": 4, "homeScore": 2, "awayScore": 1 }
+]

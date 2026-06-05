@@ -23,13 +23,15 @@ describe('result agent update cycle', () => {
     expect(summary.leaderboardRebuilds[0]).toMatchObject({
       playersProcessed: 10,
       matchesProcessed: 1,
-      changedEntries: 5
+      entries: expect.any(Array),
+      warnings: []
     });
+    expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ playerId: 'argo', points: 3, exactScores: 1 });
   });
 });
 
-describe('leaderboard rebuild skeleton', () => {
-  it('returns deterministic rebuild metadata for finalized result inputs', async () => {
+describe('leaderboard rebuild', () => {
+  it('returns recalculated leaderboard entries from seed predictions and finalized results', async () => {
     const result = await rebuildLeaderboardAfterFinalResult({
       now: new Date('2026-06-15T18:00:00.000Z'),
       finalizedResults: [
@@ -44,11 +46,10 @@ describe('leaderboard rebuild skeleton', () => {
         }
       ]
     });
-    expect(result).toEqual({
-      recalculatedAt: '2026-06-15T18:00:00.000Z',
-      playersProcessed: 10,
-      matchesProcessed: 1,
-      changedEntries: 5
-    });
+    expect(result.recalculatedAt).toBe('2026-06-15T18:00:00.000Z');
+    expect(result.playersProcessed).toBe(10);
+    expect(result.matchesProcessed).toBe(1);
+    expect(result.warnings).toEqual([]);
+    expect(result.entries[0]).toMatchObject({ playerId: 'argo', rank: 1, points: 3, exactScores: 1, correctResults: 1 });
   });
 });

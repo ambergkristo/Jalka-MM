@@ -2,6 +2,7 @@ import awardsSeed from '../data/predictions/awardsPredictions.json' with { type:
 import groupSeed from '../data/predictions/groupPredictions.json' with { type: 'json' };
 import knockoutSeed from '../data/predictions/knockoutPredictions.json' with { type: 'json' };
 import leaderboardSeed from '../data/predictions/leaderboardSeed.json' with { type: 'json' };
+import matchPredictionSeed from '../data/predictions/matchPredictions.json' with { type: 'json' };
 import playersSeed from '../data/players.json' with { type: 'json' };
 
 export interface Player {
@@ -18,6 +19,17 @@ export interface GroupPrediction {
   first: string;
   second: string;
   third: string;
+}
+
+export interface PlayerMatchPrediction {
+  playerId: string;
+  matchId: number;
+  homeScore: number;
+  awayScore: number;
+  predictedHomeTeam?: string;
+  predictedAwayTeam?: string;
+  predictedWinner?: string;
+  penaltyWinner?: string;
 }
 
 export type KnockoutRound = 'R32' | 'R16' | 'QF' | 'SF' | 'Final';
@@ -59,6 +71,7 @@ export interface LeaderboardEntry {
 export interface PredictionBundle {
   player: Player;
   leaderboardEntry?: LeaderboardEntry;
+  matchPredictions: PlayerMatchPrediction[];
   groupPredictions: GroupPrediction[];
   knockoutPrediction?: KnockoutPrediction;
   awardsPrediction?: AwardsPrediction;
@@ -67,6 +80,7 @@ export interface PredictionBundle {
 
 export interface PredictionSeedData {
   players: Player[];
+  matchPredictions: PlayerMatchPrediction[];
   groupPredictions: GroupPrediction[];
   knockoutPredictions: KnockoutPrediction[];
   awardsPredictions: AwardsPrediction[];
@@ -81,6 +95,7 @@ export interface PredictionSeedLoadResult {
 export interface PredictionRepository {
   getPlayers(): Player[];
   getPlayerById(playerId: string): Player | undefined;
+  getMatchPredictions(playerId?: string): PlayerMatchPrediction[];
   getGroupPredictions(playerId?: string): GroupPrediction[];
   getKnockoutPredictions(playerId?: string): KnockoutPrediction[];
   getAwardsPredictions(playerId?: string): AwardsPrediction[];
@@ -96,6 +111,7 @@ interface RawGroupPredictionSet {
 
 const emptySeedData: PredictionSeedData = {
   players: [],
+  matchPredictions: [],
   groupPredictions: [],
   knockoutPredictions: [],
   awardsPredictions: [],
@@ -105,6 +121,7 @@ const validGroupIds = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
 
 export function loadPredictionSeedData(raw: {
   players: unknown;
+  matchPredictions?: unknown;
   groupPredictions: unknown;
   knockoutPredictions: unknown;
   awardsPredictions: unknown;
@@ -112,11 +129,12 @@ export function loadPredictionSeedData(raw: {
 }): PredictionSeedLoadResult {
   const errors: string[] = [];
   const players = asArray<Player>(raw.players, 'players', errors).filter((player) => isString(player.id, 'players.id', errors) && isString(player.name, 'players.name', errors));
+  const matchPredictions = asArray<PlayerMatchPrediction>(raw.matchPredictions ?? [], 'matchPredictions', errors);
   const groupPredictions = normalizeGroupPredictions(raw.groupPredictions, errors);
   const knockoutPredictions = asArray<KnockoutPrediction>(raw.knockoutPredictions, 'knockoutPredictions', errors);
   const awardsPredictions = asArray<AwardsPrediction>(raw.awardsPredictions, 'awardsPredictions', errors);
   const leaderboard = asArray<LeaderboardEntry>(raw.leaderboard, 'leaderboard', errors);
-  const data = { players, groupPredictions, knockoutPredictions, awardsPredictions, leaderboard };
+  const data = { players, matchPredictions, groupPredictions, knockoutPredictions, awardsPredictions, leaderboard };
   errors.push(...validatePredictionSeedData(data));
   return { data: errors.length ? { ...emptySeedData, players } : data, errors };
 }
@@ -136,6 +154,11 @@ export function validatePredictionSeedData(data: PredictionSeedData): string[] {
     if (!playerIds.has(playerId)) errors.push(`${kind} references missing player: ${playerId}`);
   };
   for (const row of data.leaderboard) checkPlayerReference('Leaderboard entry', row.playerId);
+  for (const row of data.matchPredictions) {
+    checkPlayerReference('Match prediction', row.playerId);
+    if (!Number.isInteger(row.matchId) || row.matchId <= 0) errors.push(`Match prediction for ${row.playerId} has invalid match id: ${row.matchId}`);
+    if (!Number.isInteger(row.homeScore) || !Number.isInteger(row.awayScore) || row.homeScore < 0 || row.awayScore < 0) errors.push(`Match prediction for ${row.playerId} match ${row.matchId} has invalid score.`);
+  }
   for (const row of data.groupPredictions) checkPlayerReference('Group prediction', row.playerId);
   for (const row of data.knockoutPredictions) checkPlayerReference('Knockout prediction', row.playerId);
   for (const row of data.awardsPredictions) checkPlayerReference('Awards prediction', row.playerId);
@@ -171,6 +194,10 @@ export class JsonPredictionRepository implements PredictionRepository {
     return this.data.players.find((player) => player.id === playerId);
   }
 
+  getMatchPredictions(playerId?: string): PlayerMatchPrediction[] {
+    return this.filterByPlayer(this.data.matchPredictions, playerId);
+  }
+
   getGroupPredictions(playerId?: string): GroupPrediction[] {
     return this.filterByPlayer(this.data.groupPredictions, playerId);
   }
@@ -190,6 +217,7 @@ export class JsonPredictionRepository implements PredictionRepository {
     return {
       player,
       leaderboardEntry: this.data.leaderboard.find((row) => row.playerId === playerId),
+      matchPredictions: this.getMatchPredictions(playerId),
       groupPredictions: this.getGroupPredictions(playerId),
       knockoutPrediction: this.getKnockoutPredictions(playerId)[0],
       awardsPrediction: this.getAwardsPredictions(playerId)[0],
@@ -215,6 +243,7 @@ export const predictionRepository: PredictionRepository = new JsonPredictionRepo
 export function loadDefaultPredictionSeedData(): PredictionSeedLoadResult {
   return loadPredictionSeedData({
     players: playersSeed,
+    matchPredictions: matchPredictionSeed,
     groupPredictions: groupSeed,
     knockoutPredictions: knockoutSeed,
     awardsPredictions: awardsSeed,

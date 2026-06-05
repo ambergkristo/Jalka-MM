@@ -39,6 +39,17 @@ export interface LeaderboardRebuildResult {
   playersProcessed: number;
   matchesProcessed: number;
   changedEntries: number;
+  entries: Array<{
+    playerId: string;
+    rank: number;
+    points: number;
+    exactScores: number;
+    correctResults: number;
+    hitRate: number;
+    previousRank?: number;
+    lastUpdatedAt: string;
+  }>;
+  warnings: string[];
 }
 
 export interface ResultAgentStatus {

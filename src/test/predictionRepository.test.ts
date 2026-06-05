@@ -3,6 +3,7 @@ import { JsonPredictionRepository, loadDefaultPredictionSeedData, validatePredic
 
 const validSeed: PredictionSeedData = {
   players: [{ id: 'argo', name: 'Argo' }],
+  matchPredictions: [{ playerId: 'argo', matchId: 4, homeScore: 2, awayScore: 1 }],
   groupPredictions: Array.from({ length: 12 }, (_, index) => ({
     playerId: 'argo',
     group: String.fromCharCode(65 + index),
@@ -28,6 +29,7 @@ describe('prediction seed validation', () => {
     const loadResult = loadDefaultPredictionSeedData();
     expect(loadResult.errors).toEqual([]);
     expect(loadResult.data.players).toHaveLength(10);
+    expect(loadResult.data.matchPredictions).toHaveLength(10);
     expect(loadResult.data.leaderboard).toHaveLength(10);
   });
 
@@ -70,6 +72,7 @@ describe('prediction repository', () => {
     expect(repository.getLeaderboard()[0]).toMatchObject({ playerId: 'argo', rank: 1 });
     const bundle = repository.getPlayerPredictionBundle('argo');
     expect(bundle?.player.name).toBe('Argo');
+    expect(bundle?.matchPredictions).toHaveLength(1);
     expect(bundle?.groupPredictions).toHaveLength(12);
     expect(bundle?.awardsPrediction?.championTeam).toBe('Brazil');
   });

@@ -148,6 +148,7 @@ interface TopScorerStanding {
 - `Player` records are public league participant records imported from the finalized prediction data.
 - `Match` records store tournament schedule, live status, and final scores.
 - `PlayerMatchPrediction`, `PlayerKnockoutPrediction`, `GroupPrediction`, and `AwardsPrediction` are imported from JSON/seed data generated from Excel.
+- Sprint 7 stores MVP match prediction seed data in `src/data/predictions/matchPredictions.json`.
 - `ResultUpdate` records support result-agent observability and catch-up behavior.
 - `LeaderboardEntry` is a saved runtime projection, not a client-side calculation.
 - `GroupStanding` and `TopScorerStanding` are saved runtime projections for the Tournament Center.
