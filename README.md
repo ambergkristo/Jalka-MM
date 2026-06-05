@@ -73,6 +73,7 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
 - Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
 - Mock-only backend results-agent foundation with provider abstraction, polling scheduler, update cycle, leaderboard rebuild skeleton, and catch-up endpoints
+- Result provider configuration/factory scaffold for future API-Football, football-data.org, or Sportmonks integration
 - Prediction seed-data architecture for players, leaderboard entries, group predictions, knockout predictions, and awards predictions
 - Placeholder results page
 - Read-only API health/state endpoints
@@ -89,6 +90,7 @@ Planning documents live in `docs/`:
 - `docs/DATA_MODEL.md`
 - `docs/SCORING_RULES.md`
 - `docs/RESULTS_AGENT.md`
+- `docs/RESULT_PROVIDER_OPTIONS.md`
 - `docs/UI_UX.md`
 - `docs/SPRINTS.md`
 - `docs/LEGACY_AUDIT.md`
@@ -144,3 +146,19 @@ This is a lightweight keepalive helper. GitHub scheduled workflows can be delaye
 - `POST /api/results-agent/run`: mock-only catch-up/update cycle endpoint; must be protected before any real provider or production writes are connected.
 
 All old auth, admin, approval, prediction submission, bonus form, deadline, and lock APIs have been removed from the active server.
+
+## Result Provider Configuration
+
+The default result provider is still mock-only. Real provider modes are scaffolded for Sprint 12 and fail clearly until their adapters are implemented.
+
+```bash
+RESULTS_PROVIDER=mock
+RESULTS_WRITE_MODE=mock
+# RESULTS_API_KEY=
+# RESULTS_API_BASE_URL=
+# RESULTS_COMPETITION_ID=
+# RESULTS_SEASON=2026
+# RESULTS_AGENT_SECRET=
+```
+
+See `.env.example`, `docs/RESULTS_AGENT.md`, and `docs/RESULT_PROVIDER_OPTIONS.md` before enabling a real provider.

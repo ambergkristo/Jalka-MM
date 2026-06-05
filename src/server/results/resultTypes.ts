@@ -2,6 +2,7 @@ export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'HT' | 'ET' | 'PEN' | 'FINISHED
 
 export interface TrackedMatch {
   id: number;
+  providerMatchId?: string;
   kickoffUtc: string;
   status: MatchStatus;
   homeTeam: string;
@@ -16,15 +17,19 @@ export interface TrackedMatch {
 
 export interface ResultUpdate {
   matchId: number;
+  providerMatchId?: string;
   status: MatchStatus;
   homeScore?: number;
   awayScore?: number;
   minute?: number;
+  period?: 'REGULAR' | 'EXTRA_TIME' | 'PENALTIES';
   isFinal: boolean;
   lastCheckedAt: string;
   nextCheckAt?: string;
   provider: string;
   rawProviderStatus?: string;
+  providerUpdatedAt?: string;
+  warning?: string;
 }
 
 export interface MatchUpdatePlan {
@@ -57,7 +62,7 @@ export interface ResultAgentStatus {
   nextSuggestedRunAt?: string;
   staleMatchesCount: number;
   provider: string;
-  mode: 'mock';
+  mode: 'mock' | 'live';
 }
 
 export interface ResultAgentRunSummary extends ResultAgentStatus {

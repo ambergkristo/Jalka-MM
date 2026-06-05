@@ -53,7 +53,7 @@ export async function runResultUpdateCycle(input: {
     nextSuggestedRunAt: findNextSuggestedRunAt(refreshedPlans),
     staleMatchesCount: refreshedPlans.filter((plan) => plan.shouldCheckNow).length,
     provider: input.provider.name,
-    mode: 'mock'
+    mode: input.provider.mode
   };
   await input.repository.saveRunSummary(summary);
   return summary;

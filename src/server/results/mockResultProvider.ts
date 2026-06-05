@@ -22,6 +22,7 @@ const scenarios: Record<number, MockScenario> = {
 
 export class MockResultProvider implements ResultProvider {
   name = 'mock-result-provider';
+  mode = 'mock' as const;
 
   async fetchMatchUpdate(match: TrackedMatch, now: Date): Promise<ResultUpdate> {
     const scenario = scenarios[match.id] ?? inferScenario(match, now);

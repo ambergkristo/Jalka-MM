@@ -1,11 +1,11 @@
 import { InMemoryResultRepository } from './inMemoryResultRepository.js';
-import { MockResultProvider } from './mockResultProvider.js';
 import { getResultAgentStatus, runResultUpdateCycle } from './resultAgent.js';
+import { createResultProvider } from './resultProviderFactory.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import type { LeaderboardRebuildResult } from './resultTypes.js';
 
 const repository = new InMemoryResultRepository();
-const provider = new MockResultProvider();
+const provider = createResultProvider();
 let latestRebuild: LeaderboardRebuildResult | undefined;
 
 export function getResultsAgentStatus(now = new Date()) {

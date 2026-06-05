@@ -1,0 +1,20 @@
+[
+  {
+    "internalMatchId": 1,
+    "provider": "api-football",
+    "providerCompetitionId": "world-cup",
+    "providerSeason": "2026",
+    "providerFixtureId": null,
+    "confidence": "example",
+    "notes": "Populate after fetching the provider fixture list. Match by competition, kickoffUtc, home/away team ids, then store providerFixtureId."
+  },
+  {
+    "internalMatchId": 1,
+    "provider": "sportmonks",
+    "providerCompetitionId": "732",
+    "providerSeason": "2026",
+    "providerFixtureId": null,
+    "confidence": "example",
+    "notes": "Sportmonks World Cup 2026 docs reference league id 732; verify in account before Sprint 12."
+  }
+]
