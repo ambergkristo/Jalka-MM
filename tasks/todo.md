@@ -10,7 +10,7 @@
 - [x] Update provider strategy docs, results-agent docs, README, and `.env.example`.
 - [x] Run `npm run build`.
 - [x] Run targeted provider/consensus/agent tests.
-- [ ] Commit, push, and verify `HEAD == origin/main`.
+- [x] Commit, push, and verify `HEAD == origin/main`.
 
 ## Review
 
