@@ -1,14 +1,19 @@
-# World Cup 2026 Predictor MVP
+# Sprint 0 - Architecture Lock
 
-- [x] Isolate the new predictor app from the existing booking system.
-- [x] Create a pure TypeScript scoring engine with unit tests.
-- [x] Add a Node backend with SQLite schema, seed data, manual result provider, and recalculation.
-- [x] Add a mobile-first React PWA for player, admin, and leaderboard flows.
-- [x] Document local setup, seeding, admin usage, and provider extension.
-- [x] Run scoring tests and production build.
-- [x] Commit and push changes.
+- [x] Rewrite README for the public read-only MM 2026 tracker direction.
+- [x] Create product masterplan.
+- [x] Document planned data model.
+- [x] Document future results agent workflow.
+- [x] Document UI/UX direction.
+- [x] Document sprint roadmap.
+- [x] Audit legacy prediction-submission areas.
+- [x] Run existing verification commands.
+- [x] Commit and push documentation changes.
 
 ## Review
 
-- Built as `worldcup2026/` to avoid overwriting the existing FUTU booking app and uncommitted user changes.
-- Reference files are located in `C:\Users\Kasutaja\Documents\Jalka MM APP`; the runtime has no spreadsheet/PDF dependency.
+- Sprint scope is documentation only.
+- New direction is public/read-only with final predictions sourced from Excel outside the app.
+- Prediction submission, login, registration, admin approval, and deadline UX are legacy areas scheduled for Sprint 1 removal.
+- Verification passed: `npm test`, `npm run build`, `npm run validate:tournament-data`, and `npm run audit:tournament-data`.
+- Tournament data audit still reports existing `partial_official` status with medium risk because knockout fixture dates and slots remain unresolved.
