@@ -1,51 +1,70 @@
 import { Card } from '../components/Card.js';
+import { GroupStandingsGrid } from '../components/GroupStandingsGrid.js';
+import { KnockoutStage } from '../components/KnockoutStage.js';
 import { PageHeader } from '../components/PageHeader.js';
-import { groupLeaders, topScorers } from '../data/mock.js';
+import { TopScorersTable } from '../components/TopScorersTable.js';
+import { TournamentStatsCards } from '../components/TournamentStatsCards.js';
+import { TournamentSummaryCards } from '../components/TournamentSummaryCards.js';
+import {
+  groupStandings,
+  knockoutStages,
+  tournamentProgressByStage,
+  tournamentStats,
+  tournamentSummary,
+  tournamentTopScorers
+} from '../data/mock.js';
 
 export function TournamentPage() {
   return (
-    <>
-      <PageHeader eyebrow="Tournament center" title="MM 2026 Tournament" description="Public tournament overview skeleton for standings, bracket, scorers, and statistics." />
-      <section className="dashboard-grid">
-        <Card title="Group Standings" eyebrow="Groups">
-          <div className="group-grid">
-            {groupLeaders.map((group) => (
-              <div className="stat-tile" key={group.group}>
-                <span>Group {group.group}</span>
-                <strong>{group.team}</strong>
-                <small>{group.points} pts</small>
-              </div>
-            ))}
-          </div>
+    <section className="tournament-center-page">
+      <PageHeader
+        eyebrow="Tournament center"
+        title="MM 2026 Tournament"
+        description="Public tournament overview for groups, knockout path, scorers, statistics, and match progress."
+      />
+
+      <Card title="Tournament Summary" eyebrow="Live snapshot" className="tournament-section">
+        <TournamentSummaryCards metrics={tournamentSummary} />
+        <div className="stage-progress-list" aria-label="Match progress by stage">
+          {tournamentProgressByStage.map((stage) => {
+            const percent = Math.round((stage.completed / stage.total) * 100);
+            return (
+              <article className="stage-progress-row" key={stage.stage}>
+                <div>
+                  <strong>{stage.stage}</strong>
+                  <span>{stage.completed} / {stage.total} matches</span>
+                </div>
+                <div className="stage-progress-track" aria-hidden="true">
+                  <span style={{ width: `${percent}%` }} />
+                </div>
+                <b>{percent}%</b>
+              </article>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card title="Group Standings" eyebrow="Groups A-L" className="tournament-section">
+        <GroupStandingsGrid groups={groupStandings} />
+      </Card>
+
+      <Card title="Knockout Bracket" eyebrow="Progression view" className="tournament-section">
+        <section className="knockout-progression" aria-label="Knockout bracket progression">
+          {knockoutStages.map((stage) => (
+            <KnockoutStage stage={stage} key={stage.stage} />
+          ))}
+        </section>
+      </Card>
+
+      <section className="tournament-secondary-grid">
+        <Card title="Top Scorers" eyebrow="Golden boot race" className="tournament-section">
+          <TopScorersTable scorers={tournamentTopScorers} />
         </Card>
-        <Card title="Knockout Bracket" eyebrow="Playoffs">
-          <div className="bracket-placeholder">
-            <span>R32</span>
-            <span>R16</span>
-            <span>QF</span>
-            <span>SF</span>
-            <span>Final</span>
-          </div>
-        </Card>
-        <Card title="Top Scorers" eyebrow="Golden boot">
-          <div className="leader-list">
-            {topScorers.map((row) => (
-              <div className="leader-item" key={row.player}>
-                <b>{row.rank}</b>
-                <span>{row.player}</span>
-                <strong>{row.goals}</strong>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card title="Tournament Statistics" eyebrow="Snapshot">
-          <section className="metric-grid compact">
-            <div className="metric-card"><span>Matches</span><strong>104</strong></div>
-            <div className="metric-card"><span>Teams</span><strong>48</strong></div>
-            <div className="metric-card"><span>Groups</span><strong>12</strong></div>
-          </section>
+
+        <Card title="Tournament Statistics" eyebrow="Snapshot" className="tournament-section">
+          <TournamentStatsCards stats={tournamentStats} />
         </Card>
       </section>
-    </>
+    </section>
   );
 }

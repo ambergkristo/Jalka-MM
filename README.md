@@ -48,7 +48,8 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 - Premium Landing Dashboard with matchday, latest results, leaderboard, group leaders, and quick navigation sections
 - Premium leaderboard with top-three highlighting and player profile links
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
-- Placeholder tournament/results pages
+- Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
+- Placeholder results page
 - Read-only API health/state endpoints
 - Tournament data seeding and validation
 - No login UI
@@ -84,7 +85,7 @@ npm run audit:tournament-data
 - `/leaderboard`: Mock-data public leaderboard with rank movement, top-three highlighting, points, exact scores, and hit rate.
 - `/player/:playerId`: Mock-data public player profile with prediction summary, champion/top scorer picks, playoff bracket, and group prediction accordions.
 - `/results`: Placeholder matches and results page.
-- `/tournament`: Placeholder tournament center.
+- `/tournament`: Mock-data Tournament Center with tournament summary, all group standings, mobile-first knockout progression, top scorers, statistics, and match progress by stage.
 - `/not-found`: 404 page.
 
 ## API

@@ -1055,6 +1055,373 @@ td a {
 .accordion summary { min-height: 36px; cursor: pointer; font-weight: 850; }
 .accordion p { color: var(--muted); margin: 8px 0 0; }
 
+.tournament-center-page {
+  display: grid;
+  gap: 14px;
+}
+
+.tournament-section {
+  overflow: hidden;
+}
+
+.tournament-summary-grid,
+.tournament-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.tournament-summary-card,
+.tournament-stat-card {
+  display: grid;
+  gap: 6px;
+  min-height: 104px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .025)),
+    rgba(255, 255, 255, .035);
+}
+
+.tournament-summary-card.gold { border-left: 4px solid var(--gold); }
+.tournament-summary-card.blue { border-left: 4px solid var(--blue); }
+.tournament-summary-card.green { border-left: 4px solid var(--green); }
+.tournament-summary-card.red { border-left: 4px solid var(--red); }
+
+.tournament-summary-card span,
+.tournament-summary-card small,
+.tournament-stat-card span,
+.tournament-stat-card small {
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.tournament-summary-card strong,
+.tournament-stat-card strong {
+  color: var(--white);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.stage-progress-list {
+  display: grid;
+  gap: 9px;
+}
+
+.stage-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 8px;
+  align-items: center;
+  min-height: 64px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+}
+
+.stage-progress-row div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.stage-progress-row strong,
+.stage-progress-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stage-progress-row span {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.stage-progress-row b {
+  justify-self: end;
+  color: var(--gold);
+  font-size: .88rem;
+}
+
+.stage-progress-track {
+  grid-column: 1 / -1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.stage-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold), var(--green));
+}
+
+.group-standings-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.group-standing-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(212, 175, 55, .09), transparent 34%),
+    rgba(255, 255, 255, .035);
+}
+
+.group-standing-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.group-standing-card header span {
+  color: var(--gold);
+  font-size: .78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.group-standing-card header strong {
+  min-width: 0;
+  color: var(--white);
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.group-standing-table {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.standing-row {
+  display: grid;
+  grid-template-columns: minmax(84px, 1fr) repeat(8, minmax(15px, auto));
+  gap: 3px;
+  align-items: center;
+  min-height: 44px;
+  padding: 7px 4px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .035);
+  font-size: .66rem;
+  font-weight: 850;
+}
+
+.standing-head {
+  min-height: 28px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .68rem;
+  text-transform: uppercase;
+}
+
+.standing-row.state-qualified {
+  border-left: 3px solid var(--success);
+  background: rgba(34, 197, 94, .08);
+}
+
+.standing-row.state-third-place {
+  border-left: 3px solid var(--gold);
+}
+
+.standing-row.state-out {
+  opacity: .72;
+}
+
+.standing-team {
+  display: grid;
+  grid-template-columns: 21px minmax(0, 1fr);
+  gap: 2px 4px;
+  align-items: center;
+  min-width: 0;
+}
+
+.standing-team b {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .08);
+  color: var(--gold);
+}
+
+.standing-team span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--white);
+  font-size: .74rem;
+}
+
+.standing-team em {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: .62rem;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.knockout-progression {
+  display: grid;
+  gap: 12px;
+}
+
+.knockout-stage {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.knockout-stage header {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+}
+
+.knockout-stage header span {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  border: 1px solid rgba(212, 175, 55, .30);
+  border-radius: var(--radius);
+  background: rgba(212, 175, 55, .12);
+  color: var(--gold);
+  font-weight: 1000;
+}
+
+.knockout-stage header strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.knockout-stage-matches {
+  display: grid;
+  gap: 8px;
+}
+
+.knockout-match-card {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+}
+
+.knockout-match-card.finished {
+  border-color: rgba(34, 197, 94, .22);
+}
+
+.knockout-match-topline,
+.knockout-team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.knockout-match-topline span,
+.knockout-match-card small {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 850;
+}
+
+.knockout-match-topline strong {
+  color: var(--gold);
+  font-size: .74rem;
+  text-transform: uppercase;
+}
+
+.knockout-team-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 900;
+}
+
+.knockout-team-row .winner {
+  color: #bdf8cf;
+}
+
+.knockout-team-row b {
+  color: var(--white);
+  font-size: 1.1rem;
+}
+
+.tournament-secondary-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.top-scorers-table {
+  display: grid;
+  gap: 7px;
+}
+
+.top-scorer-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1.25fr) minmax(72px, .75fr) 28px 28px;
+  gap: 6px;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
+.top-scorer-head {
+  min-height: 28px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .68rem;
+  text-transform: uppercase;
+}
+
+.top-scorer-row.rank-1 {
+  border: 1px solid rgba(212, 175, 55, .40);
+  background: linear-gradient(90deg, rgba(212, 175, 55, .16), rgba(255, 255, 255, .04));
+}
+
+.top-scorer-row.rank-2,
+.top-scorer-row.rank-3 {
+  border: 1px solid rgba(56, 189, 248, .18);
+}
+
+.top-scorer-row b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, .16);
+  color: var(--gold);
+}
+
+.top-scorer-row strong,
+.top-scorer-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.top-scorer-row strong {
+  color: var(--white);
+}
+
 @media (min-width: 620px) {
   .app-frame { padding: 22px; }
   .topbar { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
@@ -1110,6 +1477,19 @@ td a {
   .group-accordion-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .tournament-summary-grid,
+  .tournament-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .group-standings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .knockout-progression {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tournament-secondary-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  }
 }
 
 @media (min-width: 980px) {
@@ -1128,5 +1508,12 @@ td a {
   }
   .group-accordion-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .group-standings-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .knockout-progression {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: start;
   }
 }

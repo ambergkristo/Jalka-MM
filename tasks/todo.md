@@ -1,23 +1,18 @@
-# Sprint 3 - Leaderboard & Player Profiles
+# Sprint 4 - Tournament Center
 
 - [x] Read Sprint 0 product and UI documentation.
-- [x] Expand centralized mock data to 10 players.
-- [x] Add rank, points, exact scores, correct results, hit rate, and position changes.
-- [x] Add champion predictions and top scorer predictions.
-- [x] Add knockout progression predictions.
-- [x] Add group prediction data for Groups A-L.
-- [x] Build premium leaderboard with top-three highlighting.
-- [x] Make leaderboard rows link to player profiles.
-- [x] Build rich player profile route.
-- [x] Add champion card, top scorer card, bracket view, and group prediction accordions.
-- [x] Keep components reusable for future comparison work.
-- [x] Improve mobile-first leaderboard and profile styling.
+- [x] Expand centralized mock data with tournament summary metrics.
+- [x] Add Groups A-L standings with full table fields.
+- [x] Add mobile-first knockout bracket mock data.
+- [x] Add top scorer standings and tournament statistics.
+- [x] Build reusable Tournament Center components.
+- [x] Replace placeholder `/tournament` page.
+- [x] Add mobile-first styling for compact standings and progression cards.
 - [x] Run verification commands.
 
 ## Review
 
-- Sprint scope is leaderboard and player profile only; no live APIs or integrations were added.
-- Leaderboard and profile routes now use centralized realistic mock data.
-- Player profile now includes summary metrics, predicted champion, predicted top scorer, knockout progression, and group prediction accordions.
-- Verification passed: `npm test`, `npm run build`, `npm run validate:tournament-data`, and `npm run audit:tournament-data`.
+- Sprint scope is Tournament Center only; no live APIs or integrations were added.
+- `/tournament` now uses centralized realistic mock data for summary, all groups, knockout path, top scorers, statistics, and match progress by stage.
+- Verification passed: `npm test`, `npm run build`, `npm run validate:tournament-data`, `npm run audit:tournament-data`, and a built-server `/tournament` smoke check on port 8787.
 - Tournament data audit still reports existing `partial_official` status with medium risk because knockout fixture dates and slots remain unresolved.
