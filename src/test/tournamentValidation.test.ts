@@ -39,7 +39,7 @@ describe('validateTournamentData', () => {
   });
 
   it('fails when verification status is invalid', () => {
-    const result = validateTournamentData({ metadata: { ...metadata, verificationStatus: 'claimed' as any }, teams, groups, matches });
+    const result = validateTournamentData({ metadata: { ...metadata, verificationStatus: 'claimed' as unknown as TournamentMetadata['verificationStatus'] }, teams, groups, matches });
     expect(result.errors).toContain('metadata.verificationStatus claimed is not allowed');
   });
 

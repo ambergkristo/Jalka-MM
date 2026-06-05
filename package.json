@@ -1,5 +1,5 @@
 {
-  "name": "worldcup2026-predictor",
+  "name": "mm2026-tournament-prediction-tracker",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,6 @@
     "seed": "npm run seed:tournament-data",
     "seed:tournament-data": "node --run build:server && node dist/server/seed-cli.js",
     "db:migrate": "node --run build:server && node dist/server/migrate-cli.js",
-    "seed:demo": "node --run build:server && node dist/server/seed-demo-cli.js --confirm=DELETE_LOCAL_DATA",
     "reset:dev": "node --run build:server && node dist/server/reset-dev-cli.js --confirm=DELETE_LOCAL_DATA",
     "backup:db": "node --run build:server && node dist/server/backup-cli.js",
     "validate:tournament-data": "node scripts/validate-tournament-data.mjs",

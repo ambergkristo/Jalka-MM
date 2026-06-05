@@ -39,11 +39,22 @@ Prediction submission is no longer in scope. The previous login, registration, p
 - Player detail: full-screen public profile route for one player's predictions and scoring.
 - Tournament center: group standings, playoff bracket, top scorers, and tournament results.
 
-## Current Sprint
+## Current App State
 
-Sprint 0 is documentation and architecture lock only.
+Sprint 1 reset is in place. The repository now contains the foundation of the public read-only tracker:
 
-No new frontend features, large deletions, new dependencies, or product implementation are intended in this sprint. See the planning documents in `docs/`:
+- Public React/Vite app shell
+- Mobile-first navigation
+- Placeholder dashboard pages
+- Read-only API health/state endpoints
+- Tournament data seeding and validation
+- No login UI
+- No registration UI
+- No admin UI
+- No prediction submission forms
+- No deadline or lock UX
+
+Planning documents live in `docs/`:
 
 - `docs/MASTERPLAN.md`
 - `docs/DATA_MODEL.md`
@@ -64,4 +75,18 @@ npm run validate:tournament-data
 npm run audit:tournament-data
 ```
 
-The current codebase still contains legacy prediction-submission functionality. Treat it as implementation debt scheduled for removal, not as the future product contract.
+## Routes
+
+- `/`: Landing dashboard with Today's Matches, Latest Results, Top 5 Leaderboard, and Group Leaders placeholders.
+- `/leaderboard`: Placeholder public leaderboard table.
+- `/player/:playerId`: Placeholder public player detail page.
+- `/results`: Placeholder matches and results page.
+- `/tournament`: Placeholder tournament center.
+- `/not-found`: 404 page.
+
+## API
+
+- `GET /api/state`: public read-only app state metadata.
+- `GET /api/health`: public health check.
+
+All old auth, admin, approval, prediction submission, bonus form, deadline, and lock APIs have been removed from the active server.

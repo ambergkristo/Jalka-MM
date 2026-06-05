@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rankParticipants, requirePenaltyWinnerForTiedKnockout, scoreGroupBonus, scoreKnockoutBonus, scoreMatch, scoreTopScorer } from '../domain/scoring.js';
+import { requirePenaltyWinnerForTiedKnockout, scoreGroupBonus, scoreKnockoutBonus, scoreMatch, scoreTopScorer } from '../domain/scoring.js';
 
 describe('match scoring', () => {
   it('scores exact score', () => expect(scoreMatch({ matchId: 1, homeGoals: 2, awayGoals: 1 }, { matchId: 1, homeGoals: 2, awayGoals: 1 }).points).toBe(6));
@@ -39,17 +39,3 @@ describe('bonus scoring', () => {
   it('splits top scorer points', () => expect(scoreTopScorer('Player A', ['Player A', 'Player B'])[0].points).toBe(25));
 });
 
-describe('leaderboard', () => {
-  it('breaks ties by earlier submission time', () => {
-    const ranked = rankParticipants([
-      { playerId: 'b', name: 'B', submittedAt: '2026-06-01T12:00:00Z', matchPoints: 5, bonusPoints: 5, totalPoints: 10 },
-      { playerId: 'a', name: 'A', submittedAt: '2026-06-01T10:00:00Z', matchPoints: 10, bonusPoints: 0, totalPoints: 10 }
-    ]);
-    expect(ranked[0].playerId).toBe('a');
-  });
-
-  it('keeps full recalculation ranking idempotent', () => {
-    const scores = [{ playerId: 'a', name: 'A', submittedAt: '2026-06-01T10:00:00Z', matchPoints: 6, bonusPoints: 4, totalPoints: 10 }];
-    expect(rankParticipants(rankParticipants(scores))).toEqual(rankParticipants(scores));
-  });
-});

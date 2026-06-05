@@ -3,8 +3,10 @@ import { flagIconUrl } from '../lib/flagAssets.js';
 
 const PLACEHOLDER_ICON = '\u26bd';
 
-export function TeamBadge({ team, slotLabel, align = 'left' }: { team?: Partial<Team> | null; slotLabel?: string; align?: 'left' | 'right' }) {
-  const name = (team as any)?.name_et || team?.nameEt || team?.name || slotLabel || 'V\u00f5istkond t\u00e4psustamisel';
+type TeamBadgeTeam = Partial<Team> & { name_et?: string };
+
+export function TeamBadge({ team, slotLabel, align = 'left' }: { team?: TeamBadgeTeam | null; slotLabel?: string; align?: 'left' | 'right' }) {
+  const name = team?.name_et || team?.nameEt || team?.name || slotLabel || 'Team TBC';
   const code = team?.code;
   const flagUrl = flagIconUrl(code);
 
