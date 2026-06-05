@@ -49,6 +49,7 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 - Premium leaderboard with top-three highlighting and player profile links
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
 - Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
+- Mock-only backend results-agent foundation with provider abstraction, polling scheduler, update cycle, leaderboard rebuild skeleton, and catch-up endpoints
 - Placeholder results page
 - Read-only API health/state endpoints
 - Tournament data seeding and validation
@@ -92,5 +93,7 @@ npm run audit:tournament-data
 
 - `GET /api/state`: public read-only app state metadata.
 - `GET /api/health`: public health check.
+- `GET /api/results-agent/status`: mock-only results-agent status for Sprint 5 groundwork.
+- `POST /api/results-agent/run`: mock-only catch-up/update cycle endpoint; must be protected before any real provider or production writes are connected.
 
 All old auth, admin, approval, prediction submission, bonus form, deadline, and lock APIs have been removed from the active server.

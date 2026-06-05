@@ -1,6 +1,17 @@
 # Results Agent Plan
 
-The results agent is a future separate agent or cron workflow that updates tournament match statuses and scores. It is not implemented in Sprint 0.
+The results agent is the backend workflow that updates tournament match statuses and scores. Sprint 5 implements the first mock-only foundation; a real football provider is still deferred.
+
+Current implementation modules live in `src/server/results/`:
+
+- `resultTypes.ts`
+- `resultProvider.ts`
+- `mockResultProvider.ts`
+- `matchScheduler.ts`
+- `resultAgent.ts`
+- `leaderboardRebuild.ts`
+- `inMemoryResultRepository.ts`
+- `resultAgentRuntime.ts`
 
 ## Responsibilities
 
@@ -42,6 +53,8 @@ Each tracked update should store:
 - optional raw provider status
 - optional error message
 
+Sprint 5 stores this through an in-memory repository interface. The existing database schema already has `match_results`, `result_updates`, and `leaderboard_entries` tables, but the production repository implementation is intentionally deferred until the real import/provider work starts.
+
 ## Polling Rules
 
 Recommended MVP polling schedule:
@@ -80,6 +93,22 @@ MVP catch-up strategy:
 4. Any newly finalized result triggers a leaderboard rebuild.
 
 No complex pending queue is needed for MVP. The database state and provider API are enough to recover missed polling intervals.
+
+Sprint 5 adds mock-only catch-up endpoints:
+
+- `GET /api/results-agent/status`
+- `POST /api/results-agent/run`
+
+The `POST` endpoint runs one safe/idempotent update cycle against the mock provider. It is public for now because it makes no external calls, has no real side effects outside process memory, and exists only as architecture groundwork. Before connecting a real provider or persistent production writes, protect this endpoint with a scheduler secret, internal cron trigger, or equivalent server-side authorization.
+
+## Sprint 5 Deferred Work
+
+- Replace `InMemoryResultRepository` with a database-backed repository.
+- Persist score, minute, provider, and recalculation metadata in final schema shape.
+- Connect a real football data provider.
+- Apply final Excel-derived prediction data to the scoring engine.
+- Save rebuilt `LeaderboardEntry` rows after recalculation.
+- Add production protection for the run endpoint.
 
 ## Boundaries
 
