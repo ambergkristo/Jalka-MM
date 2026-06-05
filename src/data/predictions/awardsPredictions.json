@@ -1,0 +1,12 @@
+[
+  { "playerId": "argo", "championTeam": "Brazil", "championStatus": "Still alive", "topScorerName": "Vinicius Junior", "topScorerTeam": "Brazil", "topScorerCurrentGoals": 4, "topScorerStatus": "In chase" },
+  { "playerId": "kristo", "championTeam": "Argentina", "championStatus": "Still alive", "topScorerName": "Lionel Messi", "topScorerTeam": "Argentina", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" },
+  { "playerId": "martin", "championTeam": "Spain", "championStatus": "Still alive", "topScorerName": "Kylian Mbappe", "topScorerTeam": "France", "topScorerCurrentGoals": 5, "topScorerStatus": "Leading" },
+  { "playerId": "mari", "championTeam": "France", "championStatus": "Still alive", "topScorerName": "Harry Kane", "topScorerTeam": "England", "topScorerCurrentGoals": 2, "topScorerStatus": "Eliminated" },
+  { "playerId": "liis", "championTeam": "Germany", "championStatus": "Eliminated", "topScorerName": "Lamine Yamal", "topScorerTeam": "Spain", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" },
+  { "playerId": "taavi", "championTeam": "England", "championStatus": "Still alive", "topScorerName": "Vinicius Junior", "topScorerTeam": "Brazil", "topScorerCurrentGoals": 4, "topScorerStatus": "In chase" },
+  { "playerId": "kadri", "championTeam": "Portugal", "championStatus": "Still alive", "topScorerName": "Lionel Messi", "topScorerTeam": "Argentina", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" },
+  { "playerId": "juhan", "championTeam": "Netherlands", "championStatus": "Eliminated", "topScorerName": "Kylian Mbappe", "topScorerTeam": "France", "topScorerCurrentGoals": 5, "topScorerStatus": "Leading" },
+  { "playerId": "sander", "championTeam": "Uruguay", "championStatus": "Eliminated", "topScorerName": "Harry Kane", "topScorerTeam": "England", "topScorerCurrentGoals": 2, "topScorerStatus": "Eliminated" },
+  { "playerId": "helen", "championTeam": "Belgium", "championStatus": "Eliminated", "topScorerName": "Lamine Yamal", "topScorerTeam": "Spain", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" }
+]

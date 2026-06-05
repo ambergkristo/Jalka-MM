@@ -1,7 +1,7 @@
-import type { PlayerProfileData } from '../data/mock.js';
+import type { PlayerProfileView } from '../lib/predictionViewModels.js';
 import { StatusBadge } from './StatusBadge.js';
 
-export function ChampionCard({ player }: { player: PlayerProfileData }) {
+export function ChampionCard({ player }: { player: PlayerProfileView }) {
   return (
     <section className="profile-feature-card champion-card">
       <p className="eyebrow">Predicted Champion</p>

@@ -26,10 +26,23 @@ Prediction submission is no longer in scope. The previous login, registration, p
 
 - Excel remains the initial source of truth for final player predictions.
 - A later import step will convert the final Excel file into JSON or seed data.
+- Prediction seed files live under `src/data/` and are loaded through `src/domain/predictionRepository.ts`.
 - The database is the runtime source of truth after data is imported.
 - Match results will later be updated by a separate results agent or cron workflow.
 - Leaderboard entries will be rebuilt after result updates and saved to the database.
 - The frontend reads saved leaderboard entries only; it does not calculate rankings client-side.
+
+Future prediction workflow:
+
+```text
+Excel
+-> JSON conversion
+-> Seed files in src/data/
+-> PredictionRepository
+-> Application pages
+```
+
+The current seed repository validates unique player ids, missing player references, group prediction completeness, duplicate group predictions, and valid group ids. Excel import and admin upload tools are intentionally not implemented.
 
 ## Planned Pages
 
@@ -50,6 +63,7 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
 - Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
 - Mock-only backend results-agent foundation with provider abstraction, polling scheduler, update cycle, leaderboard rebuild skeleton, and catch-up endpoints
+- Prediction seed-data architecture for players, leaderboard entries, group predictions, knockout predictions, and awards predictions
 - Placeholder results page
 - Read-only API health/state endpoints
 - Tournament data seeding and validation
@@ -83,8 +97,8 @@ npm run audit:tournament-data
 ## Routes
 
 - `/`: Premium mock-data landing dashboard with hero status, Today's Matches, Latest Results, Top 5 Leaderboard, Group Leaders, and Quick Navigation.
-- `/leaderboard`: Mock-data public leaderboard with rank movement, top-three highlighting, points, exact scores, and hit rate.
-- `/player/:playerId`: Mock-data public player profile with prediction summary, champion/top scorer picks, playoff bracket, and group prediction accordions.
+- `/leaderboard`: Seed-data public leaderboard with rank movement, top-three highlighting, points, exact scores, and hit rate.
+- `/player/:playerId`: Seed-data public player profile with prediction summary, champion/top scorer picks, playoff bracket, and group prediction accordions.
 - `/results`: Placeholder matches and results page.
 - `/tournament`: Mock-data Tournament Center with tournament summary, all group standings, mobile-first knockout progression, top scorers, statistics, and match progress by stage.
 - `/not-found`: 404 page.

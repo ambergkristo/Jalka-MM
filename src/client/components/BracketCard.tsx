@@ -1,4 +1,4 @@
-import type { KnockoutRoundPrediction } from '../data/mock.js';
+import type { KnockoutRoundPrediction } from '../../domain/predictionRepository.js';
 
 export function BracketCard({ rounds }: { rounds: KnockoutRoundPrediction[] }) {
   return (

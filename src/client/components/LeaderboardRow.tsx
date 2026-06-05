@@ -1,7 +1,7 @@
-import type { LeaderboardRow as LeaderboardRowData } from '../data/mock.js';
+import type { LeaderboardRowView } from '../lib/predictionViewModels.js';
 import { PositionChange } from './PositionChange.js';
 
-export function LeaderboardRow({ row }: { row: LeaderboardRowData }) {
+export function LeaderboardRow({ row }: { row: LeaderboardRowView }) {
   return (
     <a className={`leaderboard-row rank-${row.rank <= 3 ? row.rank : 'standard'}`} href={`/player/${row.playerId}`}>
       <span className="leaderboard-rank">{row.rank}</span>

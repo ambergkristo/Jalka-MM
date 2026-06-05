@@ -1055,6 +1055,29 @@ td a {
 .accordion summary { min-height: 36px; cursor: pointer; font-weight: 850; }
 .accordion p { color: var(--muted); margin: 8px 0 0; }
 
+.empty-state,
+.profile-empty-state span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.profile-empty-state {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(19, 32, 58, .96), rgba(10, 20, 37, .98));
+  box-shadow: var(--shadow);
+}
+
+.profile-empty-state h1 {
+  margin: 0;
+  font-family: "Archivo Black", "Arial Black", sans-serif;
+  font-size: clamp(2.1rem, 10vw, 4.6rem);
+  line-height: .95;
+}
+
 .tournament-center-page {
   display: grid;
   gap: 14px;

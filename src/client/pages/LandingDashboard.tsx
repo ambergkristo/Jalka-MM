@@ -5,9 +5,12 @@ import { LeaderboardPreview } from '../components/LeaderboardPreview.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { NavigationCards } from '../components/NavigationCards.js';
 import { ResultCard } from '../components/ResultCard.js';
-import { groupLeaders, heroMetrics, latestResults, leaderboardPreview, navigationCards, todaysMatches } from '../data/mock.js';
+import { groupLeaders, heroMetrics, latestResults, navigationCards, todaysMatches } from '../data/mock.js';
+import { getLeaderboardRows } from '../lib/predictionViewModels.js';
 
 export function LandingDashboard() {
+  const leaderboardPreview = getLeaderboardRows().slice(0, 5);
+
   return (
     <div className="landing-dashboard">
       <HeroCard metrics={heroMetrics} />

@@ -1,6 +1,20 @@
-import type { GroupPredictionRow } from '../data/mock.js';
+import type { GroupPrediction } from '../../domain/predictionRepository.js';
 
-export function GroupPredictionAccordion({ groups }: { groups: GroupPredictionRow[] }) {
+export function GroupPredictionAccordion({ groups }: { groups: GroupPrediction[] }) {
+  if (groups.length === 0) {
+    return (
+      <section className="group-prediction-card">
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">Group predictions</p>
+            <h2>Predicted Group Standings</h2>
+          </div>
+        </div>
+        <p className="empty-state">Group prediction seed data is not available for this player.</p>
+      </section>
+    );
+  }
+
   return (
     <section className="group-prediction-card">
       <div className="section-title-row">

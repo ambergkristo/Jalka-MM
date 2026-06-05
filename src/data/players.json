@@ -1,0 +1,12 @@
+[
+  { "id": "argo", "name": "Argo", "location": "Tallinn" },
+  { "id": "kristo", "name": "Kristo", "location": "Tartu" },
+  { "id": "martin", "name": "Martin", "location": "Tallinn" },
+  { "id": "mari", "name": "Mari", "location": "Pärnu" },
+  { "id": "liis", "name": "Liis", "location": "Viljandi" },
+  { "id": "taavi", "name": "Taavi", "location": "Rakvere" },
+  { "id": "kadri", "name": "Kadri", "location": "Tallinn" },
+  { "id": "juhan", "name": "Juhan", "location": "Tartu" },
+  { "id": "sander", "name": "Sander", "location": "Haapsalu" },
+  { "id": "helen", "name": "Helen", "location": "Kuressaare" }
+]

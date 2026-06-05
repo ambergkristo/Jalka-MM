@@ -3,10 +3,23 @@ import { ChampionCard } from '../components/ChampionCard.js';
 import { GroupPredictionAccordion } from '../components/GroupPredictionAccordion.js';
 import { PlayerSummaryCard } from '../components/PlayerSummaryCard.js';
 import { TopScorerCard } from '../components/TopScorerCard.js';
-import { findPlayerProfile } from '../data/mock.js';
+import { getPlayerProfile } from '../lib/predictionViewModels.js';
 
 export function PlayerDetailPage({ playerId }: { playerId: string }) {
-  const player = findPlayerProfile(playerId);
+  const player = getPlayerProfile(playerId);
+
+  if (!player) {
+    return (
+      <section className="player-profile-page">
+        <div className="profile-empty-state">
+          <p className="eyebrow">Player profile</p>
+          <h1>Player not found</h1>
+          <span>Prediction seed data does not contain a player with id "{playerId}".</span>
+          <a className="button-link" href="/leaderboard">Back to Leaderboard</a>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="player-profile-page">

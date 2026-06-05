@@ -1,7 +1,7 @@
-import type { PlayerProfileData } from '../data/mock.js';
+import type { PlayerProfileView } from '../lib/predictionViewModels.js';
 import { StatusBadge } from './StatusBadge.js';
 
-export function TopScorerCard({ player }: { player: PlayerProfileData }) {
+export function TopScorerCard({ player }: { player: PlayerProfileView }) {
   const prediction = player.topScorerPrediction;
 
   return (

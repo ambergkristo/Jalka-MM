@@ -1,7 +1,7 @@
-import type { PlayerProfileData } from '../data/mock.js';
+import type { PlayerProfileView } from '../lib/predictionViewModels.js';
 import { PositionChange } from './PositionChange.js';
 
-export function PlayerSummaryCard({ player }: { player: PlayerProfileData }) {
+export function PlayerSummaryCard({ player }: { player: PlayerProfileView }) {
   return (
     <section className="player-summary-card">
       <div>
