@@ -16,5 +16,14 @@
     "providerFixtureId": null,
     "confidence": "example",
     "notes": "Sportmonks World Cup 2026 docs reference league id 732; verify in account before Sprint 12."
+  },
+  {
+    "internalMatchId": 1,
+    "provider": "football-data",
+    "providerCompetitionId": "WC",
+    "providerSeason": "2026",
+    "providerFixtureId": null,
+    "confidence": "example",
+    "notes": "Populate after verifying football-data.org World Cup 2026 fixture ids. Use as delayed final-score verifier, not as the only live source."
   }
 ]

@@ -73,7 +73,7 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
 - Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
 - Mock-default backend results-agent foundation with provider abstraction, polling scheduler, update cycle, persisted match results, persisted leaderboard rebuilds, and catch-up endpoints
-- Result provider configuration/factory scaffold for future API-Football, football-data.org, or Sportmonks integration
+- Mock-default result provider chain scaffold with API-Football, football-data.org, and optional Sportmonks adapters disabled until configured
 - Prediction seed-data architecture for players, leaderboard entries, group predictions, knockout predictions, and awards predictions
 - Placeholder results page
 - Read-only API health/state endpoints
@@ -149,18 +149,21 @@ All old auth, admin, approval, prediction submission, bonus form, deadline, and 
 
 ## Result Provider Configuration
 
-The default result provider is still mock. Sprint 14 adds the first real adapter for Sportmonks, but it requires external credentials and confirmed fixture mapping.
+The default result provider is still mock. Real providers require external credentials and confirmed fixture mapping. The recommended low-cost strategy is API-Football as the primary candidate, football-data.org as a secondary verifier, and Sportmonks as an optional paid fallback.
 
 ```bash
 RESULTS_PROVIDER=mock
+RESULTS_PROVIDER_CHAIN=mock
 # `dry-run` can fetch a real provider without writing DB changes.
 RESULTS_WRITE_MODE=mock
 # Single-provider fallback confirmation delay. Two-provider agreement can confirm immediately.
 RESULT_CONFIRMATION_DELAY_MINUTES=10
-# RESULTS_API_KEY=
-# RESULTS_API_BASE_URL=https://api.sportmonks.com
-# RESULTS_COMPETITION_ID=732
-# RESULTS_SEASON=2026
+# API_FOOTBALL_API_KEY=
+# API_FOOTBALL_API_BASE_URL=https://v3.football.api-sports.io
+# FOOTBALL_DATA_API_KEY=
+# FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
+# SPORTMONKS_API_KEY=
+# SPORTMONKS_API_BASE_URL=https://api.sportmonks.com
 # RESULTS_AGENT_SECRET=
 ```
 

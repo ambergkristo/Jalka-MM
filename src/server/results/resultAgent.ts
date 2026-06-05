@@ -2,8 +2,9 @@ import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import { rebuildLeaderboardAfterFinalResult } from './leaderboardRebuild.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import type { ResultProvider } from './resultProvider.js';
+import { isResultProviderChain } from './providerChainResultProvider.js';
 import { decideResultConsensus, toProviderResultObservation } from './resultConsensus.js';
-import type { ResultAgentRunSummary, ResultAgentStatus, ResultsAgentRepository } from './resultTypes.js';
+import type { ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export async function getResultAgentStatus(input: {
   repository: ResultsAgentRepository;
@@ -36,13 +37,17 @@ export async function runResultUpdateCycle(input: {
   for (const plan of duePlans) {
     const match = matches.find((candidate) => candidate.id === plan.matchId);
     if (!match) continue;
-    const update = await input.provider.fetchMatchUpdate(match, input.now);
-    if (update.warning) warnings.push(update.warning);
+    const updates = await fetchProviderUpdates(input.provider, match, input.now);
+    warnings.push(...updates.flatMap((update) => update.warning ? [update.warning] : []));
     if (input.dryRun) continue;
-    const previousResult = await input.repository.getMatchResult(update.matchId);
-    const previousObservations = await input.repository.getProviderResultObservations(update.matchId);
+    const selectedUpdate = selectConsensusUpdate(updates);
+    const previousResult = await input.repository.getMatchResult(selectedUpdate.matchId);
+    const previousObservations = [
+      ...await input.repository.getProviderResultObservations(selectedUpdate.matchId),
+      ...updates.filter((update) => update !== selectedUpdate).map(toProviderResultObservation)
+    ];
     const consensus = decideResultConsensus({
-      observation: toProviderResultObservation(update),
+      observation: toProviderResultObservation(selectedUpdate),
       previousResult,
       previousObservations,
       now: input.now,
@@ -62,7 +67,7 @@ export async function runResultUpdateCycle(input: {
       const previousEntries = await input.leaderboardRepository?.getLeaderboard();
       const rebuild = await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now, previousEntries });
       await input.leaderboardRepository?.replaceLeaderboard(rebuild.entries, rebuild);
-      await input.repository.markPointsRecalculated(update.matchId, rebuild.recalculatedAt);
+      await input.repository.markPointsRecalculated(consensus.update.matchId, rebuild.recalculatedAt);
       leaderboardRebuilds.push(rebuild);
     }
   }
@@ -92,4 +97,15 @@ export async function runResultUpdateCycle(input: {
   };
   if (!input.dryRun) await input.repository.saveRunSummary(summary);
   return summary;
+}
+
+async function fetchProviderUpdates(provider: ResultProvider, match: TrackedMatch, now: Date): Promise<ResultUpdate[]> {
+  if (isResultProviderChain(provider)) return provider.fetchMatchUpdates(match, now);
+  return [await provider.fetchMatchUpdate(match, now)];
+}
+
+function selectConsensusUpdate(updates: ResultUpdate[]): ResultUpdate {
+  const finalUpdate = [...updates].reverse().find((update) => update.isFinal);
+  if (finalUpdate) return finalUpdate;
+  return updates.find((update) => !update.warning) ?? updates[0];
 }

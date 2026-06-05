@@ -1,9 +1,11 @@
 import providerMatchMapSeed from '../../data/providerMatchMap.example.json' with { type: 'json' };
+import { ApiFootballResultProvider } from './apiFootballResultProvider.js';
+import { FootballDataResultProvider } from './footballDataResultProvider.js';
 import { MockResultProvider } from './mockResultProvider.js';
 import { validateProviderMatchMapForLive, type ProviderMatchMapEntry } from './providerMatchMap.js';
-import { RealResultProviderStub } from './realResultProviderStub.js';
+import { ProviderChainResultProvider } from './providerChainResultProvider.js';
 import type { ResultProvider } from './resultProvider.js';
-import { loadResultProviderConfig, validateResultProviderConfig, type ResultProviderConfig } from './resultProviderConfig.js';
+import { loadResultProviderConfig, validateResultProviderConfig, type ProviderSpecificConfig, type ResultProviderConfig, type ResultsProviderName } from './resultProviderConfig.js';
 import { SportmonksResultProvider } from './sportmonksResultProvider.js';
 
 export function createResultProvider(
@@ -12,18 +14,44 @@ export function createResultProvider(
 ): ResultProvider {
   const errors = validateResultProviderConfig(config);
   if (errors.length > 0) throw new Error(`Invalid result provider configuration: ${errors.join('; ')}`);
-  if (config.provider === 'mock') return new MockResultProvider();
-  if (config.provider === 'sportmonks') {
-    if (config.writeMode === 'live') {
-      const mapErrors = validateProviderMatchMapForLive({
-        entries: matchMap,
-        provider: 'sportmonks',
-        competitionId: config.competitionId,
-        season: config.season
-      });
-      if (mapErrors.length > 0) throw new Error(`Invalid Sportmonks provider match map for live writes: ${mapErrors.join('; ')}`);
-    }
-    return new SportmonksResultProvider(config, matchMap);
-  }
-  return new RealResultProviderStub(config);
+  if (config.writeMode === 'live') validateLiveMatchMaps(config, matchMap);
+  const providers = config.providerChain.map((provider) => createSingleProvider(provider, config, matchMap));
+  return providers.length === 1 ? providers[0] : new ProviderChainResultProvider(providers);
+}
+
+function createSingleProvider(provider: ResultsProviderName, config: ResultProviderConfig, matchMap: ProviderMatchMapEntry[]): ResultProvider {
+  if (provider === 'mock') return new MockResultProvider();
+  if (provider === 'api-football') return new ApiFootballResultProvider(config.apiFootball, matchMap);
+  if (provider === 'football-data') return new FootballDataResultProvider(config.footballData, matchMap);
+  return new SportmonksResultProvider(providerScopedConfig(config, config.sportmonks), matchMap);
+}
+
+function validateLiveMatchMaps(config: ResultProviderConfig, matchMap: ProviderMatchMapEntry[]): void {
+  const providers = [...new Set(config.providerChain.filter((provider) => provider !== 'mock'))];
+  const errors = providers.flatMap((provider) => {
+    const providerConfig = providerConfigFor(provider, config);
+    return validateProviderMatchMapForLive({
+      entries: matchMap,
+      provider,
+      competitionId: providerConfig.competitionId,
+      season: providerConfig.season
+    }).map((error) => `${provider}: ${error}`);
+  });
+  if (errors.length > 0) throw new Error(`Invalid provider match map for live writes: ${errors.join('; ')}`);
+}
+
+function providerConfigFor(provider: Exclude<ResultsProviderName, 'mock'>, config: ResultProviderConfig): ProviderSpecificConfig {
+  if (provider === 'api-football') return config.apiFootball;
+  if (provider === 'football-data') return config.footballData;
+  return config.sportmonks;
+}
+
+function providerScopedConfig(config: ResultProviderConfig, providerConfig: ProviderSpecificConfig): ResultProviderConfig {
+  return {
+    ...config,
+    apiKey: providerConfig.apiKey,
+    apiBaseUrl: providerConfig.apiBaseUrl,
+    competitionId: providerConfig.competitionId,
+    season: providerConfig.season
+  };
 }

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { InMemoryResultRepository, createDefaultMockMatches } from '../server/results/inMemoryResultRepository.js';
 import { rebuildLeaderboardAfterFinalResult } from '../server/results/leaderboardRebuild.js';
 import { MockResultProvider } from '../server/results/mockResultProvider.js';
+import { ProviderChainResultProvider } from '../server/results/providerChainResultProvider.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
+import { toResultUpdate, type ResultProvider } from '../server/results/resultProvider.js';
 
 describe('result agent update cycle', () => {
   it('keeps first final observation provisional and rebuilds only after delayed confirmation', async () => {
@@ -71,6 +73,45 @@ describe('result agent update cycle', () => {
     expect(summary.checkedMatches).toBeGreaterThan(0);
     await expect(repository.getFinalizedResults()).resolves.toEqual([]);
   });
+
+  it('confirms immediately when two chained providers agree on a final score', async () => {
+    const now = new Date('2026-06-15T18:00:00.000Z');
+    const repository = new InMemoryResultRepository(createDefaultMockMatches(now).filter((match) => match.id === 4));
+    const provider = new ProviderChainResultProvider([
+      finalProvider('api-football-result-provider', 2, 1),
+      finalProvider('football-data-result-provider', 2, 1)
+    ]);
+
+    const summary = await runResultUpdateCycle({ repository, provider, now });
+
+    expect(summary.finalizedResults).toBe(1);
+    expect(summary.confirmationPending).toBe(0);
+    expect(summary.needsReview).toBe(0);
+    expect(summary.leaderboardRebuilt).toBe(true);
+    const finalized = await repository.getFinalizedResults();
+    expect(finalized[0]).toMatchObject({
+      isFinal: true,
+      publicStatus: 'CONFIRMED_FINAL',
+      confirmationConfidence: 'provider-agreement',
+      confirmationSource: 'api-football-result-provider+football-data-result-provider'
+    });
+  });
+
+  it('marks needs review and skips leaderboard rebuild when chained providers disagree', async () => {
+    const now = new Date('2026-06-15T18:00:00.000Z');
+    const repository = new InMemoryResultRepository(createDefaultMockMatches(now).filter((match) => match.id === 4));
+    const provider = new ProviderChainResultProvider([
+      finalProvider('api-football-result-provider', 2, 1),
+      finalProvider('football-data-result-provider', 1, 1)
+    ]);
+
+    const summary = await runResultUpdateCycle({ repository, provider, now });
+
+    expect(summary.finalizedResults).toBe(0);
+    expect(summary.needsReview).toBe(1);
+    expect(summary.leaderboardRebuilt).toBe(false);
+    expect(summary.warnings).toContain('Provider final scores disagree for match 4.');
+  });
 });
 
 describe('leaderboard rebuild', () => {
@@ -100,3 +141,21 @@ describe('leaderboard rebuild', () => {
     expect(result.entries[0]).toMatchObject({ rank: 1, points: 6, exactScores: 1, correctResults: 1 });
   });
 });
+
+function finalProvider(name: string, homeScore: number, awayScore: number): ResultProvider {
+  return {
+    name,
+    mode: 'live',
+    async fetchMatchUpdate(match, now) {
+      return toResultUpdate({
+        match,
+        provider: name,
+        providerStatus: 'finished',
+        now,
+        homeScore,
+        awayScore,
+        minute: 90
+      });
+    }
+  };
+}

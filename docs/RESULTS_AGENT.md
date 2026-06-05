@@ -1,6 +1,6 @@
 # Results Agent Plan
 
-The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 14 adds the first real adapter for Sportmonks. Sprint 15 protects live writes with a scheduler secret and adds dry-run support; live use still requires credentials and confirmed fixture mapping. Sprint 16 adds the confirmed-results-only policy: provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
+The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 17 adds a free/low-cost provider-chain foundation: API-Football can act as the primary candidate, football-data.org can act as a verifier, Sportmonks remains an optional paid provider, and manual/open-data confirmation remains a future fallback. Live use still requires credentials, confirmed fixture mapping, and endpoint protection. Provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
 
 Current implementation modules live in `src/server/results/`:
 
@@ -9,8 +9,10 @@ Current implementation modules live in `src/server/results/`:
 - `resultProviderConfig.ts`
 - `resultProviderFactory.ts`
 - `mockResultProvider.ts`
+- `apiFootballResultProvider.ts`
+- `footballDataResultProvider.ts`
 - `sportmonksResultProvider.ts`
-- `realResultProviderStub.ts`
+- `providerChainResultProvider.ts`
 - `providerMatchMap.ts`
 - `matchScheduler.ts`
 - `resultAgent.ts`
@@ -161,17 +163,31 @@ Sprint 5 adds catch-up endpoints that remain mock-default:
 
 The `POST` endpoint runs one safe/idempotent update cycle. Mock mode remains manually triggerable for local development. Live write mode requires `x-results-agent-secret`; dry-run mode fetches provider updates without persisting DB changes.
 
-## Provider Selection Architecture
+## Provider Chain Architecture
 
-Sprint 11 adds provider configuration and factory scaffolding. Sprint 14 adds the first real adapter for Sportmonks while keeping mock as the default provider.
+Sprint 17 supports a configurable provider chain while keeping mock as the default provider.
 
 Environment variables:
 
 - `RESULTS_PROVIDER=mock | api-football | football-data | sportmonks`
+- `RESULTS_PROVIDER_CHAIN=mock` or comma-separated provider names such as `api-football,football-data,sportmonks`
 - `RESULTS_API_KEY`
 - `RESULTS_API_BASE_URL`
 - `RESULTS_COMPETITION_ID`
 - `RESULTS_SEASON`
+- `API_FOOTBALL_API_KEY`
+- `API_FOOTBALL_API_BASE_URL`
+- `API_FOOTBALL_HOST`
+- `API_FOOTBALL_COMPETITION_ID`
+- `API_FOOTBALL_SEASON`
+- `FOOTBALL_DATA_API_KEY`
+- `FOOTBALL_DATA_API_BASE_URL`
+- `FOOTBALL_DATA_COMPETITION_ID`
+- `FOOTBALL_DATA_SEASON`
+- `SPORTMONKS_API_KEY`
+- `SPORTMONKS_API_BASE_URL`
+- `SPORTMONKS_COMPETITION_ID`
+- `SPORTMONKS_SEASON`
 - `RESULTS_WRITE_MODE=mock | dry-run | live`
 - `RESULT_CONFIRMATION_DELAY_MINUTES`
 - `RESULTS_AGENT_SECRET`
@@ -179,6 +195,7 @@ Environment variables:
 Defaults are safe:
 
 - `RESULTS_PROVIDER` defaults to `mock`.
+- `RESULTS_PROVIDER_CHAIN` defaults to the selected provider, so default chain is `mock`.
 - `RESULTS_WRITE_MODE` defaults to `mock`.
 - Missing API keys do not crash the app in mock mode.
 - Non-mock providers fail clearly if required provider config is missing.
@@ -186,21 +203,35 @@ Defaults are safe:
 - `RESULTS_WRITE_MODE=dry-run` fetches provider data but skips result, run summary, and leaderboard persistence.
 - `RESULT_CONFIRMATION_DELAY_MINUTES` defaults to `10` and controls only the single-provider fallback confirmation delay.
 
-`createResultProvider(config)` returns `MockResultProvider` by default. `RESULTS_PROVIDER=sportmonks` returns `SportmonksResultProvider` when required config is present. API-Football and football-data.org remain deferred stubs until explicitly implemented.
+`createResultProvider(config)` returns `MockResultProvider` by default. When `RESULTS_PROVIDER_CHAIN` contains multiple providers, it returns a `ProviderChainResultProvider` that fetches the primary provider first and asks verifier providers only when confirmation is useful.
 
-Sportmonks env example:
+Low-cost provider-chain dry-run example:
 
 ```bash
-RESULTS_PROVIDER=sportmonks
-RESULTS_API_BASE_URL=https://api.sportmonks.com
-RESULTS_COMPETITION_ID=732
-RESULTS_SEASON=2026
+RESULTS_PROVIDER_CHAIN=api-football,football-data
 RESULTS_WRITE_MODE=dry-run
 RESULT_CONFIRMATION_DELAY_MINUTES=10
-RESULTS_API_KEY=...
+API_FOOTBALL_API_BASE_URL=https://v3.football.api-sports.io
+API_FOOTBALL_COMPETITION_ID=world-cup
+API_FOOTBALL_SEASON=2026
+FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
+FOOTBALL_DATA_COMPETITION_ID=WC
+FOOTBALL_DATA_SEASON=2026
+API_FOOTBALL_API_KEY=...
+FOOTBALL_DATA_API_KEY=...
 ```
 
-Do not commit `RESULTS_API_KEY`.
+Do not commit provider API keys.
+
+## Rate Limit Strategy
+
+Free and low-cost result providers can have small request budgets. The chain therefore avoids polling every provider for every scheduled match:
+
+- The primary provider is queried first.
+- Verifier providers are queried only when the primary provider returns a final score or the stored match state is already awaiting confirmation/review.
+- Ordinary scheduled/live primary updates do not fan out to secondary providers.
+- Provider failures are returned as warnings so another provider can still contribute an observation.
+- Dry-run mode should be used before live writes to observe payload shape and request volume.
 
 ## Provider Contract
 
