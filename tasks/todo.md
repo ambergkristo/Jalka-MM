@@ -1,13 +1,12 @@
-# Sprint 16 - Confirmed Result Policy
+# Public Pre-Tournament Dashboard Cleanup
 
-- [x] Inspect result-agent, provider, persistence, API, and docs.
-- [x] Add provisional/confirmed result state types.
-- [x] Add provider observation and consensus service.
-- [x] Persist provisional/confirmed result fields and enough observation metadata for restart-safe delayed confirmation.
-- [x] Rebuild leaderboard only after confirmed final result changes.
-- [x] Add public result mapper for confirmed-only score exposure.
-- [x] Add targeted consensus, agent, persistence, and public mapper tests.
-- [x] Update result-agent and data-model documentation.
+- [x] Inspect landing dashboard, results page, group leader cards, and public mock data.
+- [x] Remove fake latest result data from public dashboard/results views.
+- [x] Add pre-tournament opening matchday fixture selection from 11 June 2026 schedule.
+- [x] Add empty state for confirmed latest results.
+- [x] Make group leader cards clickable tournament/group shortcuts.
+- [x] Add group anchors in Tournament Center.
+- [x] Add targeted public dashboard data and render tests.
 - [x] Run `npm run build`.
 - [x] Run targeted tests.
 - [x] Commit, push, and verify `HEAD == origin/main`.
@@ -15,6 +14,6 @@
 ## Review
 
 - Build passed: `npm run build`.
-- Targeted Vitest passed: `npx vitest run src/test/resultConsensus.test.ts src/test/resultAgent.test.ts src/test/matchScheduler.test.ts src/test/resultProviderFactory.test.ts src/test/mockResultProvider.test.ts src/test/sportmonksResultProvider.test.ts`.
-- Persistence node test passed: `node --test dist/test-db/result-persistence-node-test.js`.
+- Targeted tests passed: `npx vitest run src/test/publicDashboardData.test.ts src/test/publicDashboardPages.test.tsx src/test/resultConsensus.test.ts`.
+- Vite still reports a chunk-size warning after successful build; no functional failure.
 - Git publication completed after verification.

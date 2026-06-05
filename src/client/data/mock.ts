@@ -27,9 +27,9 @@ export interface DashboardResult {
 
 export interface GroupLeader {
   group: string;
-  team: string;
-  points: number;
-  record: string;
+  team?: string;
+  points?: number;
+  record?: string;
 }
 
 export interface TournamentSummaryMetric {
@@ -147,36 +147,24 @@ export interface NavigationCardData {
 }
 
 export const heroMetrics: DashboardMetric[] = [
-  { label: 'Turniiri faas', value: 'Alagrupid', detail: 'Teine voor on käimas' },
-  { label: 'Mängitud', value: '18 / 104', detail: '17% mängudest peetud' },
-  { label: 'Jäänud', value: '86', detail: 'Järgmine avavile 2h 15m' }
-];
-
-export const todaysMatches: DashboardMatch[] = [
-  { id: 'm19', homeTeam: 'Canada', awayTeam: 'Morocco', kickoffTime: '19:00', stage: 'Alagrupp B', status: 'scheduled', venue: 'Toronto' },
-  { id: 'm20', homeTeam: 'Mexico', awayTeam: 'Japan', kickoffTime: '22:00', stage: 'Alagrupp A', status: 'scheduled', venue: 'Mexico City' },
-  { id: 'm21', homeTeam: 'United States', awayTeam: 'Ghana', kickoffTime: '02:00', stage: 'Alagrupp D', status: 'scheduled', venue: 'Los Angeles' }
-];
-
-export const latestResults: DashboardResult[] = [
-  { id: 'r16', homeTeam: 'Brazil', awayTeam: 'Croatia', homeScore: 2, awayScore: 1, stage: 'Alagrupp C', winner: 'Brazil', finishedAt: 'Lõpp' },
-  { id: 'r17', homeTeam: 'Spain', awayTeam: 'Senegal', homeScore: 1, awayScore: 1, stage: 'Alagrupp H', winner: 'Draw', finishedAt: 'Lõpp' },
-  { id: 'r18', homeTeam: 'Argentina', awayTeam: 'Korea Republic', homeScore: 3, awayScore: 0, stage: 'Alagrupp F', winner: 'Argentina', finishedAt: 'Lõpp' }
+  { label: 'Turniiri algus', value: '11.06', detail: 'Esimene mäng 11. juunil 2026' },
+  { label: 'Mängitud', value: '0 / 104', detail: 'Kinnitatud tulemusi veel ei ole' },
+  { label: 'Järgmine', value: 'Avapäev', detail: 'Ajakava algab Mehhikos' }
 ];
 
 export const groupLeaders: GroupLeader[] = [
-  { group: 'A', team: 'Mexico', points: 6, record: '2V 0Vi 0K' },
-  { group: 'B', team: 'Canada', points: 4, record: '1V 1Vi 0K' },
-  { group: 'C', team: 'Brazil', points: 6, record: '2V 0Vi 0K' },
-  { group: 'D', team: 'United States', points: 4, record: '1V 1Vi 0K' },
-  { group: 'E', team: 'Germany', points: 6, record: '2V 0Vi 0K' },
-  { group: 'F', team: 'Argentina', points: 6, record: '2V 0Vi 0K' },
-  { group: 'G', team: 'France', points: 4, record: '1V 1Vi 0K' },
-  { group: 'H', team: 'Spain', points: 5, record: '1V 2Vi 0K' },
-  { group: 'I', team: 'England', points: 6, record: '2V 0Vi 0K' },
-  { group: 'J', team: 'Portugal', points: 4, record: '1V 1Vi 0K' },
-  { group: 'K', team: 'Netherlands', points: 6, record: '2V 0Vi 0K' },
-  { group: 'L', team: 'Uruguay', points: 4, record: '1V 1Vi 0K' }
+  { group: 'A' },
+  { group: 'B' },
+  { group: 'C' },
+  { group: 'D' },
+  { group: 'E' },
+  { group: 'F' },
+  { group: 'G' },
+  { group: 'H' },
+  { group: 'I' },
+  { group: 'J' },
+  { group: 'K' },
+  { group: 'L' }
 ];
 
 export const navigationCards: NavigationCardData[] = [
@@ -836,9 +824,3 @@ export const tournamentProgressByStage = [
   { stage: 'Finaalid', completed: 0, total: 2 }
 ];
 
-export const matchRows = todaysMatches.map((match) => ({
-  time: match.kickoffTime,
-  home: match.homeTeam,
-  away: match.awayTeam,
-  status: match.status
-}));

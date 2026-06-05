@@ -922,6 +922,9 @@ main {
   gap: 8px;
   min-height: 104px;
   padding: 11px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .18s ease, transform .18s ease;
 }
 
 .group-leader-card span,
@@ -929,6 +932,18 @@ main {
   color: var(--muted);
   font-size: .76rem;
   font-weight: 850;
+}
+
+.group-leader-card strong {
+  color: var(--white);
+  font-size: .95rem;
+  font-weight: 950;
+}
+
+.group-leader-card:hover,
+.group-leader-card:focus-visible {
+  border-color: rgba(212, 175, 55, .48);
+  transform: translateY(-1px);
 }
 
 .navigation-cards {

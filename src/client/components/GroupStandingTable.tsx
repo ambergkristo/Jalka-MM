@@ -11,7 +11,7 @@ const stateLabels = {
 
 export function GroupStandingTable({ group }: { group: GroupStanding }) {
   return (
-    <article className="group-standing-card">
+    <article className="group-standing-card" id={`group-${group.group.toLowerCase()}`}>
       <header>
         <span>Alagrupp {group.group}</span>
         <strong>{group.teams[0] ? displayTeamName(group.teams[0].team) : ''}</strong>

@@ -5,11 +5,13 @@ import { LeaderboardPreview } from '../components/LeaderboardPreview.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { NavigationCards } from '../components/NavigationCards.js';
 import { ResultCard } from '../components/ResultCard.js';
-import { groupLeaders, heroMetrics, latestResults, navigationCards, todaysMatches } from '../data/mock.js';
+import { groupLeaders, heroMetrics, navigationCards } from '../data/mock.js';
+import { confirmedLatestResults, getPublicMatchSection } from '../data/publicDashboard.js';
 import { getLeaderboardRows } from '../lib/predictionViewModels.js';
 
 export function LandingDashboard() {
   const leaderboardPreview = getLeaderboardRows().slice(0, 5);
+  const matchSection = getPublicMatchSection();
 
   return (
     <div className="landing-dashboard">
@@ -18,13 +20,13 @@ export function LandingDashboard() {
       <Card className="today-card">
         <div className="section-title-row">
           <div>
-            <p className="eyebrow">Täna</p>
-            <h2>Tänased mängud</h2>
+            <p className="eyebrow">{matchSection.eyebrow}</p>
+            <h2>{matchSection.title}</h2>
           </div>
-          <span className="section-count">{todaysMatches.length} mängu</span>
+          <span className="section-count">{matchSection.matches.length} mängu</span>
         </div>
         <div className="match-card-grid">
-          {todaysMatches.map((match) => <MatchCard match={match} key={match.id} />)}
+          {matchSection.matches.map((match) => <MatchCard match={match} key={match.id} />)}
         </div>
       </Card>
 
@@ -35,9 +37,13 @@ export function LandingDashboard() {
             <h2>Viimased tulemused</h2>
           </div>
         </div>
-        <div className="result-card-grid">
-          {latestResults.map((result) => <ResultCard result={result} key={result.id} />)}
-        </div>
+        {confirmedLatestResults.length > 0 ? (
+          <div className="result-card-grid">
+            {confirmedLatestResults.map((result) => <ResultCard result={result} key={result.id} />)}
+          </div>
+        ) : (
+          <p className="empty-state">Lõppenud mänge veel ei ole.</p>
+        )}
       </Card>
 
       <LeaderboardPreview rows={leaderboardPreview} />

@@ -6,11 +6,11 @@ export function GroupLeaderGrid({ groups }: { groups: GroupLeader[] }) {
   return (
     <section className="group-leader-grid">
       {groups.map((group) => (
-        <article className="group-leader-card" key={group.group}>
+        <a className="group-leader-card" href={`/tournament#group-${group.group.toLowerCase()}`} key={group.group}>
           <span>Alagrupp {group.group}</span>
-          <TeamBadge team={teamFromName(group.team)} />
-          <small>{group.points} p - {group.record}</small>
-        </article>
+          {group.team ? <TeamBadge team={teamFromName(group.team)} /> : <strong>Vaata alagruppi</strong>}
+          <small>{group.points !== undefined && group.record ? `${group.points} p - ${group.record}` : 'Tabel avaneb turniiri vaates'}</small>
+        </a>
       ))}
     </section>
   );
