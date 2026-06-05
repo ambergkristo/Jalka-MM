@@ -28,7 +28,10 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(summary.finalizedMatches, 0);
       assert.equal(summary.leaderboardRebuilt, false);
       assert.deepEqual(await repository.getLeaderboard(), []);
-      assert.deepEqual((await getPublicTournamentSnapshot(db)).latestResults, []);
+      const snapshot = await getPublicTournamentSnapshot(db);
+      assert.deepEqual(snapshot.latestResults, []);
+      assert.equal(snapshot.upcomingMatches.length > 0, true);
+      assert.equal(snapshot.upcomingMatches[0]?.homeTeam, 'Mexico');
     });
   });
 
@@ -46,6 +49,7 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(report.leaderboardRows, 24);
       assert.equal((await repository.getLeaderboard()).length, 24);
       assert.equal(snapshot.latestResults.length, 3);
+      assert.equal(snapshot.upcomingMatches.some((match) => match.id === '1'), false);
       assert.deepEqual(snapshot.latestResults[0], {
         id: '3',
         homeTeam: 'Canada',
@@ -61,6 +65,7 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(snapshot.groupStandings.find((group) => group.group === 'B')?.teams[0]?.team, 'Canada');
       assert.equal(snapshot.groupStandings.find((group) => group.group === 'B')?.teams[0]?.points, 3);
       assert.equal(snapshot.topScorers.length, simulatedTopScorers().length);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
 
       const repeated = await runResultUpdateCycle({
         repository,
@@ -94,6 +99,7 @@ describe('matchday 1 simulation with persistent storage', () => {
 
       assert.deepEqual(snapshot.latestResults, []);
       assert.deepEqual(snapshot.topScorers, []);
+      assert.equal(snapshot.upcomingMatches.length > 0, true);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 0);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM match_results'))?.count), 0);
     });

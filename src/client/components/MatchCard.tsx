@@ -23,6 +23,7 @@ function statusLabel(status: DashboardMatch['status']) {
   return {
     scheduled: 'Algamas',
     live: 'Otse',
+    confirming: 'Kinnitamisel',
     final: 'Lõppenud'
   }[status];
 }

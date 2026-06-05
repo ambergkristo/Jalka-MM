@@ -80,6 +80,7 @@ Disagreement run:
 
 `GET /api/public-dashboard` returns confirmed public state:
 
+- `upcomingMatches`
 - `latestResults`
 - `groupStandings`
 - `groupLeaders`
@@ -89,6 +90,37 @@ Disagreement run:
 - `tournamentProgressByStage`
 
 Only `CONFIRMED_FINAL` match results are exposed as final scores.
+
+Additional public route-specific endpoints:
+
+- `GET /api/results` returns upcoming matches and confirmed results only.
+- `GET /api/leaderboard` returns persisted recalculated leaderboard rows when available.
+- `GET /api/tournament` returns public group standings, top scorers, tournament summary, statistics, and stage progress.
+
+## Frontend Verification
+
+Manual verification sequence:
+
+1. Run `npm run simulate:reset`.
+2. Open `/`.
+   - Latest results should show `Lõppenud mänge veel ei ole.`
+   - Opening fixtures should remain visible.
+3. Run `npm run simulate:matchday1`.
+4. Open `/`.
+   - Latest results should show the three confirmed simulated results.
+   - Top 5 leaderboard should reflect persisted recalculated rows.
+   - Group leaders should reflect updated standings where matches were confirmed.
+5. Open `/results`.
+   - Confirmed results should be visible.
+   - Upcoming list should no longer include confirmed matches.
+6. Open `/leaderboard`.
+   - Persisted recalculated leaderboard should be used.
+7. Open `/tournament`.
+   - Group A and B standings should reflect the confirmed results.
+   - Simulated top scorers should be visible.
+8. Run `npm run simulate:reset` again.
+9. Reopen `/`.
+   - Confirmed latest results should be empty again.
 
 ## Known Gaps
 

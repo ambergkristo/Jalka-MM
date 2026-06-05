@@ -3,6 +3,7 @@ import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultUpdate } from './resultTypes.js';
 
 export interface PublicDashboardSnapshot {
+  upcomingMatches: PublicMatchCard[];
   latestResults: PublicResultCard[];
   groupStandings: PublicGroupStanding[];
   groupLeaders: Array<{ group: string; team?: string; points?: number; record?: string }>;
@@ -10,6 +11,16 @@ export interface PublicDashboardSnapshot {
   tournamentSummary: Array<{ label: string; value: string; detail: string; tone: 'gold' | 'blue' | 'green' | 'red' }>;
   tournamentStats: Array<{ label: string; value: string; detail: string }>;
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+}
+
+export interface PublicMatchCard {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  kickoffTime: string;
+  stage: string;
+  status: 'scheduled' | 'live' | 'confirming';
+  venue: string;
 }
 
 export interface PublicResultCard {
@@ -63,6 +74,7 @@ interface StandingRow {
 
 export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promise<PublicDashboardSnapshot> {
   await migrateResultPersistenceSchema(db);
+  const upcomingMatches = await getUpcomingMatches(db);
   const latestResults = await getConfirmedLatestResults(db);
   const groupStandings = await getPublicGroupStandings(db);
   const topScorers = await getPublicTopScorers(db);
@@ -80,6 +92,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   });
 
   return {
+    upcomingMatches,
     latestResults,
     groupStandings,
     groupLeaders,
@@ -105,6 +118,34 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
       { stage: 'Poolfinaalid', completed: 0, total: 2 },
       { stage: 'Finaalid', completed: 0, total: 2 }
     ]
+  };
+}
+
+export async function getPublicResultsPayload(db: QueryableDatabase): Promise<{
+  upcomingMatches: PublicMatchCard[];
+  confirmedResults: PublicResultCard[];
+}> {
+  const snapshot = await getPublicTournamentSnapshot(db);
+  return {
+    upcomingMatches: snapshot.upcomingMatches,
+    confirmedResults: snapshot.latestResults
+  };
+}
+
+export async function getPublicTournamentPayload(db: QueryableDatabase): Promise<{
+  groupStandings: PublicGroupStanding[];
+  topScorers: PublicTopScorer[];
+  tournamentSummary: PublicDashboardSnapshot['tournamentSummary'];
+  tournamentStats: PublicDashboardSnapshot['tournamentStats'];
+  tournamentProgressByStage: PublicDashboardSnapshot['tournamentProgressByStage'];
+}> {
+  const snapshot = await getPublicTournamentSnapshot(db);
+  return {
+    groupStandings: snapshot.groupStandings,
+    topScorers: snapshot.topScorers,
+    tournamentSummary: snapshot.tournamentSummary,
+    tournamentStats: snapshot.tournamentStats,
+    tournamentProgressByStage: snapshot.tournamentProgressByStage
   };
 }
 
@@ -186,6 +227,34 @@ async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicR
       finishedAt: formatDateTime(String(row.confirmed_at ?? row.kickoff_at))
     };
   });
+}
+
+async function getUpcomingMatches(db: QueryableDatabase): Promise<PublicMatchCard[]> {
+  const rows = await db.all(`
+    SELECT
+      m.id,
+      m.group_id,
+      m.kickoff_at,
+      COALESCE(home.name, m.home_slot) AS home_team,
+      COALESCE(away.name, m.away_slot) AS away_team,
+      r.public_status
+    FROM matches m
+    LEFT JOIN match_results r ON r.match_id = m.id
+    LEFT JOIN teams home ON home.id = m.home_team_id
+    LEFT JOIN teams away ON away.id = m.away_team_id
+    WHERE COALESCE(r.public_status, 'SCHEDULED') IN ('SCHEDULED', 'LIVE', 'CONFIRMING', 'NEEDS_REVIEW')
+    ORDER BY m.kickoff_at, m.id
+    LIMIT 8
+  `);
+  return rows.map((row) => ({
+    id: String(row.id),
+    homeTeam: String(row.home_team),
+    awayTeam: String(row.away_team),
+    kickoffTime: formatDateTime(String(row.kickoff_at)),
+    stage: row.group_id ? `Alagrupp ${row.group_id}` : 'Turniir',
+    status: publicMatchStatus(String(row.public_status ?? 'SCHEDULED')),
+    venue: ''
+  }));
 }
 
 async function getPublicGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
@@ -346,6 +415,12 @@ function formatDateTime(value: string): string {
 
 function formatDecimal(value: number): string {
   return value.toLocaleString('et-EE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function publicMatchStatus(publicStatus: string): PublicMatchCard['status'] {
+  if (publicStatus === 'LIVE') return 'live';
+  if (publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW') return 'confirming';
+  return 'scheduled';
 }
 
 function slug(value: string): string {

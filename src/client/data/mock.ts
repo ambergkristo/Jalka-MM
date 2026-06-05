@@ -10,7 +10,7 @@ export interface DashboardMatch {
   awayTeam: string;
   kickoffTime: string;
   stage: string;
-  status: 'scheduled' | 'live' | 'final';
+  status: 'scheduled' | 'live' | 'confirming' | 'final';
   venue: string;
 }
 

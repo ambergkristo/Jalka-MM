@@ -178,6 +178,8 @@ The simulation proves:
 - derived group standings and simulation top scorers refresh after confirmation
 - provider disagreement becomes `NEEDS_REVIEW` and does not rebuild the leaderboard
 
+The public frontend consumes this state through `GET /api/public-dashboard`, `GET /api/results`, `GET /api/leaderboard`, and `GET /api/tournament`. These endpoints intentionally omit provider raw payloads and provisional final scores.
+
 See `docs/E2E_SIMULATION.md` for the exact simulated matches and expected output.
 
 Sprint 5 adds catch-up endpoints that remain mock-default:

@@ -143,6 +143,8 @@ This is a lightweight keepalive helper. GitHub scheduled workflows can be delaye
 - `GET /api/health`: public health check.
 - `GET /api/leaderboard`: persisted leaderboard entries when available; seed leaderboard fallback before the first rebuild.
 - `GET /api/public-dashboard`: confirmed public results, recalculated group standings, group leaders, top scorers, tournament summary, and stage progress.
+- `GET /api/results`: upcoming public matches and confirmed results only.
+- `GET /api/tournament`: public group standings, top scorers, tournament summary, statistics, and stage progress.
 - `GET /api/results-agent/status`: mock-default results-agent status with persisted stale-match and leaderboard rebuild metadata.
 - `POST /api/results-agent/run`: mock-default catch-up/update cycle endpoint that upserts match results and persisted leaderboard rows; must be protected before any real provider or production writes are connected.
 

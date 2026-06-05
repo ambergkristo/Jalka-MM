@@ -8,7 +8,7 @@ import { usePublicDashboardSnapshot } from '../lib/publicApi.js';
 export function ResultsPage() {
   const dashboardSnapshot = usePublicDashboardSnapshot();
   const matchSection = getPublicMatchSection();
-  const upcoming = upcomingFixtures(new Date(), 6);
+  const upcoming = dashboardSnapshot?.upcomingMatches?.length ? dashboardSnapshot.upcomingMatches.slice(0, 6) : upcomingFixtures(new Date(), 6);
   const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
 
   return (

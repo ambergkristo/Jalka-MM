@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
+import type { DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
 import type { LeaderboardRowView } from './predictionViewModels.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 
 export interface PublicDashboardSnapshot {
+  upcomingMatches: DashboardMatch[];
   latestResults: DashboardResult[];
   groupStandings: GroupStanding[];
   groupLeaders: GroupLeader[];
