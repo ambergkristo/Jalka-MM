@@ -1,5 +1,6 @@
 import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import { rebuildLeaderboardAfterFinalResult } from './leaderboardRebuild.js';
+import type { LeaderboardRepository } from './leaderboardRepository.js';
 import type { ResultProvider } from './resultProvider.js';
 import type { ResultAgentRunSummary, ResultAgentStatus, ResultsAgentRepository } from './resultTypes.js';
 
@@ -13,6 +14,7 @@ export async function getResultAgentStatus(input: {
 
 export async function runResultUpdateCycle(input: {
   repository: ResultsAgentRepository;
+  leaderboardRepository?: LeaderboardRepository;
   provider: ResultProvider;
   now: Date;
 }): Promise<ResultAgentRunSummary> {
@@ -36,7 +38,11 @@ export async function runResultUpdateCycle(input: {
     if (finalResultChanged) {
       finalizedResults += 1;
       const finalized = await input.repository.getFinalizedResults();
-      leaderboardRebuilds.push(await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now }));
+      const previousEntries = await input.leaderboardRepository?.getLeaderboard();
+      const rebuild = await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now, previousEntries });
+      await input.leaderboardRepository?.replaceLeaderboard(rebuild.entries, rebuild);
+      await input.repository.markPointsRecalculated(update.matchId, rebuild.recalculatedAt);
+      leaderboardRebuilds.push(rebuild);
     }
   }
 
@@ -48,6 +54,11 @@ export async function runResultUpdateCycle(input: {
     checkedMatches: duePlans.length,
     updatesApplied,
     finalizedResults,
+    updatedMatches: updatesApplied,
+    finalizedMatches: finalizedResults,
+    leaderboardRebuilt: leaderboardRebuilds.length > 0,
+    playersProcessed: leaderboardRebuilds.at(-1)?.playersProcessed ?? 0,
+    warnings: [...new Set(leaderboardRebuilds.flatMap((rebuild) => rebuild.warnings))],
     leaderboardRebuilds,
     lastRunAt: finishedAt,
     nextSuggestedRunAt: findNextSuggestedRunAt(refreshedPlans),

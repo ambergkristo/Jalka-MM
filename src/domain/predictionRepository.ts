@@ -65,6 +65,12 @@ export interface LeaderboardEntry {
   exactScores: number;
   correctResults: number;
   hitRate: number;
+  matchesScored?: number;
+  matchPoints?: number;
+  groupBonusPoints?: number;
+  playoffBonusPoints?: number;
+  topScorerBonusPoints?: number;
+  totalPoints?: number;
   previousRank?: number;
   lastUpdatedAt: string;
 }

@@ -306,6 +306,12 @@ export function rebuildLeaderboard(input: {
     exactScores: result.exactScores,
     correctResults: result.correctResults,
     hitRate: result.hitRate,
+    matchesScored: result.matchesScored,
+    matchPoints: result.matchPoints,
+    groupBonusPoints: result.groupBonusPoints,
+    playoffBonusPoints: result.playoffBonusPoints,
+    topScorerBonusPoints: result.topScorerBonusPoints,
+    totalPoints: result.totalPoints,
     previousRank: previousRankByPlayer.get(result.playerId),
     lastUpdatedAt: input.recalculatedAt
   }));

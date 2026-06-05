@@ -4,6 +4,7 @@ import { getTournamentData } from '../domain/tournamentData.js';
 import type { Match } from '../domain/types.js';
 import { getRuntimeConfig, requireDestructiveConfirmation } from './config.js';
 import { createDatabase, type QueryValue } from './databaseAdapter.js';
+import { migrateResultPersistenceSchema } from './results/resultPersistenceSchema.js';
 
 const config = getRuntimeConfig();
 export const db = createDatabase(config);
@@ -11,6 +12,7 @@ export const db = createDatabase(config);
 export async function migrate(): Promise<void> {
   if (db.provider === 'postgres') await migratePostgres();
   else await migrateSqlite();
+  await migrateResultPersistenceSchema(db);
 }
 
 async function migrateSqlite(): Promise<void> {
@@ -23,9 +25,10 @@ async function migrateSqlite(): Promise<void> {
     CREATE TABLE IF NOT EXISTS player_knockout_predictions (player_id TEXT PRIMARY KEY, prediction_json TEXT NOT NULL, imported_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_predictions (player_id TEXT NOT NULL, group_id TEXT NOT NULL, winner_team_id TEXT NOT NULL, runner_up_team_id TEXT NOT NULL, third_place_team_id TEXT, advancing_team_ids_json TEXT NOT NULL, PRIMARY KEY (player_id, group_id));
     CREATE TABLE IF NOT EXISTS awards_predictions (player_id TEXT PRIMARY KEY, champion_team_id TEXT NOT NULL, top_scorer_name TEXT NOT NULL, top_scorer_team_id TEXT);
-    CREATE TABLE IF NOT EXISTS match_results (match_id INTEGER PRIMARY KEY, home_score INTEGER, away_score INTEGER, status TEXT NOT NULL, is_final INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS result_updates (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, source TEXT NOT NULL, status TEXT NOT NULL, is_final INTEGER NOT NULL DEFAULT 0, last_checked_at TEXT NOT NULL, next_check_at TEXT, points_recalculated_at TEXT, raw_provider_status TEXT, error_message TEXT);
-    CREATE TABLE IF NOT EXISTS leaderboard_entries (player_id TEXT PRIMARY KEY, rank INTEGER NOT NULL, points INTEGER NOT NULL, exact_scores INTEGER NOT NULL, correct_results INTEGER NOT NULL, hit_rate REAL NOT NULL, previous_rank INTEGER, last_updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS match_results (match_id INTEGER PRIMARY KEY, home_score INTEGER, away_score INTEGER, minute INTEGER, status TEXT NOT NULL, is_final INTEGER NOT NULL DEFAULT 0, provider TEXT, provider_fixture_id TEXT, raw_provider_status TEXT, last_checked_at TEXT, next_check_at TEXT, updated_at TEXT NOT NULL, points_recalculated_at TEXT);
+    CREATE TABLE IF NOT EXISTS result_updates (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, source TEXT NOT NULL, status TEXT NOT NULL, home_score INTEGER, away_score INTEGER, minute INTEGER, is_final INTEGER NOT NULL DEFAULT 0, last_checked_at TEXT NOT NULL, next_check_at TEXT, points_recalculated_at TEXT, provider_fixture_id TEXT, provider_updated_at TEXT, raw_provider_status TEXT, warning TEXT, error_message TEXT);
+    CREATE TABLE IF NOT EXISTS leaderboard_entries (player_id TEXT PRIMARY KEY, rank INTEGER NOT NULL, points INTEGER NOT NULL, exact_scores INTEGER NOT NULL, correct_results INTEGER NOT NULL, hit_rate REAL NOT NULL, matches_scored INTEGER NOT NULL DEFAULT 0, match_points INTEGER NOT NULL DEFAULT 0, group_bonus_points INTEGER NOT NULL DEFAULT 0, playoff_bonus_points INTEGER NOT NULL DEFAULT 0, top_scorer_bonus_points INTEGER NOT NULL DEFAULT 0, total_points INTEGER NOT NULL DEFAULT 0, previous_rank INTEGER, last_updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS leaderboard_metadata (id TEXT PRIMARY KEY, last_rebuild_at TEXT NOT NULL, players_processed INTEGER NOT NULL, matches_processed INTEGER NOT NULL, changed_entries INTEGER NOT NULL, warnings_json TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_standings (group_id TEXT NOT NULL, team_id TEXT NOT NULL, rank INTEGER NOT NULL, played INTEGER NOT NULL, wins INTEGER NOT NULL, draws INTEGER NOT NULL, losses INTEGER NOT NULL, goals_for INTEGER NOT NULL, goals_against INTEGER NOT NULL, goal_difference INTEGER NOT NULL, points INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (group_id, team_id));
     CREATE TABLE IF NOT EXISTS top_scorer_standings (id TEXT PRIMARY KEY, rank INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, goals INTEGER NOT NULL, assists INTEGER, minutes_played INTEGER, updated_at TEXT NOT NULL);
   `);
@@ -41,9 +44,10 @@ async function migratePostgres(): Promise<void> {
     CREATE TABLE IF NOT EXISTS player_knockout_predictions (player_id TEXT PRIMARY KEY, prediction_json TEXT NOT NULL, imported_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_predictions (player_id TEXT NOT NULL, group_id TEXT NOT NULL, winner_team_id TEXT NOT NULL, runner_up_team_id TEXT NOT NULL, third_place_team_id TEXT, advancing_team_ids_json TEXT NOT NULL, PRIMARY KEY (player_id, group_id));
     CREATE TABLE IF NOT EXISTS awards_predictions (player_id TEXT PRIMARY KEY, champion_team_id TEXT NOT NULL, top_scorer_name TEXT NOT NULL, top_scorer_team_id TEXT);
-    CREATE TABLE IF NOT EXISTS match_results (match_id INTEGER PRIMARY KEY, home_score INTEGER, away_score INTEGER, status TEXT NOT NULL, is_final INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS result_updates (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, source TEXT NOT NULL, status TEXT NOT NULL, is_final INTEGER NOT NULL DEFAULT 0, last_checked_at TEXT NOT NULL, next_check_at TEXT, points_recalculated_at TEXT, raw_provider_status TEXT, error_message TEXT);
-    CREATE TABLE IF NOT EXISTS leaderboard_entries (player_id TEXT PRIMARY KEY, rank INTEGER NOT NULL, points INTEGER NOT NULL, exact_scores INTEGER NOT NULL, correct_results INTEGER NOT NULL, hit_rate DOUBLE PRECISION NOT NULL, previous_rank INTEGER, last_updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS match_results (match_id INTEGER PRIMARY KEY, home_score INTEGER, away_score INTEGER, minute INTEGER, status TEXT NOT NULL, is_final INTEGER NOT NULL DEFAULT 0, provider TEXT, provider_fixture_id TEXT, raw_provider_status TEXT, last_checked_at TEXT, next_check_at TEXT, updated_at TEXT NOT NULL, points_recalculated_at TEXT);
+    CREATE TABLE IF NOT EXISTS result_updates (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, source TEXT NOT NULL, status TEXT NOT NULL, home_score INTEGER, away_score INTEGER, minute INTEGER, is_final INTEGER NOT NULL DEFAULT 0, last_checked_at TEXT NOT NULL, next_check_at TEXT, points_recalculated_at TEXT, provider_fixture_id TEXT, provider_updated_at TEXT, raw_provider_status TEXT, warning TEXT, error_message TEXT);
+    CREATE TABLE IF NOT EXISTS leaderboard_entries (player_id TEXT PRIMARY KEY, rank INTEGER NOT NULL, points INTEGER NOT NULL, exact_scores INTEGER NOT NULL, correct_results INTEGER NOT NULL, hit_rate DOUBLE PRECISION NOT NULL, matches_scored INTEGER NOT NULL DEFAULT 0, match_points INTEGER NOT NULL DEFAULT 0, group_bonus_points INTEGER NOT NULL DEFAULT 0, playoff_bonus_points INTEGER NOT NULL DEFAULT 0, top_scorer_bonus_points INTEGER NOT NULL DEFAULT 0, total_points INTEGER NOT NULL DEFAULT 0, previous_rank INTEGER, last_updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS leaderboard_metadata (id TEXT PRIMARY KEY, last_rebuild_at TEXT NOT NULL, players_processed INTEGER NOT NULL, matches_processed INTEGER NOT NULL, changed_entries INTEGER NOT NULL, warnings_json TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_standings (group_id TEXT NOT NULL, team_id TEXT NOT NULL, rank INTEGER NOT NULL, played INTEGER NOT NULL, wins INTEGER NOT NULL, draws INTEGER NOT NULL, losses INTEGER NOT NULL, goals_for INTEGER NOT NULL, goals_against INTEGER NOT NULL, goal_difference INTEGER NOT NULL, points INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (group_id, team_id));
     CREATE TABLE IF NOT EXISTS top_scorer_standings (id TEXT PRIMARY KEY, rank INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, goals INTEGER NOT NULL, assists INTEGER, minutes_played INTEGER, updated_at TEXT NOT NULL);
   `);
@@ -63,9 +67,11 @@ export async function resetDevData(options: { allowDestructive?: boolean; confir
   await db.exec(`
     DELETE FROM top_scorer_standings;
     DELETE FROM group_standings;
+    DELETE FROM leaderboard_metadata;
     DELETE FROM leaderboard_entries;
     DELETE FROM result_updates;
     DELETE FROM match_results;
+    DELETE FROM result_agent_runs;
     DELETE FROM awards_predictions;
     DELETE FROM group_predictions;
     DELETE FROM player_knockout_predictions;

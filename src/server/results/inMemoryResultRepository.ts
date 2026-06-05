@@ -50,8 +50,14 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
       nextSuggestedRunAt: findNextSuggestedRunAt(plans),
       staleMatchesCount: plans.filter((plan) => plan.shouldCheckNow).length,
       provider,
-      mode: 'mock'
+      mode: 'mock',
+      lastLeaderboardRebuildAt: undefined
     };
+  }
+
+  async markPointsRecalculated(matchId: number, timestamp: string): Promise<void> {
+    const update = this.updates.get(matchId);
+    if (update) this.updates.set(matchId, { ...update, pointsRecalculatedAt: timestamp });
   }
 
   async saveRunSummary(summary: ResultAgentRunSummary): Promise<void> {

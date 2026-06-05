@@ -18,7 +18,7 @@ createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', `http://${request.headers.host}`);
     if (request.method === 'GET' && url.pathname === '/api/state') return json(response, 200, await getPublicState());
     if (request.method === 'GET' && (url.pathname === '/api/health' || url.pathname === '/api/health/db')) return json(response, 200, await healthCheck());
-    if (request.method === 'GET' && url.pathname === '/api/leaderboard') return json(response, 200, getCurrentLeaderboard());
+    if (request.method === 'GET' && url.pathname === '/api/leaderboard') return json(response, 200, await getCurrentLeaderboard());
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
     if (request.method === 'POST' && url.pathname === '/api/results-agent/run') return json(response, 200, await runResultsAgentCycle());
     if (url.pathname.startsWith('/api/')) return json(response, 404, { error: 'Not found' });

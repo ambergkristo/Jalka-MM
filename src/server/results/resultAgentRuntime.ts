@@ -1,37 +1,38 @@
-import { InMemoryResultRepository } from './inMemoryResultRepository.js';
 import { getResultAgentStatus, runResultUpdateCycle } from './resultAgent.js';
 import { createResultProvider } from './resultProviderFactory.js';
+import { db } from '../db.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
-import type { LeaderboardRebuildResult } from './resultTypes.js';
+import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
+import { DatabaseResultRepository } from './databaseResultRepository.js';
+import type { LeaderboardRepository } from './leaderboardRepository.js';
 
-const repository = new InMemoryResultRepository();
+const repository = new DatabaseResultRepository(db);
 const provider = createResultProvider();
-let latestRebuild: LeaderboardRebuildResult | undefined;
 
 export function getResultsAgentStatus(now = new Date()) {
   return getResultAgentStatus({ repository, provider, now });
 }
 
 export function runResultsAgentCycle(now = new Date()) {
-  return runResultUpdateCycle({ repository, provider, now }).then((summary) => {
-    latestRebuild = summary.leaderboardRebuilds.at(-1) ?? latestRebuild;
-    return summary;
-  });
+  return runResultUpdateCycle({ repository, leaderboardRepository: repository, provider, now });
 }
 
-export function getCurrentLeaderboard() {
-  if (latestRebuild) {
+export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRepository = repository) {
+  const persisted = await leaderboardRepository.getLeaderboard();
+  if (persisted.length > 0) {
+    const metadata = await leaderboardRepository.getLeaderboardMetadata();
     return {
-      mode: 'in-memory-recalculated',
-      recalculatedAt: latestRebuild.recalculatedAt,
-      warnings: latestRebuild.warnings,
-      entries: latestRebuild.entries
+      mode: 'persisted',
+      recalculatedAt: metadata.lastRebuildAt,
+      warnings: metadata.warnings,
+      entries: persisted
     };
   }
+  console.warn('Leaderboard API falling back to seed leaderboard because no persisted leaderboard rows exist yet.');
   return {
     mode: 'seed',
     recalculatedAt: undefined,
-    warnings: ['Leaderboard is currently served from seed data until a result-agent rebuild runs.'],
-    entries: predictionRepository.getLeaderboard()
+    warnings: [],
+    entries: predictionRepository.getLeaderboard() satisfies LeaderboardEntry[]
   };
 }

@@ -98,11 +98,15 @@ interface ResultUpdate {
   status: MatchStatus;
   homeScore?: number;
   awayScore?: number;
+  minute?: number;
+  providerFixtureId?: string;
   isFinal: boolean;
   lastCheckedAt: string;
   nextCheckAt?: string;
   pointsRecalculatedAt?: string;
+  providerUpdatedAt?: string;
   rawProviderStatus?: string;
+  warning?: string;
   errorMessage?: string;
 }
 
@@ -113,6 +117,12 @@ interface LeaderboardEntry {
   exactScores: number;
   correctResults: number;
   hitRate: number;
+  matchesScored?: number;
+  matchPoints?: number;
+  groupBonusPoints?: number;
+  playoffBonusPoints?: number;
+  topScorerBonusPoints?: number;
+  totalPoints?: number;
   lastUpdatedAt: string;
   previousRank?: number;
 }
@@ -184,5 +194,5 @@ interface TopScorerStanding {
 - `PlayerPointsResult` is an internal scoring breakdown used before saving or exposing compact `LeaderboardEntry` rows.
 - Actual bonus data is represented separately from predictions so the result agent can add official group/play-off/top-scorer data later without changing prediction seed files.
 - `ResultUpdate` records support result-agent observability and catch-up behavior.
-- `LeaderboardEntry` is a saved runtime projection, not a client-side calculation.
+- `LeaderboardEntry` is a saved runtime projection, not a client-side calculation. Sprint 13 persists rebuilt leaderboard rows with scoring breakdown fields when available.
 - `GroupStanding` and `TopScorerStanding` are saved runtime projections for the Tournament Center.

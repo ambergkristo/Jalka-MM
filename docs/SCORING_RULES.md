@@ -108,10 +108,10 @@ Prediction seed files
 -> PredictionRepository
 -> PointsEngine
 -> LeaderboardRebuild
--> ResultAgent summary / in-memory leaderboard API
+-> ResultAgent summary / persisted leaderboard API
 ```
 
-The current leaderboard API can return either seed entries or in-memory recalculated entries after the mock result agent runs. Database persistence of rebuilt leaderboard rows is deferred.
+The current leaderboard API returns persisted leaderboard entries when available and falls back to seed entries before the first rebuild.
 
 ## Implemented Now
 
@@ -125,5 +125,5 @@ The current leaderboard API can return either seed entries or in-memory recalcul
 ## Deferred
 
 - Best Player scoring is deferred because the public seed/domain model does not yet safely expose a best-player prediction field.
-- Final database persistence of detailed scoring breakdowns is deferred.
+- Final public/API exposure of detailed per-player scoring breakdowns is deferred.
 - Final live actual group standings, actual knockout stage-team data, and official top scorer feed integration are deferred until real tournament/result data is connected.

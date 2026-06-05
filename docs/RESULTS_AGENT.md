@@ -14,7 +14,10 @@ Current implementation modules live in `src/server/results/`:
 - `matchScheduler.ts`
 - `resultAgent.ts`
 - `leaderboardRebuild.ts`
+- `databaseResultRepository.ts`
 - `inMemoryResultRepository.ts`
+- `leaderboardRepository.ts`
+- `resultPersistenceSchema.ts`
 - `resultAgentRuntime.ts`
 
 ## Responsibilities
@@ -57,7 +60,7 @@ Each tracked update should store:
 - optional raw provider status
 - optional error message
 
-Sprint 5 stores this through an in-memory repository interface. The existing database schema already has `match_results`, `result_updates`, and `leaderboard_entries` tables, but the production repository implementation is intentionally deferred until the real import/provider work starts.
+Sprint 13 persists this through the database-backed result repository. The database stores current match result state, result update metadata, leaderboard rows, and leaderboard rebuild metadata. `InMemoryResultRepository` remains available for narrow unit tests only.
 
 ## Polling Rules
 
@@ -85,7 +88,20 @@ When a result becomes final or a finalized result changes:
 
 For MVP, full leaderboard rebuild is acceptable after each finalized result.
 
-Sprint 12 connects this path to the official points engine in `src/domain/pointsEngine.ts`. The rebuild now calculates official `6/4/2/0` match points from prediction seed data and finalized results, and can add group, play-off, champion, and top-scorer bonuses when the corresponding actual data is available. Rebuilt entries are returned in result-agent summaries and exposed in memory through `GET /api/leaderboard`; database persistence is still deferred.
+Sprint 12 connects this path to the official points engine in `src/domain/pointsEngine.ts`. The rebuild calculates official `6/4/2/0` match points from prediction seed data and finalized results, and can add group, play-off, champion, and top-scorer bonuses when the corresponding actual data is available.
+
+Sprint 13 persists rebuilt leaderboard rows through `DatabaseResultRepository.replaceLeaderboard`. `GET /api/leaderboard` now prefers saved `leaderboard_entries`; if none exist yet, it falls back to seed leaderboard data without showing technical status text in the public UI.
+
+Persisted leaderboard rows include:
+
+- rank, points, exact scores, correct results, and hit rate
+- matches scored
+- match points
+- group bonus points
+- play-off bonus points
+- top scorer bonus points
+- total points
+- last updated timestamp
 
 ## Render Hibernate Recovery
 
@@ -94,9 +110,11 @@ Render free services can sleep through polling windows.
 MVP catch-up strategy:
 
 1. If the web service wakes and stale matches exist, an API request or startup check triggers catch-up.
-2. Catch-up fetches current provider data for stale scheduled/live/recent matches.
-3. The agent updates statuses and scores.
-4. Any newly finalized result triggers a leaderboard rebuild.
+2. Catch-up reads persisted match result state and schedule data.
+3. Catch-up fetches current provider data for stale scheduled/live/recent matches.
+4. The agent upserts match result state and appends result update metadata.
+5. Any newly finalized result triggers a leaderboard rebuild.
+6. Rebuilt leaderboard rows and rebuild metadata are saved, so restart does not lose the latest standings.
 
 No complex pending queue is needed for MVP. The database state and provider API are enough to recover missed polling intervals.
 
@@ -105,7 +123,7 @@ Sprint 5 adds mock-only catch-up endpoints:
 - `GET /api/results-agent/status`
 - `POST /api/results-agent/run`
 
-The `POST` endpoint runs one safe/idempotent update cycle against the mock provider. It is public for now because it makes no external calls, has no real side effects outside process memory, and exists only as architecture groundwork. Before connecting a real provider or persistent production writes, protect this endpoint with a scheduler secret, internal cron trigger, or equivalent server-side authorization.
+The `POST` endpoint runs one safe/idempotent update cycle against the mock provider. It is public for now because it makes no external calls and exists only as architecture groundwork. It now writes mock result state and rebuilt leaderboard rows to the configured database. Before connecting a real provider or production write workflow, protect this endpoint with a scheduler secret, internal cron trigger, or equivalent server-side authorization.
 
 ## Provider Selection Architecture
 
@@ -163,7 +181,7 @@ The map should be validated before live writes are enabled. Knockout slots may e
 
 ## Production Safety Rules
 
-- Mock mode can remain unprotected while it only mutates in-memory mock state.
+- Mock mode can remain unprotected while it uses deterministic mock provider data and does not call external APIs.
 - Live write mode must require a secret header, internal cron identity, or equivalent protection before persistent writes are enabled.
 - API keys must stay server-side and must never be committed.
 - Provider raw payload storage should be bounded and optional.
@@ -171,11 +189,9 @@ The map should be validated before live writes are enabled. Knockout slots may e
 
 ## Sprint 5 Deferred Work
 
-- Replace `InMemoryResultRepository` with a database-backed repository.
-- Persist score, minute, provider, and recalculation metadata in final schema shape.
+- Move remaining narrow tests away from `InMemoryResultRepository` where useful.
 - Implement the selected real football provider adapter.
 - Apply final Excel-derived prediction data to the scoring engine.
-- Save rebuilt `LeaderboardEntry` rows after recalculation.
 - Add production protection for the run endpoint.
 
 ## Boundaries

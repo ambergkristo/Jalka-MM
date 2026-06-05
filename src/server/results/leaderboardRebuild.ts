@@ -5,10 +5,11 @@ import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
 export async function rebuildLeaderboardAfterFinalResult(input: {
   finalizedResults: ResultUpdate[];
   now: Date;
+  previousEntries?: ReturnType<typeof predictionRepository.getLeaderboard>;
 }): Promise<LeaderboardRebuildResult> {
   const recalculatedAt = input.now.toISOString();
   const finalizedResults = input.finalizedResults.filter((result) => result.isFinal);
-  const previousEntries = predictionRepository.getLeaderboard();
+  const previousEntries = input.previousEntries ?? predictionRepository.getLeaderboard();
   const leaderboard = rebuildLeaderboard({
     players: predictionRepository.getPlayers(),
     predictions: predictionRepository.getMatchPredictions(),

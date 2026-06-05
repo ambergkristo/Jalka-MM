@@ -72,7 +72,7 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 - Premium leaderboard with top-three highlighting and player profile links
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
 - Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
-- Mock-only backend results-agent foundation with provider abstraction, polling scheduler, update cycle, leaderboard rebuild skeleton, and catch-up endpoints
+- Mock-default backend results-agent foundation with provider abstraction, polling scheduler, update cycle, persisted match results, persisted leaderboard rebuilds, and catch-up endpoints
 - Result provider configuration/factory scaffold for future API-Football, football-data.org, or Sportmonks integration
 - Prediction seed-data architecture for players, leaderboard entries, group predictions, knockout predictions, and awards predictions
 - Placeholder results page
@@ -141,9 +141,9 @@ This is a lightweight keepalive helper. GitHub scheduled workflows can be delaye
 
 - `GET /api/state`: public read-only app state metadata.
 - `GET /api/health`: public health check.
-- `GET /api/leaderboard`: current leaderboard entries; currently seed data until the mock result agent produces an in-memory recalculation.
-- `GET /api/results-agent/status`: mock-only results-agent status for Sprint 5 groundwork.
-- `POST /api/results-agent/run`: mock-only catch-up/update cycle endpoint; must be protected before any real provider or production writes are connected.
+- `GET /api/leaderboard`: persisted leaderboard entries when available; seed leaderboard fallback before the first rebuild.
+- `GET /api/results-agent/status`: mock-default results-agent status with persisted stale-match and leaderboard rebuild metadata.
+- `POST /api/results-agent/run`: mock-default catch-up/update cycle endpoint that upserts match results and persisted leaderboard rows; must be protected before any real provider or production writes are connected.
 
 All old auth, admin, approval, prediction submission, bonus form, deadline, and lock APIs have been removed from the active server.
 

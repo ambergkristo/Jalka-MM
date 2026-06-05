@@ -29,6 +29,7 @@ export interface ResultUpdate {
   provider: string;
   rawProviderStatus?: string;
   providerUpdatedAt?: string;
+  pointsRecalculatedAt?: string;
   warning?: string;
 }
 
@@ -51,6 +52,12 @@ export interface LeaderboardRebuildResult {
     exactScores: number;
     correctResults: number;
     hitRate: number;
+    matchesScored?: number;
+    matchPoints?: number;
+    groupBonusPoints?: number;
+    playoffBonusPoints?: number;
+    topScorerBonusPoints?: number;
+    totalPoints?: number;
     previousRank?: number;
     lastUpdatedAt: string;
   }>;
@@ -63,6 +70,7 @@ export interface ResultAgentStatus {
   staleMatchesCount: number;
   provider: string;
   mode: 'mock' | 'live';
+  lastLeaderboardRebuildAt?: string;
 }
 
 export interface ResultAgentRunSummary extends ResultAgentStatus {
@@ -71,6 +79,11 @@ export interface ResultAgentRunSummary extends ResultAgentStatus {
   checkedMatches: number;
   updatesApplied: number;
   finalizedResults: number;
+  updatedMatches: number;
+  finalizedMatches: number;
+  leaderboardRebuilt: boolean;
+  playersProcessed: number;
+  warnings: string[];
   leaderboardRebuilds: LeaderboardRebuildResult[];
 }
 
@@ -79,5 +92,6 @@ export interface ResultsAgentRepository {
   saveResultUpdate(update: ResultUpdate): Promise<{ finalResultChanged: boolean }>;
   getFinalizedResults(): Promise<ResultUpdate[]>;
   getStatus(provider: string, now: Date): Promise<ResultAgentStatus>;
+  markPointsRecalculated(matchId: number, timestamp: string): Promise<void>;
   saveRunSummary(summary: ResultAgentRunSummary): Promise<void>;
 }
