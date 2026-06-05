@@ -3,7 +3,7 @@ import { BracketMatchCard } from './BracketMatchCard.js';
 
 export function BracketRound({ round }: { round: BracketRoundData }) {
   return (
-    <section className="true-bracket-round" aria-label={round.label}>
+    <section className="true-bracket-round" data-round-index={round.roundIndex} aria-label={round.label}>
       <header>{round.label}</header>
       <div className="true-bracket-round-matches">
         {round.matches.map((match) => (

@@ -31,4 +31,15 @@ describe('true playoff bracket', () => {
     expect(markup).not.toContain('Scheduled');
     expect(markup).not.toContain('Final</');
   });
+
+  it('mirrors the right side so its semi-final is closest to the centered final', () => {
+    const markup = renderToStaticMarkup(<TrueBracket tree={playoffBracketTree} />);
+    const rightSideStart = markup.indexOf('aria-label="Parem pool"');
+    const rightSideMarkup = markup.slice(rightSideStart);
+
+    expect(rightSideStart).toBeGreaterThan(-1);
+    expect(rightSideMarkup.indexOf('Poolfinaal')).toBeLessThan(rightSideMarkup.indexOf('Veerandfinaalid'));
+    expect(rightSideMarkup.indexOf('Veerandfinaalid')).toBeLessThan(rightSideMarkup.indexOf('1/8-finaalid'));
+    expect(rightSideMarkup.indexOf('1/8-finaalid')).toBeLessThan(rightSideMarkup.indexOf('1/16-finaalid'));
+  });
 });
