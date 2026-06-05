@@ -16,17 +16,28 @@ describe('persistent result and leaderboard repositories', () => {
       await migrateResultPersistenceSchema(db);
       const tables = await db.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('match_results', 'result_updates', 'leaderboard_entries', 'leaderboard_metadata')");
       assert.deepEqual(tables.map((row) => row.name).sort(), ['leaderboard_entries', 'leaderboard_metadata', 'match_results', 'result_updates']);
+      const columns = await db.all('PRAGMA table_info(match_results)');
+      assert.ok(columns.some((row) => row.name === 'public_status'));
+      assert.ok(columns.some((row) => row.name === 'provisional_home_score'));
+      assert.ok(columns.some((row) => row.name === 'confirmed_home_score'));
+      assert.ok(columns.some((row) => row.name === 'provider_results_json'));
     });
   });
 
-  it('upserts match result state and exposes finalized results', async () => {
+  it('upserts confirmed match result state and exposes finalized results', async () => {
     await withRepository(async ({ db, repository }) => {
       await seedMatch(db, 4);
       await repository.saveResultUpdate({
         matchId: 4,
         status: 'FINISHED',
+        publicStatus: 'CONFIRMED_FINAL',
         homeScore: 2,
         awayScore: 1,
+        confirmedHomeScore: 2,
+        confirmedAwayScore: 1,
+        confirmedAt: '2026-06-15T18:11:00.000Z',
+        confirmationSource: 'mock-result-provider',
+        confirmationConfidence: 'provider-repeat',
         minute: 90,
         isFinal: true,
         lastCheckedAt: '2026-06-15T18:00:00.000Z',
@@ -39,7 +50,48 @@ describe('persistent result and leaderboard repositories', () => {
       assert.equal(result?.homeScore, 2);
       assert.equal(result?.awayScore, 1);
       assert.equal(result?.isFinal, true);
+      assert.equal(result?.publicStatus, 'CONFIRMED_FINAL');
       assert.equal((await repository.getFinalizedResults()).length, 1);
+    });
+  });
+
+  it('persists provisional final state without exposing finalized results', async () => {
+    await withRepository(async ({ db, repository }) => {
+      await seedMatch(db, 4);
+      await repository.saveResultUpdate({
+        matchId: 4,
+        status: 'FINISHED',
+        publicStatus: 'CONFIRMING',
+        homeScore: 2,
+        awayScore: 1,
+        provisionalHomeScore: 2,
+        provisionalAwayScore: 1,
+        provisionalStatus: 'FINISHED',
+        minute: 90,
+        isFinal: false,
+        lastCheckedAt: '2026-06-15T18:00:00.000Z',
+        nextConfirmationCheckAt: '2026-06-15T18:10:00.000Z',
+        nextCheckAt: '2026-06-15T18:10:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'finished',
+        providerResults: [{
+          provider: 'mock-result-provider',
+          matchId: 4,
+          status: 'FINISHED',
+          homeScore: 2,
+          awayScore: 1,
+          isFinal: true,
+          observedAt: '2026-06-15T18:00:00.000Z'
+        }]
+      });
+
+      const result = await repository.getMatchResult(4);
+      assert.equal(result?.publicStatus, 'CONFIRMING');
+      assert.equal(result?.isFinal, false);
+      assert.equal(result?.provisionalHomeScore, 2);
+      assert.equal(result?.nextConfirmationCheckAt, '2026-06-15T18:10:00.000Z');
+      assert.equal((await repository.getProviderResultObservations(4)).length, 1);
+      assert.equal((await repository.getFinalizedResults()).length, 0);
     });
   });
 
@@ -82,15 +134,17 @@ describe('persistent result and leaderboard repositories', () => {
       await seedMatch(db, 4);
       const now = new Date('2026-06-15T18:00:00.000Z');
 
-      const first = await runResultUpdateCycle({ repository, leaderboardRepository: repository, provider: new MockResultProvider(), now });
-      const second = await runResultUpdateCycle({ repository, leaderboardRepository: repository, provider: new MockResultProvider(), now });
+      const first = await runResultUpdateCycle({ repository, leaderboardRepository: repository, provider: new MockResultProvider(), now, confirmationDelayMinutes: 10 });
+      const second = await runResultUpdateCycle({ repository, leaderboardRepository: repository, provider: new MockResultProvider(), now: new Date('2026-06-15T18:11:00.000Z'), confirmationDelayMinutes: 10 });
 
       assert.equal(first.checkedMatches, 1);
       assert.equal(first.updatedMatches, 1);
-      assert.equal(first.finalizedMatches, 1);
-      assert.equal(first.leaderboardRebuilt, true);
-      assert.equal(first.playersProcessed, 24);
-      assert.equal(second.leaderboardRebuilt, false);
+      assert.equal(first.finalizedMatches, 0);
+      assert.equal(first.confirmationPending, 1);
+      assert.equal(first.leaderboardRebuilt, false);
+      assert.equal(second.finalizedMatches, 1);
+      assert.equal(second.leaderboardRebuilt, true);
+      assert.equal(second.playersProcessed, 24);
       assert.equal((await repository.getFinalizedResults()).length, 1);
       assert.equal((await repository.getLeaderboard()).length, 24);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);

@@ -4,7 +4,7 @@ import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
 import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import type { LeaderboardMetadata, LeaderboardRepository } from './leaderboardRepository.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
-import type { LeaderboardRebuildResult, MatchStatus, ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
+import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export class DatabaseResultRepository implements ResultsAgentRepository, LeaderboardRepository {
   constructor(private readonly db: QueryableDatabase) {}
@@ -35,8 +35,8 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
         COALESCE(t_away.name_et, t_away.name, m.away_slot) AS away_team,
         r.provider_fixture_id,
         r.status,
-        r.home_score,
-        r.away_score,
+        COALESCE(r.confirmed_home_score, r.home_score) AS home_score,
+        COALESCE(r.confirmed_away_score, r.away_score) AS away_score,
         r.minute,
         r.is_final,
         r.last_checked_at,
@@ -81,12 +81,25 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
           'away_score',
           'minute',
           'status',
+          'public_status',
           'is_final',
+          'provisional_home_score',
+          'provisional_away_score',
+          'provisional_status',
+          'confirmed_home_score',
+          'confirmed_away_score',
+          'confirmed_at',
+          'confirmation_source',
+          'confirmation_confidence',
+          'needs_review_reason',
           'provider',
           'provider_fixture_id',
           'raw_provider_status',
           'last_checked_at',
+          'last_provider_check_at',
           'next_check_at',
+          'next_confirmation_check_at',
+          'provider_results_json',
           'updated_at',
           'points_recalculated_at'
         ],
@@ -96,12 +109,25 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
           update.awayScore ?? null,
           update.minute ?? null,
           update.status,
+          update.publicStatus ?? (update.isFinal ? 'CONFIRMED_FINAL' : 'SCHEDULED'),
           update.isFinal ? 1 : 0,
+          update.provisionalHomeScore ?? null,
+          update.provisionalAwayScore ?? null,
+          update.provisionalStatus ?? null,
+          update.confirmedHomeScore ?? null,
+          update.confirmedAwayScore ?? null,
+          update.confirmedAt ?? null,
+          update.confirmationSource ?? null,
+          update.confirmationConfidence ?? null,
+          update.needsReviewReason ?? null,
           update.provider,
           update.providerMatchId ?? null,
           update.rawProviderStatus ?? null,
           update.lastCheckedAt,
+          update.lastProviderCheckAt ?? update.lastCheckedAt,
           update.nextCheckAt ?? null,
+          update.nextConfirmationCheckAt ?? null,
+          update.providerResults ? JSON.stringify(update.providerResults) : null,
           updatedAt,
           null
         ],
@@ -137,6 +163,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
       finalResultChanged:
         update.isFinal &&
         (!previous ||
+          !previous.isFinal ||
           previous.homeScore !== update.homeScore ||
           previous.awayScore !== update.awayScore ||
           previous.status !== update.status)
@@ -144,7 +171,13 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
   }
 
   async getFinalizedResults(): Promise<ResultUpdate[]> {
-    return (await this.getAllMatchResults()).filter((result) => result.isFinal);
+    return (await this.getAllMatchResults()).filter((result) => result.isFinal && result.publicStatus === 'CONFIRMED_FINAL');
+  }
+
+  async getProviderResultObservations(matchId: number): Promise<ProviderResultObservation[]> {
+    const current = await this.getMatchResult(matchId);
+    if (current?.providerResults?.length) return current.providerResults;
+    return [];
   }
 
   async getStatus(provider: string, now: Date): Promise<ResultAgentStatus> {
@@ -277,6 +310,7 @@ function toResultUpdate(row: Record<string, unknown>): ResultUpdate {
     matchId: Number(row.match_id),
     providerMatchId: nullableString(row.provider_fixture_id),
     status: String(row.status) as MatchStatus,
+    publicStatus: nullableString(row.public_status) as PublicResultStatus | undefined,
     homeScore: nullableNumber(row.home_score),
     awayScore: nullableNumber(row.away_score),
     minute: nullableNumber(row.minute),
@@ -285,7 +319,19 @@ function toResultUpdate(row: Record<string, unknown>): ResultUpdate {
     nextCheckAt: nullableString(row.next_check_at),
     provider: nullableString(row.provider) ?? 'unknown',
     rawProviderStatus: nullableString(row.raw_provider_status),
-    pointsRecalculatedAt: nullableString(row.points_recalculated_at)
+    pointsRecalculatedAt: nullableString(row.points_recalculated_at),
+    provisionalHomeScore: nullableNumber(row.provisional_home_score),
+    provisionalAwayScore: nullableNumber(row.provisional_away_score),
+    provisionalStatus: nullableString(row.provisional_status) as MatchStatus | undefined,
+    confirmedHomeScore: nullableNumber(row.confirmed_home_score),
+    confirmedAwayScore: nullableNumber(row.confirmed_away_score),
+    confirmedAt: nullableString(row.confirmed_at),
+    confirmationSource: nullableString(row.confirmation_source),
+    confirmationConfidence: nullableString(row.confirmation_confidence) as ResultUpdate['confirmationConfidence'],
+    needsReviewReason: nullableString(row.needs_review_reason),
+    lastProviderCheckAt: nullableString(row.last_provider_check_at),
+    nextConfirmationCheckAt: nullableString(row.next_confirmation_check_at),
+    providerResults: parseProviderResults(row.provider_results_json)
   };
 }
 
@@ -328,4 +374,25 @@ function parseWarnings(value: unknown): string[] {
   } catch {
     return [];
   }
+}
+
+function parseProviderResults(value: unknown): ProviderResultObservation[] | undefined {
+  if (typeof value !== 'string' || !value) return undefined;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return undefined;
+    return parsed.filter(isProviderResultObservation);
+  } catch {
+    return undefined;
+  }
+}
+
+function isProviderResultObservation(value: unknown): value is ProviderResultObservation {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.provider === 'string' &&
+    typeof row.matchId === 'number' &&
+    typeof row.status === 'string' &&
+    typeof row.isFinal === 'boolean' &&
+    typeof row.observedAt === 'string';
 }

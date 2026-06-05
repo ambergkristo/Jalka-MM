@@ -9,6 +9,7 @@ export interface ResultProviderConfig {
   season?: string;
   writeMode: ResultsWriteMode;
   agentSecret?: string;
+  confirmationDelayMinutes?: number;
 }
 
 export function loadResultProviderConfig(env: NodeJS.ProcessEnv = process.env): ResultProviderConfig {
@@ -19,7 +20,8 @@ export function loadResultProviderConfig(env: NodeJS.ProcessEnv = process.env): 
     competitionId: emptyToUndefined(env.RESULTS_COMPETITION_ID),
     season: emptyToUndefined(env.RESULTS_SEASON),
     writeMode: parseWriteMode(env.RESULTS_WRITE_MODE ?? 'mock'),
-    agentSecret: emptyToUndefined(env.RESULTS_AGENT_SECRET)
+    agentSecret: emptyToUndefined(env.RESULTS_AGENT_SECRET),
+    confirmationDelayMinutes: parseConfirmationDelayMinutes(env.RESULT_CONFIRMATION_DELAY_MINUTES ?? '10')
   };
 }
 
@@ -53,4 +55,10 @@ function parseWriteMode(value: string): ResultsWriteMode {
 function emptyToUndefined(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function parseConfirmationDelayMinutes(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) throw new Error(`Invalid RESULT_CONFIRMATION_DELAY_MINUTES "${value}". Use a non-negative number.`);
+  return parsed;
 }

@@ -6,6 +6,11 @@ export interface ResultProvider {
   fetchMatchUpdate(match: TrackedMatch, now: Date): Promise<ResultUpdate>;
 }
 
+export interface ResultProviderChain {
+  providers: ResultProvider[];
+  fetchMatchUpdates(match: TrackedMatch, now: Date): Promise<ResultUpdate[]>;
+}
+
 export interface ProviderStatusNormalization {
   status: ResultUpdate['status'];
   isFinal: boolean;

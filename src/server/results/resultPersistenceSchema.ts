@@ -8,12 +8,25 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       away_score INTEGER,
       minute INTEGER,
       status TEXT NOT NULL,
+      public_status TEXT NOT NULL DEFAULT 'SCHEDULED',
       is_final INTEGER NOT NULL DEFAULT 0,
+      provisional_home_score INTEGER,
+      provisional_away_score INTEGER,
+      provisional_status TEXT,
+      confirmed_home_score INTEGER,
+      confirmed_away_score INTEGER,
+      confirmed_at TEXT,
+      confirmation_source TEXT,
+      confirmation_confidence TEXT,
+      needs_review_reason TEXT,
       provider TEXT,
       provider_fixture_id TEXT,
       raw_provider_status TEXT,
       last_checked_at TEXT,
+      last_provider_check_at TEXT,
       next_check_at TEXT,
+      next_confirmation_check_at TEXT,
+      provider_results_json TEXT,
       updated_at TEXT NOT NULL,
       points_recalculated_at TEXT
     );
@@ -75,11 +88,24 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
   `);
 
   await ensureColumn(db, 'match_results', 'minute', 'INTEGER');
+  await ensureColumn(db, 'match_results', 'public_status', "TEXT NOT NULL DEFAULT 'SCHEDULED'");
+  await ensureColumn(db, 'match_results', 'provisional_home_score', 'INTEGER');
+  await ensureColumn(db, 'match_results', 'provisional_away_score', 'INTEGER');
+  await ensureColumn(db, 'match_results', 'provisional_status', 'TEXT');
+  await ensureColumn(db, 'match_results', 'confirmed_home_score', 'INTEGER');
+  await ensureColumn(db, 'match_results', 'confirmed_away_score', 'INTEGER');
+  await ensureColumn(db, 'match_results', 'confirmed_at', 'TEXT');
+  await ensureColumn(db, 'match_results', 'confirmation_source', 'TEXT');
+  await ensureColumn(db, 'match_results', 'confirmation_confidence', 'TEXT');
+  await ensureColumn(db, 'match_results', 'needs_review_reason', 'TEXT');
   await ensureColumn(db, 'match_results', 'provider', 'TEXT');
   await ensureColumn(db, 'match_results', 'provider_fixture_id', 'TEXT');
   await ensureColumn(db, 'match_results', 'raw_provider_status', 'TEXT');
   await ensureColumn(db, 'match_results', 'last_checked_at', 'TEXT');
+  await ensureColumn(db, 'match_results', 'last_provider_check_at', 'TEXT');
   await ensureColumn(db, 'match_results', 'next_check_at', 'TEXT');
+  await ensureColumn(db, 'match_results', 'next_confirmation_check_at', 'TEXT');
+  await ensureColumn(db, 'match_results', 'provider_results_json', 'TEXT');
   await ensureColumn(db, 'match_results', 'points_recalculated_at', 'TEXT');
 
   await ensureColumn(db, 'result_updates', 'home_score', 'INTEGER');

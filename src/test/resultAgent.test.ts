@@ -5,22 +5,36 @@ import { MockResultProvider } from '../server/results/mockResultProvider.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
 
 describe('result agent update cycle', () => {
-  it('checks due matches, saves updates, and rebuilds leaderboard after final changes', async () => {
+  it('keeps first final observation provisional and rebuilds only after delayed confirmation', async () => {
     const now = new Date('2026-06-15T18:00:00.000Z');
     const repository = new InMemoryResultRepository(createDefaultMockMatches(now));
-    const summary = await runResultUpdateCycle({
+    const first = await runResultUpdateCycle({
       repository,
       provider: new MockResultProvider(),
-      now
+      now,
+      confirmationDelayMinutes: 10
     });
 
-    expect(summary.provider).toBe('mock-result-provider');
-    expect(summary.mode).toBe('mock');
-    expect(summary.checkedMatches).toBeGreaterThan(0);
-    expect(summary.updatesApplied).toBe(summary.checkedMatches);
-    expect(summary.finalizedResults).toBe(1);
-    expect(summary.leaderboardRebuilds).toHaveLength(1);
-    expect(summary.leaderboardRebuilds[0]).toMatchObject({
+    expect(first.provider).toBe('mock-result-provider');
+    expect(first.mode).toBe('mock');
+    expect(first.checkedMatches).toBeGreaterThan(0);
+    expect(first.updatesApplied).toBe(first.checkedMatches);
+    expect(first.finalizedResults).toBe(0);
+    expect(first.confirmationPending).toBe(1);
+    expect(first.leaderboardRebuilt).toBe(false);
+    expect(first.leaderboardRebuilds).toHaveLength(0);
+
+    const second = await runResultUpdateCycle({
+      repository,
+      provider: new MockResultProvider(),
+      now: new Date('2026-06-15T18:11:00.000Z'),
+      confirmationDelayMinutes: 10
+    });
+
+    expect(second.finalizedResults).toBe(1);
+    expect(second.confirmationPending).toBe(0);
+    expect(second.leaderboardRebuilds).toHaveLength(1);
+    expect(second.leaderboardRebuilds[0]).toMatchObject({
       playersProcessed: 24,
       matchesProcessed: 1,
       entries: expect.any(Array),
@@ -30,7 +44,7 @@ describe('result agent update cycle', () => {
         'Top scorer bonus points were skipped because actual top scorer data is not available.'
       ]
     });
-    expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ points: 6, exactScores: 1, correctResults: 1 });
+    expect(second.leaderboardRebuilds[0].entries[0]).toMatchObject({ points: 6, exactScores: 1, correctResults: 1 });
   });
 
   it('dry-run checks provider updates without saving results or leaderboard rows', async () => {
@@ -49,6 +63,8 @@ describe('result agent update cycle', () => {
       updatesApplied: 0,
       updatedMatches: 0,
       finalizedResults: 0,
+      confirmationPending: 0,
+      needsReview: 0,
       leaderboardRebuilt: false,
       warnings: ['Dry run completed without persisting result, run summary, or leaderboard changes.']
     });

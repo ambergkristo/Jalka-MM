@@ -96,18 +96,52 @@ interface ResultUpdate {
   matchId: number;
   source: string;
   status: MatchStatus;
+  publicStatus:
+    | "SCHEDULED"
+    | "LIVE"
+    | "CONFIRMING"
+    | "CONFIRMED_FINAL"
+    | "NEEDS_REVIEW";
   homeScore?: number;
   awayScore?: number;
+  provisionalHomeScore?: number;
+  provisionalAwayScore?: number;
+  provisionalStatus?: MatchStatus;
+  confirmedHomeScore?: number;
+  confirmedAwayScore?: number;
+  confirmedAt?: string;
+  confirmationSource?: string;
+  confirmationConfidence?: "provider-repeat" | "provider-agreement" | "manual";
+  needsReviewReason?: string;
   minute?: number;
   providerFixtureId?: string;
   isFinal: boolean;
   lastCheckedAt: string;
+  lastProviderCheckAt?: string;
   nextCheckAt?: string;
+  nextConfirmationCheckAt?: string;
+  providerResults?: ProviderResultObservation[];
   pointsRecalculatedAt?: string;
   providerUpdatedAt?: string;
   rawProviderStatus?: string;
   warning?: string;
   errorMessage?: string;
+}
+
+interface ProviderResultObservation {
+  provider: string;
+  matchId: number;
+  status: MatchStatus;
+  homeScore?: number;
+  awayScore?: number;
+  minute?: number;
+  isFinal: boolean;
+  observedAt: string;
+  providerFixtureId?: string;
+  rawProviderStatus?: string;
+  confidence?: "low" | "medium" | "high" | "confirmed";
+  providerUpdatedAt?: string;
+  warnings?: string[];
 }
 
 interface LeaderboardEntry {
@@ -193,6 +227,6 @@ interface TopScorerStanding {
 - `src/domain/pointsEngine.ts` implements official `6/4/2/0` match scoring plus group, play-off, champion, and top scorer bonus calculators.
 - `PlayerPointsResult` is an internal scoring breakdown used before saving or exposing compact `LeaderboardEntry` rows.
 - Actual bonus data is represented separately from predictions so the result agent can add official group/play-off/top-scorer data later without changing prediction seed files.
-- `ResultUpdate` records support result-agent observability and catch-up behavior.
+- `ResultUpdate` records support result-agent observability and catch-up behavior. Public final scores require `publicStatus="CONFIRMED_FINAL"` and `isFinal=true`; provider-final scores can be stored provisionally without affecting the leaderboard.
 - `LeaderboardEntry` is a saved runtime projection, not a client-side calculation. Sprint 13 persists rebuilt leaderboard rows with scoring breakdown fields when available.
 - `GroupStanding` and `TopScorerStanding` are saved runtime projections for the Tournament Center.

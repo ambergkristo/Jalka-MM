@@ -9,7 +9,7 @@ const EXPECTED_FULL_TIME_AFTER_KICKOFF_MS = 110 * MINUTE;
 const PASSIVE_RESCHEDULE_MS = 60 * MINUTE;
 
 export function planMatchUpdate(match: TrackedMatch, now: Date): MatchUpdatePlan {
-  if (match.isFinal || match.status === 'FINISHED') {
+  if (match.isFinal) {
     return {
       matchId: match.id,
       shouldCheckNow: false,

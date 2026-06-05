@@ -2,6 +2,7 @@ import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import { rebuildLeaderboardAfterFinalResult } from './leaderboardRebuild.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import type { ResultProvider } from './resultProvider.js';
+import { decideResultConsensus, toProviderResultObservation } from './resultConsensus.js';
 import type { ResultAgentRunSummary, ResultAgentStatus, ResultsAgentRepository } from './resultTypes.js';
 
 export async function getResultAgentStatus(input: {
@@ -18,6 +19,7 @@ export async function runResultUpdateCycle(input: {
   provider: ResultProvider;
   now: Date;
   dryRun?: boolean;
+  confirmationDelayMinutes?: number;
 }): Promise<ResultAgentRunSummary> {
   const startedAt = input.now.toISOString();
   const matches = await input.repository.listTrackedMatches();
@@ -25,8 +27,11 @@ export async function runResultUpdateCycle(input: {
   const duePlans = plans.filter((plan) => plan.shouldCheckNow);
   let updatesApplied = 0;
   let finalizedResults = 0;
+  let confirmationPending = 0;
+  let needsReview = 0;
   const leaderboardRebuilds = [];
   const warnings: string[] = [];
+  const confirmationDelayMs = (input.confirmationDelayMinutes ?? 10) * 60_000;
 
   for (const plan of duePlans) {
     const match = matches.find((candidate) => candidate.id === plan.matchId);
@@ -34,12 +39,24 @@ export async function runResultUpdateCycle(input: {
     const update = await input.provider.fetchMatchUpdate(match, input.now);
     if (update.warning) warnings.push(update.warning);
     if (input.dryRun) continue;
+    const previousResult = await input.repository.getMatchResult(update.matchId);
+    const previousObservations = await input.repository.getProviderResultObservations(update.matchId);
+    const consensus = decideResultConsensus({
+      observation: toProviderResultObservation(update),
+      previousResult,
+      previousObservations,
+      now: input.now,
+      confirmationDelayMs
+    });
+    warnings.push(...consensus.warnings);
+    if (consensus.pending) confirmationPending += 1;
+    if (consensus.needsReview) needsReview += 1;
     const { finalResultChanged } = await input.repository.saveResultUpdate({
-      ...update,
-      nextCheckAt: update.isFinal ? undefined : plan.nextCheckAt
+      ...consensus.update,
+      nextCheckAt: consensus.update.nextCheckAt ?? (consensus.update.isFinal ? undefined : plan.nextCheckAt)
     });
     updatesApplied += 1;
-    if (finalResultChanged) {
+    if (finalResultChanged && consensus.confirmed) {
       finalizedResults += 1;
       const finalized = await input.repository.getFinalizedResults();
       const previousEntries = await input.leaderboardRepository?.getLeaderboard();
@@ -61,6 +78,8 @@ export async function runResultUpdateCycle(input: {
     dryRun: input.dryRun ?? false,
     updatedMatches: updatesApplied,
     finalizedMatches: finalizedResults,
+    confirmationPending,
+    needsReview,
     leaderboardRebuilt: leaderboardRebuilds.length > 0,
     playersProcessed: leaderboardRebuilds.at(-1)?.playersProcessed ?? 0,
     warnings: [...new Set([...(input.dryRun ? ['Dry run completed without persisting result, run summary, or leaderboard changes.'] : []), ...warnings, ...leaderboardRebuilds.flatMap((rebuild) => rebuild.warnings)])],

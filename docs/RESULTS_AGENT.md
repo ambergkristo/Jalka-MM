@@ -1,6 +1,6 @@
 # Results Agent Plan
 
-The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 14 adds the first real adapter for Sportmonks. Sprint 15 protects live writes with a scheduler secret and adds dry-run support; live use still requires credentials and confirmed fixture mapping.
+The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 14 adds the first real adapter for Sportmonks. Sprint 15 protects live writes with a scheduler secret and adds dry-run support; live use still requires credentials and confirmed fixture mapping. Sprint 16 adds the confirmed-results-only policy: provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
 
 Current implementation modules live in `src/server/results/`:
 
@@ -20,6 +20,7 @@ Current implementation modules live in `src/server/results/`:
 - `leaderboardRepository.ts`
 - `resultPersistenceSchema.ts`
 - `resultAgentRuntime.ts`
+- `resultConsensus.ts`
 
 ## Responsibilities
 
@@ -28,8 +29,8 @@ The agent will:
 - Fetch match results from a football data API.
 - Normalize provider-specific statuses into app statuses.
 - Update match statuses and scores in the database.
-- Detect finalized results.
-- Rebuild and save the leaderboard after finalized result changes.
+- Detect provisional and confirmed final results.
+- Rebuild and save the leaderboard after confirmed final result changes only.
 - Store update metadata for monitoring and recovery.
 
 ## Match Statuses
@@ -46,7 +47,17 @@ The workflow must handle:
 - Suspended
 - Cancelled, if the provider exposes it
 
-Finalized result states should be locked once accepted. If a provider later corrects a finalized score, the agent should record the change and rebuild the leaderboard again.
+Provider-final result states are not automatically public final results. A provider may report full time, after extra time, or after penalties, but the app keeps that score provisional until the consensus policy confirms it.
+
+Public result statuses are:
+
+- `SCHEDULED` -> Algamas
+- `LIVE` -> Käimas
+- `CONFIRMING` -> Kinnitamisel
+- `CONFIRMED_FINAL` -> Lõppenud
+- `NEEDS_REVIEW` -> Kinnitamisel, with internal review metadata
+
+Only `CONFIRMED_FINAL` results expose an official public score and only those results feed the leaderboard rebuild.
 
 ## Stored Update Metadata
 
@@ -55,7 +66,15 @@ Each tracked update should store:
 - `lastCheckedAt`
 - `nextCheckAt`
 - `status`
+- `publicStatus`
 - `isFinal`
+- provisional score/status fields
+- confirmed score/status fields
+- `confirmedAt`
+- `confirmationSource`
+- `confirmationConfidence`
+- `needsReviewReason`
+- provider observation history
 - `pointsRecalculatedAt`
 - provider/source name
 - optional raw provider status
@@ -73,15 +92,31 @@ Recommended MVP polling schedule:
 - 5 minutes after expected full-time: check for full-time status.
 - Extra time: check every 5 minutes.
 - Penalties: check every 2 minutes.
-- After final status: lock result and rebuild leaderboard.
+- After confirmed final status: lock result and rebuild leaderboard.
 
 The schedule should be data-driven enough to avoid hardcoding one provider's status vocabulary into the rest of the app.
 
+## Confirmed Result Consensus
+
+The app confirms a result as soon as confidence is sufficient. There is no mandatory delay when independent sources agree.
+
+Consensus rules:
+
+1. If two different providers return the same final score with final status, confirm immediately.
+2. If only one provider has a final result, store it as provisional and schedule a confirmation recheck.
+3. If the same provider returns the same final score again after `RESULT_CONFIRMATION_DELAY_MINUTES`, confirm.
+4. If providers return different final scores, set `NEEDS_REVIEW`, do not confirm, and do not rebuild the leaderboard.
+5. Live and other non-final observations never confirm a result.
+
+`RESULT_CONFIRMATION_DELAY_MINUTES` defaults to `10`. It is only the single-provider fallback delay.
+
+Future manual override can confirm a result through the same model using `confirmationConfidence=manual`, but no manual UI is implemented yet.
+
 ## Leaderboard Rebuild
 
-When a result becomes final or a finalized result changes:
+When a result becomes confirmed final or a confirmed final result changes:
 
-1. Save the match score and final status.
+1. Save the confirmed match score and confirmation metadata.
 2. Store a `ResultUpdate` record.
 3. Rebuild leaderboard entries on the server.
 4. Save rebuilt `LeaderboardEntry` rows.
@@ -89,7 +124,7 @@ When a result becomes final or a finalized result changes:
 
 For MVP, full leaderboard rebuild is acceptable after each finalized result.
 
-Sprint 12 connects this path to the official points engine in `src/domain/pointsEngine.ts`. The rebuild calculates official `6/4/2/0` match points from prediction seed data and finalized results, and can add group, play-off, champion, and top-scorer bonuses when the corresponding actual data is available.
+Sprint 12 connects this path to the official points engine in `src/domain/pointsEngine.ts`. The rebuild calculates official `6/4/2/0` match points from prediction seed data and confirmed finalized results, and can add group, play-off, champion, and top-scorer bonuses when the corresponding actual data is available.
 
 Sprint 13 persists rebuilt leaderboard rows through `DatabaseResultRepository.replaceLeaderboard`. `GET /api/leaderboard` now prefers saved `leaderboard_entries`; if none exist yet, it falls back to seed leaderboard data without showing technical status text in the public UI.
 
@@ -114,7 +149,7 @@ MVP catch-up strategy:
 2. Catch-up reads persisted match result state and schedule data.
 3. Catch-up fetches current provider data for stale scheduled/live/recent matches.
 4. The agent upserts match result state and appends result update metadata.
-5. Any newly finalized result triggers a leaderboard rebuild.
+5. Any newly confirmed final result triggers a leaderboard rebuild.
 6. Rebuilt leaderboard rows and rebuild metadata are saved, so restart does not lose the latest standings.
 
 No complex pending queue is needed for MVP. The database state and provider API are enough to recover missed polling intervals.
@@ -137,8 +172,8 @@ Environment variables:
 - `RESULTS_API_BASE_URL`
 - `RESULTS_COMPETITION_ID`
 - `RESULTS_SEASON`
-- `RESULTS_WRITE_MODE=mock | live`
 - `RESULTS_WRITE_MODE=mock | dry-run | live`
+- `RESULT_CONFIRMATION_DELAY_MINUTES`
 - `RESULTS_AGENT_SECRET`
 
 Defaults are safe:
@@ -149,6 +184,7 @@ Defaults are safe:
 - Non-mock providers fail clearly if required provider config is missing.
 - `RESULTS_WRITE_MODE=live` requires `RESULTS_AGENT_SECRET`.
 - `RESULTS_WRITE_MODE=dry-run` fetches provider data but skips result, run summary, and leaderboard persistence.
+- `RESULT_CONFIRMATION_DELAY_MINUTES` defaults to `10` and controls only the single-provider fallback confirmation delay.
 
 `createResultProvider(config)` returns `MockResultProvider` by default. `RESULTS_PROVIDER=sportmonks` returns `SportmonksResultProvider` when required config is present. API-Football and football-data.org remain deferred stubs until explicitly implemented.
 
@@ -160,6 +196,7 @@ RESULTS_API_BASE_URL=https://api.sportmonks.com
 RESULTS_COMPETITION_ID=732
 RESULTS_SEASON=2026
 RESULTS_WRITE_MODE=dry-run
+RESULT_CONFIRMATION_DELAY_MINUTES=10
 RESULTS_API_KEY=...
 ```
 

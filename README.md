@@ -155,6 +155,8 @@ The default result provider is still mock. Sprint 14 adds the first real adapter
 RESULTS_PROVIDER=mock
 # `dry-run` can fetch a real provider without writing DB changes.
 RESULTS_WRITE_MODE=mock
+# Single-provider fallback confirmation delay. Two-provider agreement can confirm immediately.
+RESULT_CONFIRMATION_DELAY_MINUTES=10
 # RESULTS_API_KEY=
 # RESULTS_API_BASE_URL=https://api.sportmonks.com
 # RESULTS_COMPETITION_ID=732
@@ -171,3 +173,5 @@ npm run validate:provider-match-map
 ```
 
 Live result-agent writes require `x-results-agent-secret: <RESULTS_AGENT_SECRET>` on `POST /api/results-agent/run`. Mock mode remains simple for local development.
+
+Public results follow a confirmed-results-only policy. Provider final scores are first treated as provisional unless two independent providers agree immediately, or the same provider repeats the same final score after `RESULT_CONFIRMATION_DELAY_MINUTES`. The leaderboard rebuilds only from confirmed final scores.

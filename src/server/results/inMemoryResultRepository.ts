@@ -1,5 +1,5 @@
 import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
-import type { ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
+import type { ProviderResultObservation, ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export class InMemoryResultRepository implements ResultsAgentRepository {
   private readonly matches = new Map<number, TrackedMatch>();
@@ -22,8 +22,8 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
       this.matches.set(update.matchId, {
         ...existingMatch,
         status: update.status,
-        homeScore: update.homeScore,
-        awayScore: update.awayScore,
+        homeScore: update.confirmedHomeScore ?? update.homeScore,
+        awayScore: update.confirmedAwayScore ?? update.awayScore,
         minute: update.minute,
         isFinal: update.isFinal,
         lastCheckedAt: update.lastCheckedAt,
@@ -33,6 +33,7 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
     const finalResultChanged =
       update.isFinal &&
       (!previous ||
+        !previous.isFinal ||
         previous.homeScore !== update.homeScore ||
         previous.awayScore !== update.awayScore ||
         previous.status !== update.status);
@@ -40,7 +41,16 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
   }
 
   async getFinalizedResults(): Promise<ResultUpdate[]> {
-    return [...this.updates.values()].filter((update) => update.isFinal);
+    return [...this.updates.values()].filter((update) => update.isFinal && update.publicStatus === 'CONFIRMED_FINAL');
+  }
+
+  async getMatchResult(matchId: number): Promise<ResultUpdate | undefined> {
+    const update = this.updates.get(matchId);
+    return update ? { ...update, providerResults: update.providerResults ? [...update.providerResults] : undefined } : undefined;
+  }
+
+  async getProviderResultObservations(matchId: number): Promise<ProviderResultObservation[]> {
+    return this.updates.get(matchId)?.providerResults?.map((observation) => ({ ...observation })) ?? [];
   }
 
   async getStatus(provider: string, now: Date): Promise<ResultAgentStatus> {

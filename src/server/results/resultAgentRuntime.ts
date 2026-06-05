@@ -21,7 +21,14 @@ export function getResultsAgentRunPermission(input: { dryRunRequested?: boolean;
 }
 
 export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boolean } = {}) {
-  return runResultUpdateCycle({ repository, leaderboardRepository: repository, provider, now, dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run' });
+  return runResultUpdateCycle({
+    repository,
+    leaderboardRepository: repository,
+    provider,
+    now,
+    dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
+    confirmationDelayMinutes: providerConfig.confirmationDelayMinutes
+  });
 }
 
 export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRepository = repository) {

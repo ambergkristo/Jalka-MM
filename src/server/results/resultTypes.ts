@@ -1,4 +1,5 @@
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'HT' | 'ET' | 'PEN' | 'FINISHED' | 'POSTPONED' | 'SUSPENDED';
+export type PublicResultStatus = 'SCHEDULED' | 'LIVE' | 'CONFIRMING' | 'CONFIRMED_FINAL' | 'NEEDS_REVIEW';
 
 export interface TrackedMatch {
   id: number;
@@ -19,6 +20,7 @@ export interface ResultUpdate {
   matchId: number;
   providerMatchId?: string;
   status: MatchStatus;
+  publicStatus?: PublicResultStatus;
   homeScore?: number;
   awayScore?: number;
   minute?: number;
@@ -30,7 +32,35 @@ export interface ResultUpdate {
   rawProviderStatus?: string;
   providerUpdatedAt?: string;
   pointsRecalculatedAt?: string;
+  provisionalHomeScore?: number;
+  provisionalAwayScore?: number;
+  provisionalStatus?: MatchStatus;
+  confirmedHomeScore?: number;
+  confirmedAwayScore?: number;
+  confirmedAt?: string;
+  confirmationSource?: string;
+  confirmationConfidence?: 'provider-repeat' | 'provider-agreement' | 'manual';
+  needsReviewReason?: string;
+  lastProviderCheckAt?: string;
+  nextConfirmationCheckAt?: string;
+  providerResults?: ProviderResultObservation[];
   warning?: string;
+}
+
+export interface ProviderResultObservation {
+  provider: string;
+  matchId: number;
+  status: MatchStatus;
+  homeScore?: number;
+  awayScore?: number;
+  minute?: number;
+  isFinal: boolean;
+  observedAt: string;
+  providerFixtureId?: string;
+  rawProviderStatus?: string;
+  confidence?: 'low' | 'medium' | 'high' | 'confirmed';
+  providerUpdatedAt?: string;
+  warnings?: string[];
 }
 
 export interface MatchUpdatePlan {
@@ -82,6 +112,8 @@ export interface ResultAgentRunSummary extends ResultAgentStatus {
   dryRun: boolean;
   updatedMatches: number;
   finalizedMatches: number;
+  confirmationPending: number;
+  needsReview: number;
   leaderboardRebuilt: boolean;
   playersProcessed: number;
   warnings: string[];
@@ -90,6 +122,8 @@ export interface ResultAgentRunSummary extends ResultAgentStatus {
 
 export interface ResultsAgentRepository {
   listTrackedMatches(): Promise<TrackedMatch[]>;
+  getMatchResult(matchId: number): Promise<ResultUpdate | undefined>;
+  getProviderResultObservations(matchId: number): Promise<ProviderResultObservation[]>;
   saveResultUpdate(update: ResultUpdate): Promise<{ finalResultChanged: boolean }>;
   getFinalizedResults(): Promise<ResultUpdate[]>;
   getStatus(provider: string, now: Date): Promise<ResultAgentStatus>;
