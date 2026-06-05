@@ -12,6 +12,9 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
   const leaderboard = rebuildLeaderboard({
     players: predictionRepository.getPlayers(),
     predictions: predictionRepository.getMatchPredictions(),
+    groupPredictions: predictionRepository.getGroupPredictions(),
+    knockoutPredictions: predictionRepository.getKnockoutPredictions(),
+    awardsPredictions: predictionRepository.getAwardsPredictions(),
     results: finalizedResults.flatMap((result) => {
       if (typeof result.homeScore !== 'number' || typeof result.awayScore !== 'number') return [];
       return [{

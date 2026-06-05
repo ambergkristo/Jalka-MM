@@ -42,6 +42,7 @@ export interface KnockoutRoundPrediction {
 export interface KnockoutPrediction {
   playerId: string;
   rounds: KnockoutRoundPrediction[];
+  thirdPlaceWinner?: string;
 }
 
 export type PredictionStatus = 'Still alive' | 'Eliminated' | 'Won Tournament';

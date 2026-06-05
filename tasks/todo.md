@@ -1,19 +1,20 @@
-# Sprint 11 - Result Provider Preparation
+# Sprint 12 - Official Scoring Rules
 
-- [x] Audit current result-provider, result-agent runtime, config, and docs.
-- [x] Research realistic provider candidates and document comparison notes.
-- [x] Add provider environment/config structure with mock-safe defaults.
-- [x] Add result provider factory and real-provider stub scaffold.
-- [x] Extend provider-normalized result metadata without binding to one provider.
-- [x] Add provider match map example and validation helper.
-- [x] Document match mapping, status normalization, env vars, and run-endpoint safety.
-- [x] Add targeted provider/config/map tests.
+- [x] Audit current Sprint 7 points engine, leaderboard rebuild, prediction repository, and seed shapes.
+- [x] Replace temporary `3/1/0` match scoring with official `6/4/2/0` scoring.
+- [x] Add structured scoring breakdown fields.
+- [x] Add group bonus calculator.
+- [x] Add play-off progression, champion, and third-place winner bonus calculator.
+- [x] Add top scorer bonus calculator with shared-winner support.
+- [x] Integrate official scoring into leaderboard rebuild with safe warnings for missing actual bonus data.
+- [x] Update scoring, data model, and result-agent documentation.
+- [x] Add targeted scoring and rebuild tests.
 - [x] Run targeted validation.
 - [x] Commit, push, and verify `HEAD == origin/main`.
 
 ## Review
 
-- Targeted tests passed: `npx vitest run src/test/resultProviderFactory.test.ts src/test/providerMatchMap.test.ts src/test/mockResultProvider.test.ts src/test/resultAgent.test.ts`.
+- Targeted tests passed: `npx vitest run src/test/pointsEngine.test.ts src/test/resultAgent.test.ts src/test/predictionRepository.test.ts`.
 - Build passed: `npm run build`.
-- Optional built-server smoke checks passed for `/` and `/tournament`.
+- Prediction seed validation and tournament data validation were not run because seed schemas/data and tournament data files were not changed.
 - Git publication completed after verification.

@@ -24,9 +24,13 @@ describe('result agent update cycle', () => {
       playersProcessed: 24,
       matchesProcessed: 1,
       entries: expect.any(Array),
-      warnings: []
+      warnings: [
+        'Group bonus points were skipped because actual group standings are not available.',
+        'Playoff bonus points were skipped because actual knockout results are not available.',
+        'Top scorer bonus points were skipped because actual top scorer data is not available.'
+      ]
     });
-    expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ points: 3, exactScores: 1, correctResults: 1 });
+    expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ points: 6, exactScores: 1, correctResults: 1 });
   });
 });
 
@@ -49,7 +53,11 @@ describe('leaderboard rebuild', () => {
     expect(result.recalculatedAt).toBe('2026-06-15T18:00:00.000Z');
     expect(result.playersProcessed).toBe(24);
     expect(result.matchesProcessed).toBe(1);
-    expect(result.warnings).toEqual([]);
-    expect(result.entries[0]).toMatchObject({ rank: 1, points: 3, exactScores: 1, correctResults: 1 });
+    expect(result.warnings).toEqual([
+      'Group bonus points were skipped because actual group standings are not available.',
+      'Playoff bonus points were skipped because actual knockout results are not available.',
+      'Top scorer bonus points were skipped because actual top scorer data is not available.'
+    ]);
+    expect(result.entries[0]).toMatchObject({ rank: 1, points: 6, exactScores: 1, correctResults: 1 });
   });
 });

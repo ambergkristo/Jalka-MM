@@ -1,29 +1,139 @@
 import { describe, expect, it } from 'vitest';
-import { calculateMatchPredictionPoints, calculatePlayerPoints, rebuildLeaderboard, type MatchResultForScoring } from '../domain/pointsEngine.js';
-import type { Player, PlayerMatchPrediction } from '../domain/predictionRepository.js';
+import {
+  calculateGroupBonusPoints,
+  calculateMatchPredictionPoints,
+  calculatePlayoffBonusPoints,
+  calculatePlayerPoints,
+  calculateTopScorerBonus,
+  rebuildLeaderboard,
+  type ActualGroupStanding,
+  type ActualKnockoutResults,
+  type MatchResultForScoring
+} from '../domain/pointsEngine.js';
+import type { AwardsPrediction, GroupPrediction, KnockoutPrediction, Player, PlayerMatchPrediction } from '../domain/predictionRepository.js';
 
 const finalHomeWin: MatchResultForScoring = { matchId: 1, homeScore: 2, awayScore: 1, isFinal: true };
 
-describe('MVP match prediction scoring', () => {
-  it('scores exact score as 3 points', () => {
+describe('official group and playoff match scoring', () => {
+  it('scores exact score as 6 points', () => {
     expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 1, homeScore: 2, awayScore: 1 }, finalHomeWin)).toMatchObject({
-      points: 3,
+      points: 6,
       exactScore: true,
-      correctResult: true
+      correctResult: true,
+      correctGoalDifference: true
     });
   });
 
-  it('scores correct home-win outcome as 1 point', () => {
-    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 1, homeScore: 1, awayScore: 0 }, finalHomeWin).points).toBe(1);
+  it('scores correct winner and correct goal difference as 4 points', () => {
+    const actual = { matchId: 1, homeScore: 3, awayScore: 1, isFinal: true };
+    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 1, homeScore: 2, awayScore: 0 }, actual).points).toBe(4);
   });
 
-  it('scores correct draw outcome as 1 point', () => {
-    const result = { matchId: 2, homeScore: 1, awayScore: 1, isFinal: true };
-    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 2, homeScore: 2, awayScore: 2 }, result).points).toBe(1);
+  it('scores correct winner only as 2 points', () => {
+    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 1, homeScore: 2, awayScore: 0 }, finalHomeWin).points).toBe(2);
   });
 
-  it('scores incorrect result as 0 points', () => {
-    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 1, homeScore: 0, awayScore: 1 }, finalHomeWin).points).toBe(0);
+  it('scores exact draw as 6 points', () => {
+    const actual = { matchId: 2, homeScore: 1, awayScore: 1, isFinal: true };
+    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 2, homeScore: 1, awayScore: 1 }, actual).points).toBe(6);
+  });
+
+  it('scores correct draw goal difference but not exact as 4 points', () => {
+    const actual = { matchId: 2, homeScore: 0, awayScore: 0, isFinal: true };
+    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 2, homeScore: 1, awayScore: 1 }, actual).points).toBe(4);
+  });
+
+  it('scores wrong outcome as 0 points', () => {
+    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 1, homeScore: 1, awayScore: 1 }, finalHomeWin).points).toBe(0);
+  });
+
+  it('scores playoff draw after extra time and ignores penalty winner for match points', () => {
+    const actual = { matchId: 80, homeScore: 2, awayScore: 2, isFinal: true, penaltyWinner: 'France' };
+    expect(calculateMatchPredictionPoints({ playerId: 'p1', matchId: 80, homeScore: 1, awayScore: 1, penaltyWinner: 'Spain' }, actual)).toMatchObject({
+      points: 4,
+      correctResult: true,
+      correctGoalDifference: true
+    });
+  });
+});
+
+describe('official group bonus scoring', () => {
+  const standings: ActualGroupStanding[] = [
+    { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+    { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+    { group: 'A', team: 'Japan', rank: 3, qualified: true },
+    { group: 'A', team: 'Canada', rank: 4, qualified: false }
+  ];
+
+  it('awards winner, second-place, and additive qualifier points', () => {
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
+    expect(calculateGroupBonusPoints(predictions, standings)).toMatchObject({
+      points: 24,
+      warnings: []
+    });
+  });
+
+  it('awards qualifier points even when order is wrong', () => {
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Japan', second: 'Brazil', third: 'Croatia' }];
+    expect(calculateGroupBonusPoints(predictions, standings).points).toBe(9);
+  });
+
+  it('handles missing group standings safely', () => {
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
+    expect(calculateGroupBonusPoints(predictions, undefined)).toMatchObject({
+      points: 0,
+      warnings: ['Group bonus skipped: actual group standings are not available.']
+    });
+  });
+});
+
+describe('official playoff and top scorer bonuses', () => {
+  const knockoutPrediction: KnockoutPrediction = {
+    playerId: 'p1',
+    thirdPlaceWinner: 'France',
+    rounds: [
+      { round: 'R16', teams: ['Brazil', 'France'] },
+      { round: 'QF', teams: ['Brazil'] },
+      { round: 'SF', teams: ['Brazil'] },
+      { round: 'Final', teams: ['Brazil', 'Argentina'] }
+    ]
+  };
+  const actualKnockoutResults: ActualKnockoutResults = {
+    stageTeams: {
+      R16: ['Brazil'],
+      QF: ['Brazil'],
+      SF: ['Brazil'],
+      Final: ['Brazil']
+    },
+    thirdPlaceWinner: 'France',
+    champion: 'Brazil'
+  };
+
+  it('awards stage bonuses by team identity', () => {
+    const result = calculatePlayoffBonusPoints({ knockoutPrediction, actualKnockoutResults, championPrediction: 'Brazil' });
+    expect(result.points).toBe(15 + 20 + 25 + 30 + 40 + 100);
+    expect(result.breakdown.map((row) => `${row.stage}:${row.team}:${row.points}`)).toEqual([
+      'R16:Brazil:15',
+      'QF:Brazil:20',
+      'SF:Brazil:25',
+      'Finalist:Brazil:30',
+      'ThirdPlaceWinner:France:40',
+      'Champion:Brazil:100'
+    ]);
+  });
+
+  it('awards 50 points for any shared top scorer match', () => {
+    const awardsPrediction: AwardsPrediction = {
+      playerId: 'p1',
+      championTeam: 'Brazil',
+      championStatus: 'Still alive',
+      topScorerName: 'Kylian Mbappe',
+      topScorerTeam: 'France',
+      topScorerCurrentGoals: 0,
+      topScorerStatus: 'In chase'
+    };
+
+    expect(calculateTopScorerBonus(awardsPrediction, [{ name: 'Lionel Messi' }, { name: 'Kylian Mbappe' }]).points).toBe(50);
   });
 });
 
@@ -32,31 +142,66 @@ describe('player totals and leaderboard rebuild', () => {
   const predictions: PlayerMatchPrediction[] = [
     { playerId: 'argo', matchId: 1, homeScore: 2, awayScore: 1 },
     { playerId: 'argo', matchId: 2, homeScore: 1, awayScore: 1 },
-    { playerId: 'kristo', matchId: 1, homeScore: 1, awayScore: 0 },
+    { playerId: 'kristo', matchId: 1, homeScore: 3, awayScore: 2 },
     { playerId: 'kristo', matchId: 2, homeScore: 2, awayScore: 2 },
-    { playerId: 'martin', matchId: 1, homeScore: 0, awayScore: 1 },
-    { playerId: 'martin', matchId: 2, homeScore: 2, awayScore: 1 }
+    { playerId: 'martin', matchId: 1, homeScore: 1, awayScore: 0 },
+    { playerId: 'martin', matchId: 2, homeScore: 3, awayScore: 1 }
   ];
   const results: MatchResultForScoring[] = [
     { matchId: 1, homeScore: 2, awayScore: 1, isFinal: true },
     { matchId: 2, homeScore: 0, awayScore: 0, isFinal: true }
   ];
 
-  it('calculates player total points and hit rate', () => {
+  it('calculates official player total points and hit rate', () => {
     const argo = calculatePlayerPoints('argo', predictions, results);
-    expect(argo.points).toBe(4);
-    expect(argo.exactScores).toBe(1);
-    expect(argo.correctResults).toBe(2);
-    expect(argo.hitRate).toBe(1);
-    expect(argo.matchesScored).toBe(2);
+    expect(argo).toMatchObject({
+      matchPoints: 10,
+      totalPoints: 10,
+      exactScores: 1,
+      correctResults: 2,
+      hitRate: 1,
+      matchesScored: 2
+    });
   });
 
-  it('orders leaderboard by points, exact scores, correct results, then player id', () => {
+  it('orders leaderboard by total points, exact scores, correct results, then player id', () => {
     const leaderboard = rebuildLeaderboard({ players, predictions, results, recalculatedAt: '2026-06-15T18:00:00.000Z' });
-    expect(leaderboard.entries.map((entry) => `${entry.rank}:${entry.playerId}:${entry.points}`)).toEqual([
-      '1:argo:4',
-      '2:kristo:2',
-      '3:martin:0'
+    expect(leaderboard.entries.map((entry) => `${entry.rank}:${entry.playerId}:${entry.points}:${entry.exactScores}:${entry.correctResults}`)).toEqual([
+      '1:argo:10:1:2',
+      '2:kristo:8:0:2',
+      '3:martin:4:0:1'
     ]);
+  });
+
+  it('uses exact score as the first tiebreak', () => {
+    const leaderboard = rebuildLeaderboard({
+      players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+      predictions: [
+        { playerId: 'a', matchId: 1, homeScore: 2, awayScore: 1 },
+        { playerId: 'a', matchId: 2, homeScore: 9, awayScore: 0 },
+        { playerId: 'b', matchId: 1, homeScore: 3, awayScore: 2 },
+        { playerId: 'b', matchId: 2, homeScore: 1, awayScore: 0 }
+      ],
+      results: [
+        { matchId: 1, homeScore: 2, awayScore: 1, isFinal: true },
+        { matchId: 2, homeScore: 2, awayScore: 0, isFinal: true }
+      ],
+      recalculatedAt: '2026-06-15T18:00:00.000Z'
+    });
+    expect(leaderboard.entries.map((entry) => entry.playerId)).toEqual(['a', 'b']);
+  });
+
+  it('uses correct result as the second tiebreak and player id as the stable final tiebreak', () => {
+    const leaderboard = rebuildLeaderboard({
+      players: [{ id: 'z-player', name: 'Z' }, { id: 'a-player', name: 'A' }, { id: 'm-player', name: 'M' }],
+      predictions: [
+        { playerId: 'z-player', matchId: 1, homeScore: 3, awayScore: 1 },
+        { playerId: 'a-player', matchId: 1, homeScore: 1, awayScore: 0 },
+        { playerId: 'm-player', matchId: 1, homeScore: 1, awayScore: 0 }
+      ],
+      results: [{ matchId: 1, homeScore: 2, awayScore: 1, isFinal: true }],
+      recalculatedAt: '2026-06-15T18:00:00.000Z'
+    });
+    expect(leaderboard.entries.map((entry) => entry.playerId)).toEqual(['a-player', 'm-player', 'z-player']);
   });
 });

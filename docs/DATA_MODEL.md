@@ -117,6 +117,38 @@ interface LeaderboardEntry {
   previousRank?: number;
 }
 
+interface PlayerPointsResult {
+  playerId: string;
+  matchPoints: number;
+  groupBonusPoints: number;
+  playoffBonusPoints: number;
+  topScorerBonusPoints: number;
+  totalPoints: number;
+  exactScores: number;
+  correctResults: number;
+  hitRate: number;
+  matchesScored: number;
+  warnings: string[];
+}
+
+interface ActualGroupStanding {
+  group: string;
+  team: string;
+  rank: number;
+  qualified?: boolean;
+}
+
+interface ActualKnockoutResults {
+  stageTeams?: Partial<Record<"R32" | "R16" | "QF" | "SF" | "Final", string[]>>;
+  thirdPlaceWinner?: string;
+  champion?: string;
+}
+
+interface ActualTopScorer {
+  name: string;
+  team?: string;
+}
+
 interface GroupStanding {
   group: string;
   teamId: string;
@@ -148,7 +180,9 @@ interface TopScorerStanding {
 - `Player` records are public league participant records imported from the finalized prediction data.
 - `Match` records store tournament schedule, live status, and final scores.
 - `PlayerMatchPrediction`, `PlayerKnockoutPrediction`, `GroupPrediction`, and `AwardsPrediction` are imported from JSON/seed data generated from Excel.
-- Sprint 7 stores MVP match prediction seed data in `src/data/predictions/matchPredictions.json`.
+- `src/domain/pointsEngine.ts` implements official `6/4/2/0` match scoring plus group, play-off, champion, and top scorer bonus calculators.
+- `PlayerPointsResult` is an internal scoring breakdown used before saving or exposing compact `LeaderboardEntry` rows.
+- Actual bonus data is represented separately from predictions so the result agent can add official group/play-off/top-scorer data later without changing prediction seed files.
 - `ResultUpdate` records support result-agent observability and catch-up behavior.
 - `LeaderboardEntry` is a saved runtime projection, not a client-side calculation.
 - `GroupStanding` and `TopScorerStanding` are saved runtime projections for the Tournament Center.

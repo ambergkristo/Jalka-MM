@@ -85,7 +85,7 @@ When a result becomes final or a finalized result changes:
 
 For MVP, full leaderboard rebuild is acceptable after each finalized result.
 
-Sprint 7 connects this path to the MVP points engine in `src/domain/pointsEngine.ts`. The rebuild now calculates match-prediction points from prediction seed data and finalized results. Rebuilt entries are returned in result-agent summaries and exposed in memory through `GET /api/leaderboard`; database persistence is still deferred.
+Sprint 12 connects this path to the official points engine in `src/domain/pointsEngine.ts`. The rebuild now calculates official `6/4/2/0` match points from prediction seed data and finalized results, and can add group, play-off, champion, and top-scorer bonuses when the corresponding actual data is available. Rebuilt entries are returned in result-agent summaries and exposed in memory through `GET /api/leaderboard`; database persistence is still deferred.
 
 ## Render Hibernate Recovery
 
