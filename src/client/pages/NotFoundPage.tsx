@@ -4,9 +4,9 @@ import { PageHeader } from '../components/PageHeader.js';
 export function NotFoundPage() {
   return (
     <>
-      <PageHeader eyebrow="404" title="Page Not Found" description="This public tracker route does not exist." />
+      <PageHeader eyebrow="404" title="Lehte ei leitud" description="Sellist avalikku vaadet ei ole." />
       <Card>
-        <a className="button-link" href="/">Return to dashboard</a>
+        <a className="button-link" href="/">Tagasi avalehele</a>
       </Card>
     </>
   );

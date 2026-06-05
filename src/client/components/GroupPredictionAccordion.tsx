@@ -6,11 +6,11 @@ export function GroupPredictionAccordion({ groups }: { groups: GroupPrediction[]
       <section className="group-prediction-card">
         <div className="section-title-row">
           <div>
-            <p className="eyebrow">Group predictions</p>
-            <h2>Predicted Group Standings</h2>
+            <p className="eyebrow">Alagruppide ennustus</p>
+            <h2>Ennustatud alagrupid</h2>
           </div>
         </div>
-        <p className="empty-state">Group prediction seed data is not available for this player.</p>
+        <p className="empty-state">Selle mängija alagrupiennustusi pole veel saadaval.</p>
       </section>
     );
   }
@@ -19,14 +19,14 @@ export function GroupPredictionAccordion({ groups }: { groups: GroupPrediction[]
     <section className="group-prediction-card">
       <div className="section-title-row">
         <div>
-          <p className="eyebrow">Group predictions</p>
-          <h2>Predicted Group Standings</h2>
+          <p className="eyebrow">Alagruppide ennustus</p>
+          <h2>Ennustatud alagrupid</h2>
         </div>
       </div>
       <div className="group-accordion-list">
         {groups.map((group) => (
           <details className="group-accordion" key={group.group}>
-            <summary>Group {group.group}</summary>
+            <summary>Alagrupp {group.group}</summary>
             <ol>
               <li><span>1st</span><strong>{group.first}</strong></li>
               <li><span>2nd</span><strong>{group.second}</strong></li>

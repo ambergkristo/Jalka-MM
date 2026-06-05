@@ -1,13 +1,13 @@
 const links = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/results', label: 'Results' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/tournament', label: 'Tournament' }
+  { href: '/', label: 'Avaleht' },
+  { href: '/results', label: 'Tulemused' },
+  { href: '/leaderboard', label: 'Edetabel' },
+  { href: '/tournament', label: 'Turniir' }
 ];
 
 export function Navigation({ pathname }: { pathname: string }) {
   return (
-    <nav className="site-nav" aria-label="Primary navigation">
+    <nav className="site-nav" aria-label="Põhinavigatsioon">
       {links.map((link) => (
         <a key={link.href} className={isActive(pathname, link.href) ? 'active' : ''} href={link.href}>
           {link.label}

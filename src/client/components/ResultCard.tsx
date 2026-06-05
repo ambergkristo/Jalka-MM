@@ -1,4 +1,6 @@
 import type { DashboardResult } from '../data/mock.js';
+import { displayTeamName, teamFromName } from '../lib/teamLookup.js';
+import { TeamBadge } from './TeamBadge.js';
 
 export function ResultCard({ result }: { result: DashboardResult }) {
   const homeWon = result.winner === result.homeTeam;
@@ -11,13 +13,17 @@ export function ResultCard({ result }: { result: DashboardResult }) {
         <em>{result.finishedAt}</em>
       </div>
       <div className="result-scoreline">
-        <strong className={homeWon ? 'winner' : ''}>{result.homeTeam}</strong>
+        <span className={`result-team ${homeWon ? 'winner' : ''}`.trim()}>
+          <TeamBadge team={teamFromName(result.homeTeam)} />
+        </span>
         <span>{result.homeScore}</span>
         <small>-</small>
         <span>{result.awayScore}</span>
-        <strong className={awayWon ? 'winner' : ''}>{result.awayTeam}</strong>
+        <span className={`result-team ${awayWon ? 'winner' : ''}`.trim()}>
+          <TeamBadge team={teamFromName(result.awayTeam)} align="right" />
+        </span>
       </div>
-      <p>{result.winner === 'Draw' ? 'Points shared' : `${result.winner} take control`}</p>
+      <p>{result.winner === 'Draw' ? 'Punktid läksid jagamisele' : `${displayTeamName(result.winner)} võttis tähtsa võidu`}</p>
     </article>
   );
 }

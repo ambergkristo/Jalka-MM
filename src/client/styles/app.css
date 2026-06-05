@@ -137,16 +137,6 @@ main {
   gap: 16px;
 }
 
-.status-strip {
-  border: 1px solid rgba(34, 197, 94, .28);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  background: rgba(34, 197, 94, .10);
-  color: #d8ffe6;
-  font-size: .86rem;
-  font-weight: 750;
-}
-
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -178,6 +168,64 @@ main {
   border-color: rgba(212, 175, 55, .42);
   background: rgba(212, 175, 55, .14);
   color: #f8e6a0;
+}
+
+.team-badge {
+  display: inline-grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.team-badge.right {
+  grid-template-columns: minmax(0, 1fr) 25px;
+  text-align: right;
+}
+
+.team-badge.right .team-flag {
+  order: 2;
+}
+
+.team-flag {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 19px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .10);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .14);
+  font-size: .84rem;
+}
+
+.team-flag-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.team-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.team-copy strong {
+  min-width: 0;
+  color: var(--white);
+  font-size: .94rem;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.team-copy small {
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 950;
+  line-height: 1;
 }
 
 .position-change {
@@ -424,18 +472,7 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-}
-
-.match-teams strong {
-  min-width: 0;
-  color: var(--white);
-  font-size: 1.05rem;
-  overflow-wrap: anywhere;
-}
-
-.match-teams strong:last-child {
-  text-align: right;
+  gap: 10px;
 }
 
 .match-teams span {
@@ -462,23 +499,18 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
-.result-scoreline strong {
+.result-team {
   min-width: 0;
-  overflow-wrap: anywhere;
 }
 
-.result-scoreline strong:last-child {
-  text-align: right;
-}
-
-.result-scoreline .winner {
+.result-team.winner .team-copy strong {
   color: #f7df7e;
 }
 
-.result-scoreline span {
+.result-scoreline > span:not(.result-team) {
   display: grid;
   place-items: center;
   width: 34px;
@@ -863,8 +895,8 @@ main {
 
 .group-leader-card {
   display: grid;
-  gap: 5px;
-  min-height: 94px;
+  gap: 8px;
+  min-height: 104px;
   padding: 11px;
 }
 
@@ -873,13 +905,6 @@ main {
   color: var(--muted);
   font-size: .76rem;
   font-weight: 850;
-}
-
-.group-leader-card strong {
-  min-width: 0;
-  color: var(--white);
-  font-size: 1rem;
-  overflow-wrap: anywhere;
 }
 
 .navigation-cards {
@@ -1097,9 +1122,9 @@ td a {
 .tournament-summary-card,
 .tournament-stat-card {
   display: grid;
-  gap: 6px;
-  min-height: 104px;
-  padding: 12px;
+  gap: 8px;
+  min-height: 112px;
+  padding: 14px;
   border: 1px solid rgba(255, 255, 255, .10);
   border-radius: var(--radius);
   background:
@@ -1230,7 +1255,7 @@ td a {
 
 .standing-row {
   display: grid;
-  grid-template-columns: minmax(84px, 1fr) repeat(8, minmax(15px, auto));
+  grid-template-columns: minmax(118px, 1fr) repeat(8, minmax(14px, auto));
   gap: 3px;
   align-items: center;
   min-height: 44px;
@@ -1265,7 +1290,7 @@ td a {
 .standing-team {
   display: grid;
   grid-template-columns: 21px minmax(0, 1fr);
-  gap: 2px 4px;
+  gap: 4px 6px;
   align-items: center;
   min-width: 0;
 }
@@ -1278,13 +1303,6 @@ td a {
   border-radius: 50%;
   background: rgba(255, 255, 255, .08);
   color: var(--gold);
-}
-
-.standing-team span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  color: var(--white);
-  font-size: .74rem;
 }
 
 .standing-team em {
@@ -1371,11 +1389,10 @@ td a {
 
 .knockout-team-row span {
   min-width: 0;
-  overflow-wrap: anywhere;
   font-weight: 900;
 }
 
-.knockout-team-row .winner {
+.knockout-team-row .winner .team-copy strong {
   color: #bdf8cf;
 }
 
@@ -1396,7 +1413,7 @@ td a {
 
 .top-scorer-row {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1.25fr) minmax(72px, .75fr) 28px 28px;
+  grid-template-columns: 34px minmax(0, 1.05fr) minmax(92px, .95fr) 26px 26px;
   gap: 6px;
   align-items: center;
   min-height: 48px;

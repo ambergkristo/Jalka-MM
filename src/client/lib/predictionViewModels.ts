@@ -74,11 +74,11 @@ function toPlayerProfileView(bundle: PredictionBundle): PlayerProfileView {
     correctResults: entry?.correctResults ?? 0,
     hitRate: entry ? formatHitRate(entry.hitRate) : '0%',
     positionChange: entry?.previousRank ? entry.previousRank - entry.rank : 0,
-    predictedChampion: awards?.championTeam ?? 'Prediction unavailable',
+    predictedChampion: awards?.championTeam ?? 'Ennustus puudub',
     championStatus: awards?.championStatus ?? 'Eliminated',
     topScorerPrediction: {
-      name: awards?.topScorerName ?? 'Prediction unavailable',
-      team: awards?.topScorerTeam ?? 'Unknown team',
+      name: awards?.topScorerName ?? 'Ennustus puudub',
+      team: !awards?.topScorerTeam || awards.topScorerTeam === 'Unknown team' ? 'Võistkond teadmata' : awards.topScorerTeam,
       currentGoals: awards?.topScorerCurrentGoals ?? 0,
       status: awards?.topScorerStatus ?? 'Eliminated'
     },

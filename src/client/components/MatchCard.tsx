@@ -1,4 +1,6 @@
 import type { DashboardMatch } from '../data/mock.js';
+import { teamFromName } from '../lib/teamLookup.js';
+import { TeamBadge } from './TeamBadge.js';
 
 export function MatchCard({ match }: { match: DashboardMatch }) {
   return (
@@ -8,9 +10,9 @@ export function MatchCard({ match }: { match: DashboardMatch }) {
         <em>{statusLabel(match.status)}</em>
       </div>
       <div className="match-teams">
-        <strong>{match.homeTeam}</strong>
+        <TeamBadge team={teamFromName(match.homeTeam)} />
         <span>{match.kickoffTime}</span>
-        <strong>{match.awayTeam}</strong>
+        <TeamBadge team={teamFromName(match.awayTeam)} align="right" />
       </div>
       <p>{match.venue}</p>
     </article>
@@ -19,8 +21,8 @@ export function MatchCard({ match }: { match: DashboardMatch }) {
 
 function statusLabel(status: DashboardMatch['status']) {
   return {
-    scheduled: 'Scheduled',
-    live: 'Live',
-    final: 'Final'
+    scheduled: 'Algamas',
+    live: 'Otse',
+    final: 'Lõppenud'
   }[status];
 }

@@ -1,20 +1,22 @@
 import type { TournamentTopScorer } from '../data/mock.js';
+import { teamFromName } from '../lib/teamLookup.js';
+import { TeamBadge } from './TeamBadge.js';
 
 export function TopScorersTable({ scorers }: { scorers: TournamentTopScorer[] }) {
   return (
-    <section className="top-scorers-table" aria-label="Top scorers">
+    <section className="top-scorers-table" aria-label="Väravalööjate tabel">
       <div className="top-scorer-row top-scorer-head">
-        <span>Rank</span>
-        <span>Player</span>
-        <span>Team</span>
-        <span>G</span>
-        <span>A</span>
+        <span>Koht</span>
+        <span>Mängija</span>
+        <span>Võistkond</span>
+        <span>V</span>
+        <span>S</span>
       </div>
       {scorers.map((scorer) => (
         <div className={`top-scorer-row rank-${scorer.rank}`} key={`${scorer.rank}-${scorer.player}`}>
           <b>{scorer.rank}</b>
           <strong>{scorer.player}</strong>
-          <span>{scorer.team}</span>
+          <TeamBadge team={teamFromName(scorer.team)} />
           <span>{scorer.goals}</span>
           <span>{scorer.assists}</span>
         </div>

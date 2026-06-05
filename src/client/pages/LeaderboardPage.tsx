@@ -8,7 +8,7 @@ export function LeaderboardPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Leaderboard" title="Prediction League Standings" description="Compare player rank, points, exact scores, and hit rate." />
+      <PageHeader eyebrow="Edetabel" title="Ennustusliiga seis" description="Võrdle mängijate kohti, punkte, täpseid skoore ja tabavust." />
       <Card className="leaderboard-page-card">
         <LeaderboardTable rows={leaderboardRows} />
       </Card>

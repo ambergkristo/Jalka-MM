@@ -6,13 +6,21 @@ export function TopScorerCard({ player }: { player: PlayerProfileView }) {
 
   return (
     <section className="profile-feature-card top-scorer-card">
-      <p className="eyebrow">Predicted Top Scorer</p>
+      <p className="eyebrow">Ennustatud väravakütt</p>
       <strong>{prediction.name}</strong>
       <span>{prediction.team}</span>
       <div className="top-scorer-meta">
-        <b>{prediction.currentGoals} goals</b>
-        <StatusBadge value={prediction.status} tone={prediction.status === 'Eliminated' ? 'danger' : prediction.status === 'Leading' ? 'gold' : 'neutral'} />
+        <b>{prediction.currentGoals} väravat</b>
+        <StatusBadge value={statusLabel(prediction.status)} tone={prediction.status === 'Eliminated' ? 'danger' : prediction.status === 'Leading' ? 'gold' : 'neutral'} />
       </div>
     </section>
   );
+}
+
+function statusLabel(status: PlayerProfileView['topScorerPrediction']['status']) {
+  return {
+    Leading: 'Liider',
+    'In chase': 'Jälitab liidrit',
+    Eliminated: 'Väljas'
+  }[status];
 }

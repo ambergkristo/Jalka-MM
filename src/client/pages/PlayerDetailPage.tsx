@@ -12,10 +12,10 @@ export function PlayerDetailPage({ playerId }: { playerId: string }) {
     return (
       <section className="player-profile-page">
         <div className="profile-empty-state">
-          <p className="eyebrow">Player profile</p>
-          <h1>Player not found</h1>
-          <span>Prediction seed data does not contain a player with id "{playerId}".</span>
-          <a className="button-link" href="/leaderboard">Back to Leaderboard</a>
+          <p className="eyebrow">Mängija profiil</p>
+          <h1>Mängijat ei leitud</h1>
+          <span>Selle id-ga mängijat ennustusandmetes ei ole: "{playerId}".</span>
+          <a className="button-link" href="/leaderboard">Tagasi edetabelisse</a>
         </div>
       </section>
     );

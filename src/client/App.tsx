@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Layout } from './components/Layout.js';
-import { loadPublicState, type PublicState } from './api.js';
 import { LandingDashboard } from './pages/LandingDashboard.js';
 import { LeaderboardPage } from './pages/LeaderboardPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
@@ -11,11 +10,6 @@ import { TournamentPage } from './pages/TournamentPage.js';
 export function App() {
   const pathname = normalizePath(window.location.pathname);
   const route = useMemo(() => matchRoute(pathname), [pathname]);
-  const [state, setState] = useState<PublicState | null>(null);
-
-  useEffect(() => {
-    loadPublicState().then(setState).catch(() => undefined);
-  }, []);
 
   useEffect(() => {
     if (route.name === 'not-found' && pathname !== '/not-found') {
@@ -25,7 +19,6 @@ export function App() {
 
   return (
     <Layout pathname={route.name === 'not-found' ? '/not-found' : pathname}>
-      {state && <div className="status-strip">Data status: {state.tournamentDataStatus} - API {state.status}</div>}
       {route.name === 'dashboard' && <LandingDashboard />}
       {route.name === 'leaderboard' && <LeaderboardPage />}
       {route.name === 'player' && <PlayerDetailPage playerId={route.playerId} />}

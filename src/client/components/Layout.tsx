@@ -8,7 +8,7 @@ export function Layout({ pathname, children }: { pathname: string; children: Rea
       <div className="topbar">
         <a className="brand" href="/">
           <span>MM 2026</span>
-          <strong>Prediction Tracker</strong>
+          <strong>Ennustusliiga</strong>
         </a>
         <Navigation pathname={pathname} />
       </div>

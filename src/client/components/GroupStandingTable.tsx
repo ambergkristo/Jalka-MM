@@ -1,36 +1,38 @@
 import type { GroupStanding } from '../data/mock.js';
+import { displayTeamName, teamFromName } from '../lib/teamLookup.js';
+import { TeamBadge } from './TeamBadge.js';
 
 const stateLabels = {
-  qualified: 'Qualifying',
-  'third-place': '3rd race',
-  'at-risk': 'At risk',
-  out: 'Out'
+  qualified: 'Edasipääs',
+  'third-place': '3. koht',
+  'at-risk': 'Ohus',
+  out: 'Väljas'
 };
 
 export function GroupStandingTable({ group }: { group: GroupStanding }) {
   return (
     <article className="group-standing-card">
       <header>
-        <span>Group {group.group}</span>
-        <strong>{group.teams[0]?.team}</strong>
+        <span>Alagrupp {group.group}</span>
+        <strong>{group.teams[0] ? displayTeamName(group.teams[0].team) : ''}</strong>
       </header>
-      <div className="group-standing-table" role="table" aria-label={`Group ${group.group} standings`}>
+      <div className="group-standing-table" role="table" aria-label={`Alagrupi ${group.group} tabel`}>
         <div className="standing-row standing-head" role="row">
-          <span>Team</span>
+          <span>Võistkond</span>
+          <span>M</span>
+          <span>V</span>
+          <span>Vi</span>
+          <span>K</span>
+          <span>LV</span>
+          <span>LS</span>
+          <span>VV</span>
           <span>P</span>
-          <span>W</span>
-          <span>D</span>
-          <span>L</span>
-          <span>GF</span>
-          <span>GA</span>
-          <span>GD</span>
-          <span>Pts</span>
         </div>
         {group.teams.map((team) => (
           <div className={`standing-row state-${team.state}`} role="row" key={team.team}>
             <span className="standing-team">
               <b>{team.rank}</b>
-              <span>{team.team}</span>
+              <TeamBadge team={teamFromName(team.team)} />
               <em>{stateLabels[team.state]}</em>
             </span>
             <span>{team.played}</span>

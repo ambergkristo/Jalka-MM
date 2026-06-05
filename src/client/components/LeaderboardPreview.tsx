@@ -5,14 +5,14 @@ export function LeaderboardPreview({ rows }: { rows: LeaderboardRowView[] }) {
     <section className="leaderboard-preview">
       <div className="section-title-row">
         <div>
-          <p className="eyebrow">Prediction league</p>
-          <h2>Top 5 Leaderboard</h2>
+          <p className="eyebrow">Ennustusliiga</p>
+          <h2>Top 5 edetabelis</h2>
         </div>
-        <a className="small-action" href="/leaderboard">View Full Leaderboard</a>
+        <a className="small-action" href="/leaderboard">Vaata kogu edetabelit</a>
       </div>
       <div className="leaderboard-stack">
         {rows.length === 0 ? (
-          <p className="empty-state">Leaderboard seed data is not available yet.</p>
+          <p className="empty-state">Edetabeli andmeid pole veel saadaval.</p>
         ) : (
           rows.map((row) => (
             <a className="leaderboard-preview-row" href={`/player/${row.playerId}`} key={row.playerId}>

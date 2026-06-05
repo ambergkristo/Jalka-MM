@@ -1,23 +1,20 @@
-# Sprint 8 - Excel Seed Import
+# Sprint 9 - Estonian UI Cleanup
 
-- [x] Read masterplan, data model, sprint plan, scoring rules, repository, points engine, and current seeds.
-- [x] Locate workbook and copy the provided `data.xlsx` to `imports/data.xlsx` for import.
-- [x] Keep Excel workbooks out of git.
-- [x] Add repeatable Excel-to-seed import script.
-- [x] Add stable player id generation.
-- [x] Generate public player, match prediction, group prediction, knockout prediction, awards prediction, and leaderboard seed files.
-- [x] Generate an import report.
-- [x] Add prediction seed validation command.
-- [x] Update repository/view-model tests for imported players.
-- [x] Document Excel import workflow and current mapping.
+- [x] Read UI/UX, masterplan, sprint, data model, route pages, components, and flag utilities.
+- [x] Remove public data/API status strip.
+- [x] Remove public marketing/status copy blocks.
+- [x] Translate visible public UI copy to Estonian.
+- [x] Add flags to match cards, result cards, knockout cards, group leaders, group standings, and top scorers.
+- [x] Polish compact text layout for match cards, group tables, top scorers, and tournament stats.
+- [x] Document Estonian UI and no-public-debug-status rules.
 - [x] Run full verification commands.
 - [x] Commit, push, and verify `HEAD == origin/main`.
 
 ## Review
 
-- Imported only players with matching numbered individual prediction sheets.
-- Source email addresses are omitted from public seed files and checked by validation.
-- Best Player and bonus scoring remain deferred because current public domain models do not support them yet.
-- Verification passed: `npm run import:excel-seeds`, `npm run validate:prediction-seeds`, `npm test`, `npm run build`, `npm run validate:tournament-data`, and `npm run audit:tournament-data`.
-- Tournament data audit still reports the existing `partial_official` medium-risk warning for unresolved knockout dates and slots.
+- Public UI must stay Estonian.
+- Internal status/debug labels belong in APIs, logs, or docs, not public pages.
+- True left/right playoff bracket tree remains deferred to Sprint 10.
+- Verification passed: `npm test`, `npm run build`, `npm run validate:prediction-seeds`, `npm run validate:tournament-data`, `npm run audit:tournament-data`, and production preview route smoke checks.
+- Tournament data audit still reports the existing terminal-only `partial_official` medium-risk warning for unresolved knockout dates and slots.
 - Git publication completed after verification.

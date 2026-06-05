@@ -6,7 +6,7 @@ const PLACEHOLDER_ICON = '\u26bd';
 type TeamBadgeTeam = Partial<Team> & { name_et?: string };
 
 export function TeamBadge({ team, slotLabel, align = 'left' }: { team?: TeamBadgeTeam | null; slotLabel?: string; align?: 'left' | 'right' }) {
-  const name = team?.name_et || team?.nameEt || team?.name || slotLabel || 'Team TBC';
+  const name = team?.name_et || team?.nameEt || team?.name || slotLabel || 'Selgumisel';
   const code = team?.code;
   const flagUrl = flagIconUrl(code);
 

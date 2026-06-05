@@ -19,7 +19,7 @@ describe('prediction view models', () => {
     expect(profile?.name).toBe('Kristo Amberg');
     expect(profile?.groupPredictions).toHaveLength(12);
     expect(profile?.knockoutPrediction.length).toBeGreaterThan(0);
-    expect(profile?.predictedChampion).not.toBe('Prediction unavailable');
+    expect(profile?.predictedChampion).not.toBe('Ennustus puudub');
     expect(getPlayerProfile('missing-player')).toBeUndefined();
   });
 });

@@ -26,6 +26,9 @@ Use original abstract stadium, pitch, grid, light, and scoreboard patterns inste
 - No login-first experience.
 - No prediction form UX.
 - No deadline countdown UX.
+- Public-facing UI copy must be Estonian.
+- Internal data status, API status, provider state, audit state, and `partial_official` labels must not be shown on public pages.
+- True left/right playoff bracket tree is deferred to Sprint 10; current play-off views should remain readable progression cards.
 
 ## Palette
 
@@ -68,6 +71,12 @@ Use big buttons for:
 - Results
 - Leaderboard
 - Tournament
+
+In the Estonian UI these should appear as:
+
+- Tulemused
+- Edetabel
+- Turniir
 
 ### Leaderboard
 

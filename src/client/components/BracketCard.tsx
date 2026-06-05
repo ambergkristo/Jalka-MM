@@ -5,8 +5,8 @@ export function BracketCard({ rounds }: { rounds: KnockoutRoundPrediction[] }) {
     <section className="bracket-card">
       <div className="section-title-row">
         <div>
-          <p className="eyebrow">Knockout prediction</p>
-          <h2>Predicted Playoff Bracket</h2>
+          <p className="eyebrow">Play-off ennustus</p>
+          <h2>Ennustatud play-off</h2>
         </div>
       </div>
       <div className="bracket-round-list">
