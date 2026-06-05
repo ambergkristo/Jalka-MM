@@ -21,12 +21,12 @@ describe('result agent update cycle', () => {
     expect(summary.finalizedResults).toBe(1);
     expect(summary.leaderboardRebuilds).toHaveLength(1);
     expect(summary.leaderboardRebuilds[0]).toMatchObject({
-      playersProcessed: 10,
+      playersProcessed: 24,
       matchesProcessed: 1,
       entries: expect.any(Array),
       warnings: []
     });
-    expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ playerId: 'argo', points: 3, exactScores: 1 });
+    expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ points: 3, exactScores: 1, correctResults: 1 });
   });
 });
 
@@ -47,9 +47,9 @@ describe('leaderboard rebuild', () => {
       ]
     });
     expect(result.recalculatedAt).toBe('2026-06-15T18:00:00.000Z');
-    expect(result.playersProcessed).toBe(10);
+    expect(result.playersProcessed).toBe(24);
     expect(result.matchesProcessed).toBe(1);
     expect(result.warnings).toEqual([]);
-    expect(result.entries[0]).toMatchObject({ playerId: 'argo', rank: 1, points: 3, exactScores: 1, correctResults: 1 });
+    expect(result.entries[0]).toMatchObject({ rank: 1, points: 3, exactScores: 1, correctResults: 1 });
   });
 });

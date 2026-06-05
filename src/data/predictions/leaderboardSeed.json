@@ -1,12 +1,218 @@
 [
-  { "rank": 1, "playerId": "argo", "points": 146, "exactScores": 9, "correctResults": 19, "hitRate": 0.72, "previousRank": 3, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 2, "playerId": "kristo", "points": 141, "exactScores": 8, "correctResults": 18, "hitRate": 0.69, "previousRank": 1, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 3, "playerId": "martin", "points": 137, "exactScores": 8, "correctResults": 17, "hitRate": 0.67, "previousRank": 4, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 4, "playerId": "mari", "points": 128, "exactScores": 7, "correctResults": 16, "hitRate": 0.64, "previousRank": 3, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 5, "playerId": "liis", "points": 122, "exactScores": 6, "correctResults": 16, "hitRate": 0.61, "previousRank": 5, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 6, "playerId": "taavi", "points": 118, "exactScores": 6, "correctResults": 15, "hitRate": 0.59, "previousRank": 7, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 7, "playerId": "kadri", "points": 113, "exactScores": 5, "correctResults": 15, "hitRate": 0.57, "previousRank": 5, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 8, "playerId": "juhan", "points": 107, "exactScores": 5, "correctResults": 14, "hitRate": 0.54, "previousRank": 8, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 9, "playerId": "sander", "points": 101, "exactScores": 4, "correctResults": 13, "hitRate": 0.51, "previousRank": 11, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" },
-  { "rank": 10, "playerId": "helen", "points": 96, "exactScores": 4, "correctResults": 12, "hitRate": 0.49, "previousRank": 9, "lastUpdatedAt": "2026-06-15T18:00:00.000Z" }
+  {
+    "playerId": "argo-kotsar",
+    "rank": 1,
+    "points": 12,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "juho-laomets",
+    "rank": 2,
+    "points": 12,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "vallo-poldma",
+    "rank": 3,
+    "points": 12,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "anneli-seppen",
+    "rank": 4,
+    "points": 10,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "kristo-amberg",
+    "rank": 5,
+    "points": 10,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "karl-erik-kotsar",
+    "rank": 6,
+    "points": 8,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "markus-ojangu",
+    "rank": 7,
+    "points": 8,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "siim-pukk",
+    "rank": 8,
+    "points": 8,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "janek-melnik",
+    "rank": 9,
+    "points": 6,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "madis-padu",
+    "rank": 10,
+    "points": 6,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "madis-saadik",
+    "rank": 11,
+    "points": 6,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "aleksandr-lember",
+    "rank": 12,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "andri-schmidt",
+    "rank": 13,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "barbel-salumae",
+    "rank": 14,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "henri-kotsar",
+    "rank": 15,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "kaspar-kaldjarv",
+    "rank": 16,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "kart-kuivjogi",
+    "rank": 17,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "nele-sumberg",
+    "rank": 18,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "priit-hynninen",
+    "rank": 19,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "priit-suluste",
+    "rank": 20,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "rain-peerandi",
+    "rank": 21,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "rauno-peerandi",
+    "rank": 22,
+    "points": 2,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "karolin-valdmann",
+    "rank": 23,
+    "points": 0,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  },
+  {
+    "playerId": "ragnar-saadik",
+    "rank": 24,
+    "points": 0,
+    "exactScores": 0,
+    "correctResults": 0,
+    "hitRate": 0,
+    "lastUpdatedAt": "2026-06-05T12:01:31.595Z"
+  }
 ]

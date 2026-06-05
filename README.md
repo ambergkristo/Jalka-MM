@@ -45,6 +45,15 @@ Excel
 
 The current seed repository validates unique player ids, missing player references, group prediction completeness, duplicate group predictions, and valid group ids. Excel import and admin upload tools are intentionally not implemented.
 
+Developer-only Excel import workflow:
+
+```bash
+npm run import:excel-seeds
+npm run validate:prediction-seeds
+```
+
+The importer reads `imports/data.xlsx`, writes public JSON seed files under `src/data/`, and generates `imports/import-report.json`. Excel files are not committed and are never parsed by the production app. See `docs/EXCEL_IMPORT.md` for the current workbook mapping and limitations.
+
 ## Planned Pages
 
 - Landing dashboard: summary of today, latest results, leaderboard preview, and navigation.
@@ -92,6 +101,8 @@ Existing scripts are retained until Sprint 1 decides what to keep or remove:
 npm install
 npm test
 npm run build
+npm run import:excel-seeds
+npm run validate:prediction-seeds
 npm run validate:tournament-data
 npm run audit:tournament-data
 ```

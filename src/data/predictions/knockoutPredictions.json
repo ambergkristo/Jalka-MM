@@ -1,12 +1,2210 @@
 [
-  { "playerId": "argo", "rounds": [{ "round": "R32", "teams": ["Mexico", "Canada", "Brazil", "United States", "Germany", "Argentina", "France", "Spain"] }, { "round": "R16", "teams": ["Brazil", "Argentina", "France", "Spain", "England", "Portugal"] }, { "round": "QF", "teams": ["Brazil", "France", "Argentina", "Portugal"] }, { "round": "SF", "teams": ["Brazil", "France"] }, { "round": "Final", "teams": ["Brazil"] }] },
-  { "playerId": "kristo", "rounds": [{ "round": "R32", "teams": ["Mexico", "Japan", "Brazil", "Germany", "Argentina", "France", "England", "Portugal"] }, { "round": "R16", "teams": ["Brazil", "Germany", "Argentina", "France", "England", "Netherlands"] }, { "round": "QF", "teams": ["Argentina", "France", "England", "Brazil"] }, { "round": "SF", "teams": ["Argentina", "England"] }, { "round": "Final", "teams": ["Argentina"] }] },
-  { "playerId": "martin", "rounds": [{ "round": "R32", "teams": ["Canada", "Brazil", "Croatia", "Germany", "Argentina", "Spain", "England", "Portugal"] }, { "round": "R16", "teams": ["Brazil", "Germany", "Spain", "England", "Portugal", "France"] }, { "round": "QF", "teams": ["Brazil", "Spain", "England", "Portugal"] }, { "round": "SF", "teams": ["Spain", "Portugal"] }, { "round": "Final", "teams": ["Spain"] }] },
-  { "playerId": "mari", "rounds": [{ "round": "R32", "teams": ["Mexico", "Canada", "Brazil", "United States", "Germany", "Argentina", "France", "Spain"] }, { "round": "R16", "teams": ["Brazil", "Argentina", "France", "Spain", "England", "Portugal"] }, { "round": "QF", "teams": ["Brazil", "France", "Argentina", "Portugal"] }, { "round": "SF", "teams": ["Brazil", "France"] }, { "round": "Final", "teams": ["Brazil"] }] },
-  { "playerId": "liis", "rounds": [{ "round": "R32", "teams": ["Mexico", "Japan", "Brazil", "Germany", "Argentina", "France", "England", "Portugal"] }, { "round": "R16", "teams": ["Brazil", "Germany", "Argentina", "France", "England", "Netherlands"] }, { "round": "QF", "teams": ["Argentina", "France", "England", "Brazil"] }, { "round": "SF", "teams": ["Argentina", "England"] }, { "round": "Final", "teams": ["Argentina"] }] },
-  { "playerId": "taavi", "rounds": [{ "round": "R32", "teams": ["Canada", "Brazil", "Croatia", "Germany", "Argentina", "Spain", "England", "Portugal"] }, { "round": "R16", "teams": ["Brazil", "Germany", "Spain", "England", "Portugal", "France"] }, { "round": "QF", "teams": ["Brazil", "Spain", "England", "Portugal"] }, { "round": "SF", "teams": ["Spain", "Portugal"] }, { "round": "Final", "teams": ["Spain"] }] },
-  { "playerId": "kadri", "rounds": [{ "round": "R32", "teams": ["Mexico", "Canada", "Brazil", "United States", "Germany", "Argentina", "France", "Spain"] }, { "round": "R16", "teams": ["Brazil", "Argentina", "France", "Spain", "England", "Portugal"] }, { "round": "QF", "teams": ["Brazil", "France", "Argentina", "Portugal"] }, { "round": "SF", "teams": ["Brazil", "France"] }, { "round": "Final", "teams": ["Brazil"] }] },
-  { "playerId": "juhan", "rounds": [{ "round": "R32", "teams": ["Mexico", "Japan", "Brazil", "Germany", "Argentina", "France", "England", "Portugal"] }, { "round": "R16", "teams": ["Brazil", "Germany", "Argentina", "France", "England", "Netherlands"] }, { "round": "QF", "teams": ["Argentina", "France", "England", "Brazil"] }, { "round": "SF", "teams": ["Argentina", "England"] }, { "round": "Final", "teams": ["Argentina"] }] },
-  { "playerId": "sander", "rounds": [{ "round": "R32", "teams": ["Canada", "Brazil", "Croatia", "Germany", "Argentina", "Spain", "England", "Portugal"] }, { "round": "R16", "teams": ["Brazil", "Germany", "Spain", "England", "Portugal", "France"] }, { "round": "QF", "teams": ["Brazil", "Spain", "England", "Portugal"] }, { "round": "SF", "teams": ["Spain", "Portugal"] }, { "round": "Final", "teams": ["Spain"] }] },
-  { "playerId": "helen", "rounds": [{ "round": "R32", "teams": ["Mexico", "Canada", "Brazil", "United States", "Germany", "Argentina", "France", "Spain"] }, { "round": "R16", "teams": ["Brazil", "Argentina", "France", "Spain", "England", "Portugal"] }, { "round": "QF", "teams": ["Brazil", "France", "Argentina", "Portugal"] }, { "round": "SF", "teams": ["Brazil", "France"] }, { "round": "Final", "teams": ["Brazil"] }] }
+  {
+    "playerId": "vallo-poldma",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Katar",
+          "Saksamaa",
+          "Austraalia",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Jaapan",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Uruguay",
+          "Inglismaa",
+          "Alžeeria",
+          "USA",
+          "Šveits",
+          "Belgia",
+          "Tšehhi",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Kanada",
+          "Uus-Meremaa",
+          "Argentiina",
+          "Saudi Araabia",
+          "Portugal",
+          "Elevandiluurannik",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Egiptus",
+          "Kanada",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Holland",
+          "Hispaania",
+          "USA",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Saksamaa",
+          "USA",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Saksamaa",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "henri-kotsar",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Kanada",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Tuneesia",
+          "Prantsusmaa",
+          "Jaapan",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "DR Congo",
+          "USA",
+          "Bosnia ja Hertsegoviina",
+          "Egiptus",
+          "Elevandiluurannik",
+          "Kolumbia",
+          "Ghana",
+          "Hispaania",
+          "Alžeeria",
+          "Šveits",
+          "Austria",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Horvaatia",
+          "Türgi",
+          "Belgia"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Kanada",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Mehhiko",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "USA",
+          "Egiptus",
+          "Argentiina",
+          "Türgi",
+          "Austria",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "USA",
+          "Norra",
+          "Mehhiko",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Norra",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Portugal"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "madis-saadik",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Katar",
+          "Saksamaa",
+          "USA",
+          "Jaapan",
+          "Brasiilia",
+          "Šotimaa",
+          "Rootsi",
+          "Norra",
+          "Egiptus",
+          "Elevandiluurannik",
+          "Prantsusmaa",
+          "Lõuna Aafrika Vabariik",
+          "Saudi Araabia",
+          "Horvaatia",
+          "Senegal",
+          "Türgi",
+          "Šveits",
+          "Iraan",
+          "Mehhiko",
+          "DR Congo",
+          "Ghana",
+          "Hispaania",
+          "Argentiina",
+          "Kanada",
+          "Alžeeria",
+          "Austria",
+          "Uruguay",
+          "Portugal",
+          "Ecuador",
+          "Austraalia",
+          "Belgia"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Norra",
+          "Tšehhi",
+          "Brasiilia",
+          "Šotimaa",
+          "Prantsusmaa",
+          "Lõuna Aafrika Vabariik",
+          "Senegal",
+          "DR Congo",
+          "Hispaania",
+          "Türgi",
+          "Iraan",
+          "Uruguay",
+          "Belgia",
+          "Kanada",
+          "Ecuador"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Brasiilia",
+          "Hispaania",
+          "Türgi",
+          "Šotimaa",
+          "Senegal",
+          "Uruguay",
+          "Ecuador"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Brasiilia",
+          "Türgi",
+          "Šotimaa",
+          "Uruguay"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Brasiilia",
+          "Uruguay"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "ragnar-saadik",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna Aafrika Vabariik",
+          "Šveits",
+          "Saksamaa",
+          "Šotimaa",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Tuneesia",
+          "Ecuador",
+          "Norra",
+          "Lõuna-Korea",
+          "Uruguay",
+          "Inglismaa",
+          "Uzbekistan",
+          "Austraalia",
+          "Katar",
+          "Egiptus",
+          "Jordaania",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Kanada",
+          "Uus-Meremaa",
+          "Argentiina",
+          "Saudi Araabia",
+          "Portugal",
+          "Ghana",
+          "Paraguai",
+          "Belgia"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna Aafrika Vabariik",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Uruguay",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "Austraalia",
+          "Jordaania",
+          "Argentiina",
+          "Belgia",
+          "Kanada",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Holland",
+          "Hispaania",
+          "Austraalia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Saksamaa",
+          "Austraalia",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Saksamaa",
+          "Argentiina"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "argo-kotsar",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Kanada",
+          "Saksamaa",
+          "Maroko",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Türgi",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "DR Congo",
+          "USA",
+          "Senegal",
+          "Belgia",
+          "Saudi Araabia",
+          "Kolumbia",
+          "Ghana",
+          "Uruguay",
+          "Austria",
+          "Šveits",
+          "Egiptus",
+          "Argentiina",
+          "Hispaania",
+          "Portugal",
+          "Horvaatia",
+          "Paraguai",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Holland",
+          "Brasiilia",
+          "Ecuador",
+          "Mehhiko",
+          "Inglismaa",
+          "Ghana",
+          "Uruguay",
+          "Senegal",
+          "Belgia",
+          "Argentiina",
+          "Paraguai",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Holland",
+          "Uruguay",
+          "Senegal",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Šveits"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Saksamaa",
+          "Senegal",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Saksamaa",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "kaspar-kaldjarv",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Kanada",
+          "Saksamaa",
+          "Maroko",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Paraguai",
+          "Elevandiluurannik",
+          "Senegal",
+          "Mehhiko",
+          "Ecuador",
+          "Inglismaa",
+          "DR Congo",
+          "USA",
+          "Norra",
+          "Belgia",
+          "Tšehhi",
+          "Kolumbia",
+          "Ghana",
+          "Hispaania",
+          "Alžeeria",
+          "Šveits",
+          "Austria",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Horvaatia",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Kanada",
+          "Holland",
+          "Brasiilia",
+          "Senegal",
+          "Mehhiko",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "USA",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "USA",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Portugal"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "kristo-amberg",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Kanada",
+          "Saksamaa",
+          "Alžeeria",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Norra",
+          "Šveits",
+          "Senegal",
+          "Mehhiko",
+          "Paraguai",
+          "Inglismaa",
+          "Iraan",
+          "USA",
+          "Rootsi",
+          "Belgia",
+          "Bosnia ja Hertsegoviina",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Türgi",
+          "Lõuna-Korea",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Elevandiluurannik",
+          "Ecuador",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Tšehhi",
+          "Holland",
+          "Brasiilia",
+          "Šveits",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Ecuador",
+          "Türgi",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "rain-peerandi",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Kanada",
+          "Saksamaa",
+          "Maroko",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Austraalia",
+          "Elevandiluurannik",
+          "Norra",
+          "Mehhiko",
+          "Saudi Araabia",
+          "Inglismaa",
+          "Senegal",
+          "Paraguai",
+          "Jaapan",
+          "Belgia",
+          "Tšehhi",
+          "Kolumbia",
+          "Ghana",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Ecuador",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Horvaatia",
+          "USA",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Holland",
+          "Rootsi",
+          "Elevandiluurannik",
+          "Mehhiko",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "Jaapan",
+          "Belgia",
+          "Argentiina",
+          "USA",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Rootsi",
+          "Mehhiko",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Holland",
+          "Hispaania",
+          "Mehhiko",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Argentiina"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "aleksandr-lember",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Kanada",
+          "Saksamaa",
+          "Maroko",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Elevandiluurannik",
+          "Norra",
+          "Mehhiko",
+          "Ecuador",
+          "Inglismaa",
+          "Senegal",
+          "USA",
+          "Bosnia ja Hertsegoviina",
+          "Belgia",
+          "Lõuna-Korea",
+          "Kolumbia",
+          "Horvaatia",
+          "Uruguay",
+          "Austria",
+          "Šveits",
+          "Alžeeria",
+          "Argentiina",
+          "Hispaania",
+          "Portugal",
+          "Ghana",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Tšehhi",
+          "Holland",
+          "Brasiilia",
+          "Elevandiluurannik",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Uruguay",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Egiptus",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Tšehhi",
+          "Horvaatia",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Horvaatia",
+          "Brasiilia",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Argentiina"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "rauno-peerandi",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Šveits",
+          "Saksamaa",
+          "Tuneesia",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Saudi Araabia",
+          "Ecuador",
+          "Senegal",
+          "Mehhiko",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "DR Congo",
+          "USA",
+          "Bosnia ja Hertsegoviina",
+          "Belgia",
+          "Norra",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Argentiina",
+          "Kanada",
+          "Alžeeria",
+          "Austria",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "Türgi",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Maroko",
+          "Brasiilia",
+          "Senegal",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Norra",
+          "Uruguay",
+          "Türgi",
+          "Kanada",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Maroko",
+          "Hispaania",
+          "USA",
+          "Brasiilia",
+          "Inglismaa",
+          "Türgi",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Maroko",
+          "Hispaania",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Brasiilia"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "anneli-seppen",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Mehhiko",
+          "Katar",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Tuneesia",
+          "Ecuador",
+          "Norra",
+          "Tšehhi",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "Uzbekistan",
+          "USA",
+          "Kanada",
+          "Uus-Meremaa",
+          "Lõuna Aafrika Vabariik",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Alžeeria",
+          "Šveits",
+          "Belgia",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Senegal",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Mehhiko",
+          "Holland",
+          "Brasiilia",
+          "Ecuador",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "Kanada",
+          "Uus-Meremaa",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Mehhiko",
+          "Hispaania",
+          "Kanada",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Kanada",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "nele-sumberg",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Katar",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Tuneesia",
+          "Ecuador",
+          "Senegal",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "Kolumbia",
+          "USA",
+          "Kanada",
+          "Belgia",
+          "Tšehhi",
+          "DR Congo",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Norra",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "Türgi",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Maroko",
+          "Brasiilia",
+          "Senegal",
+          "Šotimaa",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Argentiina"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "kart-kuivjogi",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Kanada",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "Senegal",
+          "USA",
+          "Alžeeria",
+          "Belgia",
+          "Lõuna-Korea",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Egiptus",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "Türgi",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Tšehhi",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Argentiina"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "karl-erik-kotsar",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Kanada",
+          "Saksamaa",
+          "Šotimaa",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Senegal",
+          "Mehhiko",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "Norra",
+          "USA",
+          "Bosnia ja Hertsegoviina",
+          "Belgia",
+          "Lõuna-Korea",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Egiptus",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "Türgi",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Kanada",
+          "Holland",
+          "Brasiilia",
+          "Senegal",
+          "Mehhiko",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Portugal"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "markus-ojangu",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Mehhiko",
+          "Kanada",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Norra",
+          "Lõuna-Korea",
+          "Šotimaa",
+          "Horvaatia",
+          "Senegal",
+          "Türgi",
+          "Bosnia ja Hertsegoviina",
+          "Belgia",
+          "Tšehhi",
+          "Kolumbia",
+          "Inglismaa",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Iraan",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "USA",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Mehhiko",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Lõuna-Korea",
+          "Horvaatia",
+          "Inglismaa",
+          "Hispaania",
+          "Türgi",
+          "Belgia",
+          "Argentiina",
+          "USA",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Holland",
+          "Hispaania",
+          "Türgi",
+          "Brasiilia",
+          "Horvaatia",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Saksamaa",
+          "Hispaania",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Brasiilia"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "siim-pukk",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Bosnia ja Hertsegoviina",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Norra",
+          "Tšehhi",
+          "Saudi Araabia",
+          "Inglismaa",
+          "Senegal",
+          "Türgi",
+          "Kanada",
+          "Egiptus",
+          "Mehhiko",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Iraan",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "USA",
+          "Belgia"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Bosnia ja Hertsegoviina",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Tšehhi",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "Türgi",
+          "Mehhiko",
+          "Argentiina",
+          "USA",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Türgi",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Portugal"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "barbel-salumae",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Kanada",
+          "Saksamaa",
+          "Austraalia",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Senegal",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "Norra",
+          "USA",
+          "Elevandiluurannik",
+          "Belgia",
+          "Alžeeria",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Egiptus",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Panama",
+          "Türgi",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Maroko",
+          "Brasiilia",
+          "Senegal",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Maroko",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Portugal"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "priit-suluste",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Kanada",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "Senegal",
+          "USA",
+          "Alžeeria",
+          "Belgia",
+          "Tšehhi",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Iraan",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Elevandiluurannik",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Inglismaa",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "priit-hynninen",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Kanada",
+          "Saksamaa",
+          "Paraguai",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "DR Congo",
+          "USA",
+          "Bosnia ja Hertsegoviina",
+          "Belgia",
+          "Tšehhi",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Elevandiluurannik",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Senegal",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Kanada",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Mehhiko",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Brasiilia"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "andri-schmidt",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna-Korea",
+          "Katar",
+          "Saksamaa",
+          "Austraalia",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Jaapan",
+          "Prantsusmaa",
+          "Tuneesia",
+          "Ecuador",
+          "Senegal",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "Norra",
+          "USA",
+          "Kanada",
+          "Belgia",
+          "Elevandiluurannik",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Alžeeria",
+          "Šveits",
+          "Egiptus",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "Türgi",
+          "Uus-Meremaa"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Lõuna-Korea",
+          "Holland",
+          "Brasiilia",
+          "Senegal",
+          "Mehhiko",
+          "Inglismaa",
+          "Kolumbia",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Inglismaa",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "madis-padu",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Kanada",
+          "Ecuador",
+          "Šotimaa",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Jaapan",
+          "Saksamaa",
+          "Senegal",
+          "Mehhiko",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "Norra",
+          "USA",
+          "Bosnia ja Hertsegoviina",
+          "Belgia",
+          "Lõuna Aafrika Vabariik",
+          "Kolumbia",
+          "Ghana",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Uus-Meremaa",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Horvaatia",
+          "Türgi",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Šotimaa",
+          "Prantsusmaa",
+          "Tšehhi",
+          "Holland",
+          "Brasiilia",
+          "Senegal",
+          "Mehhiko",
+          "Inglismaa",
+          "Ghana",
+          "Hispaania",
+          "USA",
+          "Belgia",
+          "Argentiina",
+          "Türgi",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Prantsusmaa",
+          "Portugal"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "janek-melnik",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Mehhiko",
+          "Katar",
+          "Saksamaa",
+          "Türgi",
+          "Holland",
+          "Šotimaa",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Egiptus",
+          "Elevandiluurannik",
+          "Norra",
+          "Tšehhi",
+          "Jaapan",
+          "Inglismaa",
+          "Uzbekistan",
+          "Paraguai",
+          "Kanada",
+          "Belgia",
+          "Lõuna-Korea",
+          "DR Congo",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Jordaania",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Senegal",
+          "USA",
+          "Uus-Meremaa"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Mehhiko",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Tšehhi",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "Paraguai",
+          "Belgia",
+          "Argentiina",
+          "Uus-Meremaa",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Saksamaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Saksamaa",
+          "Hispaania",
+          "Inglismaa",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Saksamaa",
+          "Inglismaa"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "juho-laomets",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Tšehhi",
+          "Bosnia ja Hertsegoviina",
+          "Saksamaa",
+          "USA",
+          "Holland",
+          "Maroko",
+          "Brasiilia",
+          "Rootsi",
+          "Prantsusmaa",
+          "Tuneesia",
+          "Ecuador",
+          "Norra",
+          "Mehhiko",
+          "Šotimaa",
+          "Inglismaa",
+          "Elevandiluurannik",
+          "Türgi",
+          "Kanada",
+          "Belgia",
+          "Alžeeria",
+          "Kolumbia",
+          "Horvaatia",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Egiptus",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Ghana",
+          "Paraguai",
+          "Iraan"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Tšehhi",
+          "Holland",
+          "Brasiilia",
+          "Norra",
+          "Mehhiko",
+          "Inglismaa",
+          "Horvaatia",
+          "Hispaania",
+          "Türgi",
+          "Belgia",
+          "Argentiina",
+          "Paraguai",
+          "Šveits",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Holland",
+          "Hispaania",
+          "Belgia",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Portugal"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Brasiilia"
+        ]
+      }
+    ]
+  },
+  {
+    "playerId": "karolin-valdmann",
+    "rounds": [
+      {
+        "round": "R32",
+        "teams": [
+          "Lõuna Aafrika Vabariik",
+          "Bosnia ja Hertsegoviina",
+          "Saksamaa",
+          "Šotimaa",
+          "Tuneesia",
+          "Maroko",
+          "Brasiilia",
+          "Holland",
+          "Prantsusmaa",
+          "Rootsi",
+          "Ecuador",
+          "Norra",
+          "Lõuna-Korea",
+          "Elevandiluurannik",
+          "Inglismaa",
+          "Senegal",
+          "Türgi",
+          "Katar",
+          "Belgia",
+          "Saudi Araabia",
+          "Kolumbia",
+          "Ghana",
+          "Hispaania",
+          "Austria",
+          "Šveits",
+          "Iraan",
+          "Argentiina",
+          "Uruguay",
+          "Portugal",
+          "Horvaatia",
+          "USA",
+          "Egiptus"
+        ]
+      },
+      {
+        "round": "R16",
+        "teams": [
+          "Saksamaa",
+          "Prantsusmaa",
+          "Bosnia ja Hertsegoviina",
+          "Maroko",
+          "Brasiilia",
+          "Norra",
+          "Lõuna-Korea",
+          "Inglismaa",
+          "Ghana",
+          "Hispaania",
+          "Türgi",
+          "Belgia",
+          "Argentiina",
+          "Egiptus",
+          "Šveits",
+          "Horvaatia"
+        ]
+      },
+      {
+        "round": "QF",
+        "teams": [
+          "Prantsusmaa",
+          "Maroko",
+          "Hispaania",
+          "Türgi",
+          "Brasiilia",
+          "Inglismaa",
+          "Argentiina",
+          "Horvaatia"
+        ]
+      },
+      {
+        "round": "SF",
+        "teams": [
+          "Prantsusmaa",
+          "Hispaania",
+          "Brasiilia",
+          "Argentiina"
+        ]
+      },
+      {
+        "round": "Final",
+        "teams": [
+          "Hispaania",
+          "Brasiilia"
+        ]
+      }
+    ]
+  }
 ]

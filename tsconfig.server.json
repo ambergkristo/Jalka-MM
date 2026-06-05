@@ -12,5 +12,5 @@
     "rootDir": "src",
     "types": ["node"]
   },
-  "include": ["src/domain", "src/server", "src/test-db", "src/data/**/*.json"]
+  "include": ["src/domain", "src/server", "src/tools", "src/test-db", "src/data/**/*.json"]
 }

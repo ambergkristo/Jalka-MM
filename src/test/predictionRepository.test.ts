@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { JsonPredictionRepository, loadDefaultPredictionSeedData, validatePredictionSeedData, type PredictionSeedData } from '../domain/predictionRepository.js';
+import { generateUniquePlayerId, slugifyPlayerId } from '../domain/playerIds.js';
 
 const validSeed: PredictionSeedData = {
   players: [{ id: 'argo', name: 'Argo' }],
@@ -28,9 +30,15 @@ describe('prediction seed validation', () => {
   it('accepts the committed prediction seed files', () => {
     const loadResult = loadDefaultPredictionSeedData();
     expect(loadResult.errors).toEqual([]);
-    expect(loadResult.data.players).toHaveLength(10);
-    expect(loadResult.data.matchPredictions).toHaveLength(10);
-    expect(loadResult.data.leaderboard).toHaveLength(10);
+    expect(loadResult.data.players).toHaveLength(24);
+    expect(loadResult.data.matchPredictions).toHaveLength(1728);
+    expect(loadResult.data.leaderboard).toHaveLength(24);
+    expect(loadResult.data.players.map((player) => player.id)).toContain('kristo-amberg');
+  });
+
+  it('does not expose email addresses in public player seeds', () => {
+    const publicPlayers = readFileSync('src/data/players.json', 'utf8');
+    expect(publicPlayers).not.toMatch(/@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
   });
 
   it('detects duplicate player ids', () => {
@@ -69,16 +77,30 @@ describe('prediction seed validation', () => {
 describe('prediction repository', () => {
   it('returns leaderboard and player prediction bundles from seed data', () => {
     const repository = new JsonPredictionRepository(loadDefaultPredictionSeedData());
-    expect(repository.getLeaderboard()[0]).toMatchObject({ playerId: 'argo', rank: 1 });
-    const bundle = repository.getPlayerPredictionBundle('argo');
-    expect(bundle?.player.name).toBe('Argo');
-    expect(bundle?.matchPredictions).toHaveLength(1);
+    expect(repository.getLeaderboard()).toHaveLength(24);
+    const bundle = repository.getPlayerPredictionBundle('kristo-amberg');
+    expect(bundle?.player.name).toBe('Kristo Amberg');
+    expect(bundle?.matchPredictions).toHaveLength(72);
     expect(bundle?.groupPredictions).toHaveLength(12);
-    expect(bundle?.awardsPrediction?.championTeam).toBe('Brazil');
+    expect(bundle?.awardsPrediction?.championTeam).toBeTruthy();
   });
 
   it('returns undefined for missing player bundles instead of throwing', () => {
     const repository = new JsonPredictionRepository(loadDefaultPredictionSeedData());
     expect(repository.getPlayerPredictionBundle('missing-player')).toBeUndefined();
+  });
+});
+
+describe('player id generation', () => {
+  it('normalizes names into stable public ids', () => {
+    expect(slugifyPlayerId('Kristo Amberg')).toBe('kristo-amberg');
+    expect(slugifyPlayerId('Vallo P\u00f5ldma')).toBe('vallo-poldma');
+    expect(slugifyPlayerId('Karl-Erik Kotsar')).toBe('karl-erik-kotsar');
+  });
+
+  it('deduplicates repeated player names with numeric suffixes', () => {
+    const used = new Set<string>();
+    expect(generateUniquePlayerId('Kristo Amberg', used)).toBe('kristo-amberg');
+    expect(generateUniquePlayerId('Kristo Amberg', used)).toBe('kristo-amberg-2');
   });
 });

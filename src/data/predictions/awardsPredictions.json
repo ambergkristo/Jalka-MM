@@ -1,12 +1,218 @@
 [
-  { "playerId": "argo", "championTeam": "Brazil", "championStatus": "Still alive", "topScorerName": "Vinicius Junior", "topScorerTeam": "Brazil", "topScorerCurrentGoals": 4, "topScorerStatus": "In chase" },
-  { "playerId": "kristo", "championTeam": "Argentina", "championStatus": "Still alive", "topScorerName": "Lionel Messi", "topScorerTeam": "Argentina", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" },
-  { "playerId": "martin", "championTeam": "Spain", "championStatus": "Still alive", "topScorerName": "Kylian Mbappe", "topScorerTeam": "France", "topScorerCurrentGoals": 5, "topScorerStatus": "Leading" },
-  { "playerId": "mari", "championTeam": "France", "championStatus": "Still alive", "topScorerName": "Harry Kane", "topScorerTeam": "England", "topScorerCurrentGoals": 2, "topScorerStatus": "Eliminated" },
-  { "playerId": "liis", "championTeam": "Germany", "championStatus": "Eliminated", "topScorerName": "Lamine Yamal", "topScorerTeam": "Spain", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" },
-  { "playerId": "taavi", "championTeam": "England", "championStatus": "Still alive", "topScorerName": "Vinicius Junior", "topScorerTeam": "Brazil", "topScorerCurrentGoals": 4, "topScorerStatus": "In chase" },
-  { "playerId": "kadri", "championTeam": "Portugal", "championStatus": "Still alive", "topScorerName": "Lionel Messi", "topScorerTeam": "Argentina", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" },
-  { "playerId": "juhan", "championTeam": "Netherlands", "championStatus": "Eliminated", "topScorerName": "Kylian Mbappe", "topScorerTeam": "France", "topScorerCurrentGoals": 5, "topScorerStatus": "Leading" },
-  { "playerId": "sander", "championTeam": "Uruguay", "championStatus": "Eliminated", "topScorerName": "Harry Kane", "topScorerTeam": "England", "topScorerCurrentGoals": 2, "topScorerStatus": "Eliminated" },
-  { "playerId": "helen", "championTeam": "Belgium", "championStatus": "Eliminated", "topScorerName": "Lamine Yamal", "topScorerTeam": "Spain", "topScorerCurrentGoals": 3, "topScorerStatus": "In chase" }
+  {
+    "playerId": "vallo-poldma",
+    "championTeam": "Inglismaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Keane",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "henri-kotsar",
+    "championTeam": "Portugal",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappé",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "madis-saadik",
+    "championTeam": "Brasiilia",
+    "championStatus": "Still alive",
+    "topScorerName": "Vinicius Jr",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "ragnar-saadik",
+    "championTeam": "Argentiina",
+    "championStatus": "Still alive",
+    "topScorerName": "Lionel Messi",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "argo-kotsar",
+    "championTeam": "Inglismaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Harry Kane",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "kaspar-kaldjarv",
+    "championTeam": "Portugal",
+    "championStatus": "Still alive",
+    "topScorerName": "C. Ronaldo",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "kristo-amberg",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappé",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "rain-peerandi",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Messi",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "aleksandr-lember",
+    "championTeam": "Argentiina",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappé",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "rauno-peerandi",
+    "championTeam": "Brasiilia",
+    "championStatus": "Still alive",
+    "topScorerName": "Vinicius Junior",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "anneli-seppen",
+    "championTeam": "Prantsusmaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Vinicius Junior",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "nele-sumberg",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappé",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "kart-kuivjogi",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Julián Álvarez",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "karl-erik-kotsar",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "markus-ojangu",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Yamal",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "siim-pukk",
+    "championTeam": "Prantsusmaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "barbel-salumae",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Kylian Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "priit-suluste",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Harry Kane",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "priit-hynninen",
+    "championTeam": "Prantsusmaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "andri-schmidt",
+    "championTeam": "Prantsusmaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "madis-padu",
+    "championTeam": "Prantsusmaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Ousmane Dembélé",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "janek-melnik",
+    "championTeam": "Saksamaa",
+    "championStatus": "Still alive",
+    "topScorerName": "Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "juho-laomets",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "Ferran Torres",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  },
+  {
+    "playerId": "karolin-valdmann",
+    "championTeam": "Hispaania",
+    "championStatus": "Still alive",
+    "topScorerName": "K.Mbappe",
+    "topScorerTeam": "Unknown team",
+    "topScorerCurrentGoals": 0,
+    "topScorerStatus": "In chase"
+  }
 ]

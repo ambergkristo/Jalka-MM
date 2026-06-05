@@ -1,0 +1,207 @@
+{
+  "sourceWorkbook": "imports/data.xlsx",
+  "sourceWorkbookSize": 313625,
+  "sourceWorkbookLastModified": "2026-06-05T12:01:31.595Z",
+  "sheetsFound": [
+    "actual",
+    "stat",
+    "data",
+    "24.Karolin",
+    "23.JuhoLaomets",
+    "22.JanekMelnik",
+    "21.MadisPadu",
+    "20.AndriSchmidt",
+    "19.PriitHynninen",
+    "18.PriitSuluste",
+    "17.Barbs",
+    "16.SiimPukk",
+    "15.MarkusOjangu",
+    "14.KarlKotsar",
+    "13.KartKuivjogi",
+    "12.NeleSumberg",
+    "11.AnneliSeppen",
+    "10.RaunoPeerandi",
+    "9.AleksandrLember",
+    "8.RainPeerandi",
+    "7.KristoAmberg",
+    "6.KasparKaldjarv",
+    "5.ArgoKotsar",
+    "4.RagnarSaadik",
+    "3.MadisSaadik",
+    "2.HenriKotsar",
+    "1.ValloPoldma"
+  ],
+  "playerCountImported": 24,
+  "skippedRows": [
+    {
+      "row": 28,
+      "reason": "empty name"
+    },
+    {
+      "row": 29,
+      "reason": "empty name"
+    },
+    {
+      "row": 30,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 31,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 32,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 33,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 34,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 35,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 36,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 37,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 38,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 39,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 40,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 41,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 42,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 43,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 44,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 45,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 46,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 47,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 48,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 49,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 50,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 51,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 52,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 53,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 54,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 55,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 56,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 57,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 58,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 59,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    },
+    {
+      "row": 60,
+      "reason": "no numeric player prefix for matching an individual player sheet"
+    }
+  ],
+  "missingFields": [
+    "Row 7: missing email in source workbook for Ragnar Saadik"
+  ],
+  "unknownColumns": [
+    "data sheet columns after awards/knockout summary are not imported in Sprint 8"
+  ],
+  "predictionSectionsDetected": {
+    "playerSheets": 24,
+    "matchPredictions": 1728,
+    "groupPredictionSets": 24,
+    "knockoutPredictions": 24,
+    "awardsPredictions": 24
+  },
+  "warnings": [
+    "Emails were read only to detect source privacy risk and were not written to public seed files.",
+    "Existing Excel points are imported into leaderboardSeed; exact score and hit-rate metrics are initialized to 0 until app scoring recalculates them.",
+    "Best Player is detected in player sheets but deferred because the public AwardsPrediction model does not include it yet."
+  ],
+  "generatedSeedFiles": [
+    "src/data/players.json",
+    "src/data/predictions/matchPredictions.json",
+    "src/data/predictions/groupPredictions.json",
+    "src/data/predictions/knockoutPredictions.json",
+    "src/data/predictions/awardsPredictions.json",
+    "src/data/predictions/leaderboardSeed.json"
+  ],
+  "emailPrivacy": {
+    "sourceEmailsDetected": 23,
+    "publicEmailFieldsWritten": 0
+  },
+  "discoveredMapping": {
+    "players": "data sheet rows 4+, columns A:D = name, KOV/location, email, existing points",
+    "matchPredictions": "individual player sheets rows 1-72, columns B:E = home team, home score, away score, away team; matchId = row number",
+    "groupPredictions": "individual player sheets rows 76-87, columns B/E/H/F = group first, second, third, group id",
+    "knockoutPredictions": "individual player sheets rows 91-106 R32, 107-114 R16, 115-118 QF, 119-120 SF, row 122 Final",
+    "awardsPredictions": "individual player sheets rows 124/132, column C = champion/top scorer"
+  },
+  "validationErrors": []
+}

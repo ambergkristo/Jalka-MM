@@ -14,7 +14,9 @@
     "reset:dev": "node --run build:server && node dist/server/reset-dev-cli.js --confirm=DELETE_LOCAL_DATA",
     "backup:db": "node --run build:server && node dist/server/backup-cli.js",
     "validate:tournament-data": "node scripts/validate-tournament-data.mjs",
-    "audit:tournament-data": "node scripts/audit-tournament-data.mjs"
+    "audit:tournament-data": "node scripts/audit-tournament-data.mjs",
+    "import:excel-seeds": "node --run build:server && node dist/tools/importExcelSeeds.js",
+    "validate:prediction-seeds": "node --run build:server && node dist/tools/validatePredictionSeeds.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.4.1",
@@ -31,6 +33,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "xlsx": "^0.18.5"
   }
 }

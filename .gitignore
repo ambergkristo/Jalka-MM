@@ -16,3 +16,5 @@ Thumbs.db
 *.sqlite-wal
 test-results/
 playwright-report/
+/imports/*.xlsx
+/imports/*.xls

@@ -1,12 +1,122 @@
 [
-  { "id": "argo", "name": "Argo", "location": "Tallinn" },
-  { "id": "kristo", "name": "Kristo", "location": "Tartu" },
-  { "id": "martin", "name": "Martin", "location": "Tallinn" },
-  { "id": "mari", "name": "Mari", "location": "Pärnu" },
-  { "id": "liis", "name": "Liis", "location": "Viljandi" },
-  { "id": "taavi", "name": "Taavi", "location": "Rakvere" },
-  { "id": "kadri", "name": "Kadri", "location": "Tallinn" },
-  { "id": "juhan", "name": "Juhan", "location": "Tartu" },
-  { "id": "sander", "name": "Sander", "location": "Haapsalu" },
-  { "id": "helen", "name": "Helen", "location": "Kuressaare" }
+  {
+    "id": "vallo-poldma",
+    "name": "Vallo Põldma",
+    "location": "Rae"
+  },
+  {
+    "id": "henri-kotsar",
+    "name": "Henri Kotsar",
+    "location": "Rae"
+  },
+  {
+    "id": "madis-saadik",
+    "name": "Madis Saadik",
+    "location": "Harku"
+  },
+  {
+    "id": "ragnar-saadik",
+    "name": "Ragnar Saadik",
+    "location": "Harku"
+  },
+  {
+    "id": "argo-kotsar",
+    "name": "Argo Kotsar",
+    "location": "Rae"
+  },
+  {
+    "id": "kaspar-kaldjarv",
+    "name": "Kaspar Kaldjärv",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "kristo-amberg",
+    "name": "Kristo Amberg",
+    "location": "Saue"
+  },
+  {
+    "id": "rain-peerandi",
+    "name": "Rain Peerandi",
+    "location": "Kanepi"
+  },
+  {
+    "id": "aleksandr-lember",
+    "name": "Aleksandr Lember",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "rauno-peerandi",
+    "name": "Rauno Peerandi",
+    "location": "Kanepi"
+  },
+  {
+    "id": "anneli-seppen",
+    "name": "Anneli Seppen",
+    "location": "Rae"
+  },
+  {
+    "id": "nele-sumberg",
+    "name": "Nele Sumberg",
+    "location": "Tallinn"
+  },
+  {
+    "id": "kart-kuivjogi",
+    "name": "Kärt Kuivjõgi",
+    "location": "Rae"
+  },
+  {
+    "id": "karl-erik-kotsar",
+    "name": "Karl-Erik Kotsar",
+    "location": "Rae"
+  },
+  {
+    "id": "markus-ojangu",
+    "name": "Markus Ojangu",
+    "location": "Rae"
+  },
+  {
+    "id": "siim-pukk",
+    "name": "Siim Pukk",
+    "location": "Rae"
+  },
+  {
+    "id": "barbel-salumae",
+    "name": "Bärbel Salumäe",
+    "location": "Rae"
+  },
+  {
+    "id": "priit-suluste",
+    "name": "Priit Suluste",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "priit-hynninen",
+    "name": "Priit Hynninen",
+    "location": "Viimsi"
+  },
+  {
+    "id": "andri-schmidt",
+    "name": "Andri Schmidt",
+    "location": "Viimsi"
+  },
+  {
+    "id": "madis-padu",
+    "name": "Madis Padu",
+    "location": "Saue"
+  },
+  {
+    "id": "janek-melnik",
+    "name": "Janek Melnik",
+    "location": "Rakvere"
+  },
+  {
+    "id": "juho-laomets",
+    "name": "Juho Laomets",
+    "location": "Kastre"
+  },
+  {
+    "id": "karolin-valdmann",
+    "name": "Karolin Valdmann",
+    "location": "Hiiumaa"
+  }
 ]
