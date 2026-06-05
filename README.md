@@ -149,14 +149,14 @@ All old auth, admin, approval, prediction submission, bonus form, deadline, and 
 
 ## Result Provider Configuration
 
-The default result provider is still mock-only. Real provider modes are scaffolded for Sprint 12 and fail clearly until their adapters are implemented.
+The default result provider is still mock. Sprint 14 adds the first real adapter for Sportmonks, but it requires external credentials and confirmed fixture mapping.
 
 ```bash
 RESULTS_PROVIDER=mock
 RESULTS_WRITE_MODE=mock
 # RESULTS_API_KEY=
-# RESULTS_API_BASE_URL=
-# RESULTS_COMPETITION_ID=
+# RESULTS_API_BASE_URL=https://api.sportmonks.com
+# RESULTS_COMPETITION_ID=732
 # RESULTS_SEASON=2026
 # RESULTS_AGENT_SECRET=
 ```

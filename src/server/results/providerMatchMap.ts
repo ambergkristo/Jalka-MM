@@ -31,3 +31,19 @@ export function validateProviderMatchMap(entries: ProviderMatchMapEntry[]): stri
 
   return errors;
 }
+
+export function findProviderMatchMapEntry(input: {
+  entries: ProviderMatchMapEntry[];
+  provider: ProviderMatchMapEntry['provider'];
+  internalMatchId: number;
+  competitionId?: string;
+  season?: string;
+}): ProviderMatchMapEntry | undefined {
+  return input.entries.find(
+    (entry) =>
+      entry.provider === input.provider &&
+      entry.internalMatchId === input.internalMatchId &&
+      (!input.competitionId || entry.providerCompetitionId === input.competitionId) &&
+      (!input.season || entry.providerSeason === input.season)
+  );
+}

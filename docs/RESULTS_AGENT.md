@@ -1,6 +1,6 @@
 # Results Agent Plan
 
-The results agent is the backend workflow that updates tournament match statuses and scores. Sprint 5 implements the first mock-only foundation; a real football provider is still deferred.
+The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 14 adds the first real adapter for Sportmonks, but live use still requires credentials, confirmed fixture mapping, and production endpoint protection.
 
 Current implementation modules live in `src/server/results/`:
 
@@ -9,6 +9,7 @@ Current implementation modules live in `src/server/results/`:
 - `resultProviderConfig.ts`
 - `resultProviderFactory.ts`
 - `mockResultProvider.ts`
+- `sportmonksResultProvider.ts`
 - `realResultProviderStub.ts`
 - `providerMatchMap.ts`
 - `matchScheduler.ts`
@@ -118,7 +119,7 @@ MVP catch-up strategy:
 
 No complex pending queue is needed for MVP. The database state and provider API are enough to recover missed polling intervals.
 
-Sprint 5 adds mock-only catch-up endpoints:
+Sprint 5 adds catch-up endpoints that remain mock-default:
 
 - `GET /api/results-agent/status`
 - `POST /api/results-agent/run`
@@ -127,7 +128,7 @@ The `POST` endpoint runs one safe/idempotent update cycle against the mock provi
 
 ## Provider Selection Architecture
 
-Sprint 11 adds provider configuration and factory scaffolding without making real network calls.
+Sprint 11 adds provider configuration and factory scaffolding. Sprint 14 adds the first real adapter for Sportmonks while keeping mock as the default provider.
 
 Environment variables:
 
@@ -147,7 +148,19 @@ Defaults are safe:
 - Non-mock providers fail clearly if required provider config is missing.
 - `RESULTS_WRITE_MODE=live` requires `RESULTS_AGENT_SECRET`.
 
-`createResultProvider(config)` returns `MockResultProvider` by default. Non-mock providers currently return a stub that throws a clear Sprint 12 deferred-implementation error if called.
+`createResultProvider(config)` returns `MockResultProvider` by default. `RESULTS_PROVIDER=sportmonks` returns `SportmonksResultProvider` when required config is present. API-Football and football-data.org remain deferred stubs until explicitly implemented.
+
+Sportmonks env example:
+
+```bash
+RESULTS_PROVIDER=sportmonks
+RESULTS_API_BASE_URL=https://api.sportmonks.com
+RESULTS_COMPETITION_ID=732
+RESULTS_SEASON=2026
+RESULTS_API_KEY=...
+```
+
+Do not commit `RESULTS_API_KEY`.
 
 ## Provider Contract
 
@@ -179,6 +192,12 @@ Mapping strategy:
 
 The map should be validated before live writes are enabled. Knockout slots may exist before teams are known; provider fixture ids are therefore more reliable than names.
 
+Sprint 14 behavior:
+
+- If a Sportmonks fixture id exists for the internal match, the adapter fetches that fixture and normalizes the result.
+- If no Sportmonks fixture id exists, the adapter returns a warning update and skips the network call.
+- The live write path must not guess fixture ids from team names.
+
 ## Production Safety Rules
 
 - Mock mode can remain unprotected while it uses deterministic mock provider data and does not call external APIs.
@@ -190,9 +209,10 @@ The map should be validated before live writes are enabled. Knockout slots may e
 ## Sprint 5 Deferred Work
 
 - Move remaining narrow tests away from `InMemoryResultRepository` where useful.
-- Implement the selected real football provider adapter.
-- Apply final Excel-derived prediction data to the scoring engine.
+- Complete confirmed Sportmonks fixture mapping for all tournament matches.
 - Add production protection for the run endpoint.
+- Verify Sportmonks account coverage, rate limits, and payload shape before live tournament use.
+- Apply final Excel-derived prediction data to the scoring engine.
 
 ## Boundaries
 

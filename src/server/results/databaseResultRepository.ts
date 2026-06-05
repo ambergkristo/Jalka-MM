@@ -47,20 +47,24 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
       LEFT JOIN teams t_away ON t_away.id = m.away_team_id
       ORDER BY m.id
     `);
-    return rows.map((row) => ({
-      id: Number(row.id),
-      providerMatchId: nullableString(row.provider_fixture_id),
-      kickoffUtc: String(row.kickoff_at),
-      status: row.status ? (String(row.status) as MatchStatus) : 'SCHEDULED',
-      homeTeam: String(row.home_team),
-      awayTeam: String(row.away_team),
-      homeScore: nullableNumber(row.home_score),
-      awayScore: nullableNumber(row.away_score),
-      minute: nullableNumber(row.minute),
-      isFinal: toBoolean(row.is_final),
-      lastCheckedAt: nullableString(row.last_checked_at),
-      nextCheckAt: nullableString(row.next_check_at)
-    }));
+    return rows.flatMap((row) => {
+      const kickoffUtc = String(row.kickoff_at);
+      if (Number.isNaN(Date.parse(kickoffUtc))) return [];
+      return [{
+        id: Number(row.id),
+        providerMatchId: nullableString(row.provider_fixture_id),
+        kickoffUtc,
+        status: row.status ? (String(row.status) as MatchStatus) : 'SCHEDULED',
+        homeTeam: String(row.home_team),
+        awayTeam: String(row.away_team),
+        homeScore: nullableNumber(row.home_score),
+        awayScore: nullableNumber(row.away_score),
+        minute: nullableNumber(row.minute),
+        isFinal: toBoolean(row.is_final),
+        lastCheckedAt: nullableString(row.last_checked_at),
+        nextCheckAt: nullableString(row.next_check_at)
+      }];
+    });
   }
 
   async saveResultUpdate(update: ResultUpdate): Promise<{ finalResultChanged: boolean }> {

@@ -19,7 +19,7 @@ describe('result provider config and factory', () => {
   });
 
   it('fails clearly when real provider mode is missing required config', () => {
-    const config = loadResultProviderConfig({ RESULTS_PROVIDER: 'api-football' });
+    const config = loadResultProviderConfig({ RESULTS_PROVIDER: 'sportmonks' });
     expect(validateResultProviderConfig(config)).toEqual([
       'RESULTS_API_KEY is required when RESULTS_PROVIDER is not mock',
       'RESULTS_API_BASE_URL is required when RESULTS_PROVIDER is not mock',
@@ -29,7 +29,7 @@ describe('result provider config and factory', () => {
     expect(() => createResultProvider(config)).toThrow(/Invalid result provider configuration/);
   });
 
-  it('creates a deferred real-provider stub when required config is present', () => {
+  it('creates the Sportmonks provider when required config is present', () => {
     const provider = createResultProvider(
       loadResultProviderConfig({
         RESULTS_PROVIDER: 'sportmonks',
@@ -41,6 +41,21 @@ describe('result provider config and factory', () => {
     );
 
     expect(provider.name).toBe('sportmonks-result-provider');
+    expect(provider.mode).toBe('live');
+  });
+
+  it('keeps non-selected real providers behind deferred stubs', () => {
+    const provider = createResultProvider(
+      loadResultProviderConfig({
+        RESULTS_PROVIDER: 'api-football',
+        RESULTS_API_KEY: 'test-key',
+        RESULTS_API_BASE_URL: 'https://example.test',
+        RESULTS_COMPETITION_ID: 'world-cup',
+        RESULTS_SEASON: '2026'
+      })
+    );
+
+    expect(provider.name).toBe('api-football-result-provider');
     expect(provider.mode).toBe('live');
   });
 
