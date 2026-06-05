@@ -153,6 +153,7 @@ The default result provider is still mock. Sprint 14 adds the first real adapter
 
 ```bash
 RESULTS_PROVIDER=mock
+# `dry-run` can fetch a real provider without writing DB changes.
 RESULTS_WRITE_MODE=mock
 # RESULTS_API_KEY=
 # RESULTS_API_BASE_URL=https://api.sportmonks.com
@@ -162,3 +163,11 @@ RESULTS_WRITE_MODE=mock
 ```
 
 See `.env.example`, `docs/RESULTS_AGENT.md`, and `docs/RESULT_PROVIDER_OPTIONS.md` before enabling a real provider.
+
+Useful provider operations:
+
+```bash
+npm run validate:provider-match-map
+```
+
+Live result-agent writes require `x-results-agent-secret: <RESULTS_AGENT_SECRET>` on `POST /api/results-agent/run`. Mock mode remains simple for local development.

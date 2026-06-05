@@ -17,6 +17,7 @@
     "audit:tournament-data": "node scripts/audit-tournament-data.mjs",
     "import:excel-seeds": "node --run build:server && node dist/tools/importExcelSeeds.js",
     "validate:prediction-seeds": "node --run build:server && node dist/tools/validatePredictionSeeds.js",
+    "validate:provider-match-map": "node --run build:server && node dist/tools/validateProviderMatchMap.js",
     "ping:render": "node scripts/ping-render.mjs"
   },
   "dependencies": {

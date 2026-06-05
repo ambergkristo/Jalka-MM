@@ -1,5 +1,5 @@
 export type ResultsProviderName = 'mock' | 'api-football' | 'football-data' | 'sportmonks';
-export type ResultsWriteMode = 'mock' | 'live';
+export type ResultsWriteMode = 'mock' | 'dry-run' | 'live';
 
 export interface ResultProviderConfig {
   provider: ResultsProviderName;
@@ -46,8 +46,8 @@ function parseProviderName(value: string): ResultsProviderName {
 }
 
 function parseWriteMode(value: string): ResultsWriteMode {
-  if (value === 'mock' || value === 'live') return value;
-  throw new Error(`Unsupported RESULTS_WRITE_MODE "${value}". Use mock or live.`);
+  if (value === 'mock' || value === 'dry-run' || value === 'live') return value;
+  throw new Error(`Unsupported RESULTS_WRITE_MODE "${value}". Use mock, dry-run, or live.`);
 }
 
 function emptyToUndefined(value: string | undefined): string | undefined {

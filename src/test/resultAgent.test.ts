@@ -32,6 +32,29 @@ describe('result agent update cycle', () => {
     });
     expect(summary.leaderboardRebuilds[0].entries[0]).toMatchObject({ points: 6, exactScores: 1, correctResults: 1 });
   });
+
+  it('dry-run checks provider updates without saving results or leaderboard rows', async () => {
+    const now = new Date('2026-06-15T18:00:00.000Z');
+    const repository = new InMemoryResultRepository(createDefaultMockMatches(now));
+    const summary = await runResultUpdateCycle({
+      repository,
+      provider: new MockResultProvider(),
+      now,
+      dryRun: true
+    });
+
+    expect(summary).toMatchObject({
+      dryRun: true,
+      checkedMatches: expect.any(Number),
+      updatesApplied: 0,
+      updatedMatches: 0,
+      finalizedResults: 0,
+      leaderboardRebuilt: false,
+      warnings: ['Dry run completed without persisting result, run summary, or leaderboard changes.']
+    });
+    expect(summary.checkedMatches).toBeGreaterThan(0);
+    await expect(repository.getFinalizedResults()).resolves.toEqual([]);
+  });
 });
 
 describe('leaderboard rebuild', () => {

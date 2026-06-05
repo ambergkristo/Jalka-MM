@@ -1,4 +1,6 @@
 import { getResultAgentStatus, runResultUpdateCycle } from './resultAgent.js';
+import { getResultAgentRunPermission as resolveResultAgentRunPermission } from './resultAgentSecurity.js';
+import { loadResultProviderConfig } from './resultProviderConfig.js';
 import { createResultProvider } from './resultProviderFactory.js';
 import { db } from '../db.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
@@ -7,14 +9,19 @@ import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 
 const repository = new DatabaseResultRepository(db);
-const provider = createResultProvider();
+const providerConfig = loadResultProviderConfig();
+const provider = createResultProvider(providerConfig);
 
 export function getResultsAgentStatus(now = new Date()) {
   return getResultAgentStatus({ repository, provider, now });
 }
 
-export function runResultsAgentCycle(now = new Date()) {
-  return runResultUpdateCycle({ repository, leaderboardRepository: repository, provider, now });
+export function getResultsAgentRunPermission(input: { dryRunRequested?: boolean; providedSecret?: string }) {
+  return resolveResultAgentRunPermission({ config: providerConfig, ...input });
+}
+
+export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boolean } = {}) {
+  return runResultUpdateCycle({ repository, leaderboardRepository: repository, provider, now, dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run' });
 }
 
 export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRepository = repository) {

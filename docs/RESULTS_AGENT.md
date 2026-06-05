@@ -1,6 +1,6 @@
 # Results Agent Plan
 
-The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 14 adds the first real adapter for Sportmonks, but live use still requires credentials, confirmed fixture mapping, and production endpoint protection.
+The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 14 adds the first real adapter for Sportmonks. Sprint 15 protects live writes with a scheduler secret and adds dry-run support; live use still requires credentials and confirmed fixture mapping.
 
 Current implementation modules live in `src/server/results/`:
 
@@ -124,7 +124,7 @@ Sprint 5 adds catch-up endpoints that remain mock-default:
 - `GET /api/results-agent/status`
 - `POST /api/results-agent/run`
 
-The `POST` endpoint runs one safe/idempotent update cycle against the mock provider. It is public for now because it makes no external calls and exists only as architecture groundwork. It now writes mock result state and rebuilt leaderboard rows to the configured database. Before connecting a real provider or production write workflow, protect this endpoint with a scheduler secret, internal cron trigger, or equivalent server-side authorization.
+The `POST` endpoint runs one safe/idempotent update cycle. Mock mode remains manually triggerable for local development. Live write mode requires `x-results-agent-secret`; dry-run mode fetches provider updates without persisting DB changes.
 
 ## Provider Selection Architecture
 
@@ -138,6 +138,7 @@ Environment variables:
 - `RESULTS_COMPETITION_ID`
 - `RESULTS_SEASON`
 - `RESULTS_WRITE_MODE=mock | live`
+- `RESULTS_WRITE_MODE=mock | dry-run | live`
 - `RESULTS_AGENT_SECRET`
 
 Defaults are safe:
@@ -147,6 +148,7 @@ Defaults are safe:
 - Missing API keys do not crash the app in mock mode.
 - Non-mock providers fail clearly if required provider config is missing.
 - `RESULTS_WRITE_MODE=live` requires `RESULTS_AGENT_SECRET`.
+- `RESULTS_WRITE_MODE=dry-run` fetches provider data but skips result, run summary, and leaderboard persistence.
 
 `createResultProvider(config)` returns `MockResultProvider` by default. `RESULTS_PROVIDER=sportmonks` returns `SportmonksResultProvider` when required config is present. API-Football and football-data.org remain deferred stubs until explicitly implemented.
 
@@ -157,6 +159,7 @@ RESULTS_PROVIDER=sportmonks
 RESULTS_API_BASE_URL=https://api.sportmonks.com
 RESULTS_COMPETITION_ID=732
 RESULTS_SEASON=2026
+RESULTS_WRITE_MODE=dry-run
 RESULTS_API_KEY=...
 ```
 
@@ -198,10 +201,28 @@ Sprint 14 behavior:
 - If no Sportmonks fixture id exists, the adapter returns a warning update and skips the network call.
 - The live write path must not guess fixture ids from team names.
 
+Sprint 15 validation:
+
+- `npm run validate:provider-match-map` checks provider match map structure.
+- In `RESULTS_WRITE_MODE=live`, Sportmonks mappings must have `providerFixtureId` and `confidence: "confirmed"`.
+- Live validation can require all internal match ids to be mapped before production writes.
+
+Sportmonks fixture mapping process:
+
+1. Keep `RESULTS_PROVIDER=sportmonks` and `RESULTS_WRITE_MODE=dry-run` while testing.
+2. Fetch the Sportmonks World Cup 2026 fixture list outside the public app runtime.
+3. Match fixtures by competition id, season, kickoff UTC, and participants.
+4. Write confirmed fixture ids into the provider match map.
+5. Mark each verified row with `confidence: "confirmed"`.
+6. Run `npm run validate:provider-match-map`.
+7. Run a dry-run result-agent cycle against a small mapped subset.
+8. Enable `RESULTS_WRITE_MODE=live` only after the map is complete and the endpoint secret is configured.
+
 ## Production Safety Rules
 
 - Mock mode can remain unprotected while it uses deterministic mock provider data and does not call external APIs.
-- Live write mode must require a secret header, internal cron identity, or equivalent protection before persistent writes are enabled.
+- Live write mode requires `x-results-agent-secret: <RESULTS_AGENT_SECRET>` on `POST /api/results-agent/run`.
+- Dry-run mode may call the configured provider but does not persist match results, run summaries, or leaderboard rows.
 - API keys must stay server-side and must never be committed.
 - Provider raw payload storage should be bounded and optional.
 - Provider calls must be made only from the backend result agent.
@@ -210,7 +231,6 @@ Sprint 14 behavior:
 
 - Move remaining narrow tests away from `InMemoryResultRepository` where useful.
 - Complete confirmed Sportmonks fixture mapping for all tournament matches.
-- Add production protection for the run endpoint.
 - Verify Sportmonks account coverage, rate limits, and payload shape before live tournament use.
 - Apply final Excel-derived prediction data to the scoring engine.
 

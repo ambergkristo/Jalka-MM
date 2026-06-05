@@ -1,6 +1,6 @@
 import providerMatchMapSeed from '../../data/providerMatchMap.example.json' with { type: 'json' };
 import { MockResultProvider } from './mockResultProvider.js';
-import type { ProviderMatchMapEntry } from './providerMatchMap.js';
+import { validateProviderMatchMapForLive, type ProviderMatchMapEntry } from './providerMatchMap.js';
 import { RealResultProviderStub } from './realResultProviderStub.js';
 import type { ResultProvider } from './resultProvider.js';
 import { loadResultProviderConfig, validateResultProviderConfig, type ResultProviderConfig } from './resultProviderConfig.js';
@@ -13,6 +13,17 @@ export function createResultProvider(
   const errors = validateResultProviderConfig(config);
   if (errors.length > 0) throw new Error(`Invalid result provider configuration: ${errors.join('; ')}`);
   if (config.provider === 'mock') return new MockResultProvider();
-  if (config.provider === 'sportmonks') return new SportmonksResultProvider(config, matchMap);
+  if (config.provider === 'sportmonks') {
+    if (config.writeMode === 'live') {
+      const mapErrors = validateProviderMatchMapForLive({
+        entries: matchMap,
+        provider: 'sportmonks',
+        competitionId: config.competitionId,
+        season: config.season
+      });
+      if (mapErrors.length > 0) throw new Error(`Invalid Sportmonks provider match map for live writes: ${mapErrors.join('; ')}`);
+    }
+    return new SportmonksResultProvider(config, matchMap);
+  }
   return new RealResultProviderStub(config);
 }

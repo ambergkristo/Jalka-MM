@@ -71,6 +71,43 @@ describe('result provider config and factory', () => {
 
     expect(validateResultProviderConfig(config)).toContain('RESULTS_AGENT_SECRET is required when RESULTS_WRITE_MODE=live');
   });
+
+  it('blocks Sportmonks live writes until fixture mapping is confirmed', () => {
+    const config = loadResultProviderConfig({
+      RESULTS_PROVIDER: 'sportmonks',
+      RESULTS_API_KEY: 'test-key',
+      RESULTS_API_BASE_URL: 'https://example.test',
+      RESULTS_COMPETITION_ID: '732',
+      RESULTS_SEASON: '2026',
+      RESULTS_WRITE_MODE: 'live',
+      RESULTS_AGENT_SECRET: 'secret'
+    });
+
+    expect(() => createResultProvider(config)).toThrow(/Invalid Sportmonks provider match map for live writes/);
+  });
+
+  it('allows Sportmonks live writes when fixture mapping is confirmed and secret is configured', () => {
+    const config = loadResultProviderConfig({
+      RESULTS_PROVIDER: 'sportmonks',
+      RESULTS_API_KEY: 'test-key',
+      RESULTS_API_BASE_URL: 'https://example.test',
+      RESULTS_COMPETITION_ID: '732',
+      RESULTS_SEASON: '2026',
+      RESULTS_WRITE_MODE: 'live',
+      RESULTS_AGENT_SECRET: 'secret'
+    });
+
+    const provider = createResultProvider(config, [{
+      internalMatchId: 1,
+      provider: 'sportmonks',
+      providerCompetitionId: '732',
+      providerSeason: '2026',
+      providerFixtureId: 'fixture-1',
+      confidence: 'confirmed'
+    }]);
+
+    expect(provider.name).toBe('sportmonks-result-provider');
+  });
 });
 
 describe('provider status normalization', () => {

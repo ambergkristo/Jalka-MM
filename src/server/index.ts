@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPublicState, healthCheck, seedTournamentData } from './db.js';
-import { getCurrentLeaderboard, getResultsAgentStatus, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { getCurrentLeaderboard, getResultsAgentRunPermission, getResultsAgentStatus, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 
 await seedTournamentData();
 
@@ -20,7 +20,14 @@ createServer(async (request, response) => {
     if (request.method === 'GET' && (url.pathname === '/api/health' || url.pathname === '/api/health/db')) return json(response, 200, await healthCheck());
     if (request.method === 'GET' && url.pathname === '/api/leaderboard') return json(response, 200, await getCurrentLeaderboard());
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
-    if (request.method === 'POST' && url.pathname === '/api/results-agent/run') return json(response, 200, await runResultsAgentCycle());
+    if (request.method === 'POST' && url.pathname === '/api/results-agent/run') {
+      const permission = getResultsAgentRunPermission({
+        dryRunRequested: url.searchParams.get('dryRun') === 'true',
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      return json(response, 200, await runResultsAgentCycle(new Date(), { dryRun: permission.dryRun }));
+    }
     if (url.pathname.startsWith('/api/')) return json(response, 404, { error: 'Not found' });
     if (request.method === 'GET' || request.method === 'HEAD') return serveFrontend(request, response, url.pathname);
     return json(response, 404, { error: 'Not found' });
@@ -34,9 +41,13 @@ function json(response: ServerResponse, status: number, payload: unknown) {
     'content-type': 'application/json',
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET,POST,OPTIONS',
-    'access-control-allow-headers': 'content-type'
+    'access-control-allow-headers': 'content-type,x-results-agent-secret'
   });
   response.end(JSON.stringify(payload));
+}
+
+function singleHeaderValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function serveFrontend(request: IncomingMessage, response: ServerResponse, pathname: string) {

@@ -40,6 +40,7 @@ Still required before live use:
 - set `RESULTS_PROVIDER=sportmonks`
 - set `RESULTS_API_BASE_URL=https://api.sportmonks.com`
 - set `RESULTS_COMPETITION_ID` and `RESULTS_SEASON`
+- use `RESULTS_WRITE_MODE=dry-run` for provider response checks before writes
 - complete confirmed provider fixture mapping
 - protect write automation with `RESULTS_AGENT_SECRET`
 
