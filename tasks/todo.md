@@ -9,7 +9,7 @@
 - [x] Add targeted simulation tests using real SQLite persistence.
 - [x] Run targeted tests and `npm run build`.
 - [x] Run `npm run simulate:reset` and `npm run simulate:matchday1`.
-- [ ] Commit, push, and verify `HEAD == origin/main`.
+- [x] Commit, push, and verify `HEAD == origin/main`.
 
 ## Review
 
