@@ -4,6 +4,11 @@ import https from 'node:https';
 const targetUrl = process.env.RENDER_KEEPALIVE_URL || 'https://jalka-mm.onrender.com';
 const timeoutMs = Number(process.env.RENDER_KEEPALIVE_TIMEOUT_MS || 30000);
 const attempts = Number(process.env.RENDER_KEEPALIVE_ATTEMPTS || 3);
+const retryDelayMs = Number(process.env.RENDER_KEEPALIVE_RETRY_DELAY_MS || 2000);
+const strict = process.env.RENDER_KEEPALIVE_STRICT === 'true';
+
+let reachedTarget = false;
+let lastResult;
 
 for (let attempt = 1; attempt <= attempts; attempt += 1) {
   try {
@@ -23,8 +28,11 @@ for (let attempt = 1; attempt <= attempts; attempt += 1) {
       bodyPreview
     }, null, 2));
 
+    reachedTarget = true;
+    lastResult = { status: response.status, ok: response.ok };
     if (response.ok) process.exit(0);
   } catch (error) {
+    lastResult = { error: error instanceof Error ? error.message : String(error) };
     console.error(JSON.stringify({
       ok: false,
       attempt,
@@ -34,9 +42,29 @@ for (let attempt = 1; attempt <= attempts; attempt += 1) {
     }, null, 2));
   }
 
-  if (attempt < attempts) await sleep(2000);
+  if (attempt < attempts) await sleep(retryDelayMs);
 }
 
+if (!strict && reachedTarget) {
+  console.warn(JSON.stringify({
+    ok: true,
+    url: targetUrl,
+    checkedAt: new Date().toISOString(),
+    keepaliveAccepted: true,
+    message: 'Render was reached but did not return 2xx before retries ended. Treating keepalive as non-fatal.',
+    lastResult
+  }, null, 2));
+  process.exit(0);
+}
+
+console.error(JSON.stringify({
+  ok: false,
+  url: targetUrl,
+  checkedAt: new Date().toISOString(),
+  keepaliveAccepted: false,
+  strict,
+  lastResult
+}, null, 2));
 process.exit(1);
 
 async function fetchWithTimeout(url, timeout) {

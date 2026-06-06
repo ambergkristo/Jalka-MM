@@ -128,6 +128,8 @@ npm run ping:render
 
 This is a lightweight keepalive helper. GitHub scheduled workflows can be delayed by GitHub's runner availability, so a paid always-on Render instance remains the most reliable option if zero hibernation is required.
 
+The scheduled workflow runs in non-strict mode. It retries cold starts for a longer window and treats temporary non-2xx Render responses as a successful wake attempt when the service was reached, so the keepalive job does not create repeated red GitHub Actions runs during transient Render 503 responses.
+
 ## Routes
 
 - `/`: Premium mock-data landing dashboard with hero status, Today's Matches, Latest Results, Top 5 Leaderboard, Group Leaders, and Quick Navigation.

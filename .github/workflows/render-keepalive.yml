@@ -28,6 +28,8 @@ jobs:
       - name: Ping Render URL
         env:
           RENDER_KEEPALIVE_URL: https://jalka-mm.onrender.com
-          RENDER_KEEPALIVE_TIMEOUT_MS: 30000
-          RENDER_KEEPALIVE_ATTEMPTS: 3
+          RENDER_KEEPALIVE_TIMEOUT_MS: 45000
+          RENDER_KEEPALIVE_ATTEMPTS: 6
+          RENDER_KEEPALIVE_RETRY_DELAY_MS: 10000
+          RENDER_KEEPALIVE_STRICT: false
         run: node scripts/ping-render.mjs
