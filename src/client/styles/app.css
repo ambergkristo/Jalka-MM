@@ -1926,6 +1926,136 @@ td a {
   gap: 10px;
 }
 
+.operator-auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.operator-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.operator-filter {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--white);
+  font-weight: 850;
+}
+
+.operator-filter.active {
+  border-color: rgba(212, 175, 55, .48);
+  background: rgba(212, 175, 55, .16);
+  color: #f8e6a0;
+}
+
+.operator-match-list {
+  display: grid;
+  gap: 10px;
+}
+
+.operator-match-card {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+  color: inherit;
+  text-align: left;
+}
+
+.operator-match-card.active {
+  border-color: rgba(212, 175, 55, .45);
+  background: rgba(212, 175, 55, .10);
+}
+
+.operator-match-card-topline,
+.operator-match-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.operator-match-card-topline strong {
+  color: var(--gold);
+  font-size: .9rem;
+}
+
+.operator-match-card small {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.operator-match-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.operator-match-vs {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.operator-match-action,
+.operator-score-pill {
+  font-size: .76rem;
+  font-weight: 900;
+}
+
+.operator-match-action {
+  color: var(--muted);
+}
+
+.operator-score-pill {
+  color: var(--white);
+}
+
+.operator-selected-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.operator-selected-summary div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .03);
+}
+
+.operator-selected-summary span {
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.operator-selected-summary strong {
+  color: var(--white);
+  font-size: .95rem;
+}
+
+.operator-scorer-section {
+  display: grid;
+  gap: 12px;
+}
+
 .operator-match-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1992,6 +2122,12 @@ td a {
 }
 
 .operator-remove {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+  color: var(--white);
   justify-self: start;
 }
 
@@ -2069,6 +2205,19 @@ td a {
   }
   .group-leader-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .operator-match-card {
+    padding: 14px;
+  }
+  .operator-scorer-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    align-items: end;
+  }
+  .operator-score-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .operator-selected-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .leaderboard-table-head,
   .leaderboard-row {
@@ -2152,5 +2301,8 @@ td a {
   .knockout-progression {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     align-items: start;
+  }
+  .operator-match-teams {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
 }

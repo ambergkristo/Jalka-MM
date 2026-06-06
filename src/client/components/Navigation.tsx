@@ -2,7 +2,8 @@ const links = [
   { href: '/', label: 'Avaleht' },
   { href: '/results', label: 'Tulemused' },
   { href: '/leaderboard', label: 'Edetabel' },
-  { href: '/tournament', label: 'Turniir' }
+  { href: '/tournament', label: 'Turniir' },
+  { href: '/operator', label: 'Operaator' }
 ];
 
 export function Navigation({ pathname }: { pathname: string }) {
