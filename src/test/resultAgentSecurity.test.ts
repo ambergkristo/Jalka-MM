@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getResultAgentRunPermission } from '../server/results/resultAgentSecurity.js';
+import { getManualResultPermission, getResultAgentRunPermission } from '../server/results/resultAgentSecurity.js';
 import type { ResultProviderConfig } from '../server/results/resultProviderConfig.js';
 
 const baseConfig: ResultProviderConfig = {
@@ -40,6 +40,31 @@ describe('result agent run permission', () => {
     expect(getResultAgentRunPermission({ config: { ...baseConfig, provider: 'sportmonks', writeMode: 'live', agentSecret: 'secret' }, providedSecret: 'secret' })).toMatchObject({
       allowed: true,
       dryRun: false,
+      status: 200
+    });
+  });
+});
+
+describe('manual result permission', () => {
+  it('requires a configured secret even in mock mode', () => {
+    expect(getManualResultPermission({ config: baseConfig })).toMatchObject({
+      allowed: false,
+      status: 403,
+      error: 'RESULTS_AGENT_SECRET is required for manual result confirmation.'
+    });
+  });
+
+  it('rejects wrong manual confirmation secret', () => {
+    expect(getManualResultPermission({ config: { ...baseConfig, agentSecret: 'secret' }, providedSecret: 'wrong' })).toMatchObject({
+      allowed: false,
+      status: 403,
+      error: 'Invalid results-agent secret.'
+    });
+  });
+
+  it('allows manual confirmation with matching secret', () => {
+    expect(getManualResultPermission({ config: { ...baseConfig, agentSecret: 'secret' }, providedSecret: 'secret' })).toMatchObject({
+      allowed: true,
       status: 200
     });
   });

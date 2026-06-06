@@ -31,6 +31,7 @@ async function migrateSqlite(): Promise<void> {
     CREATE TABLE IF NOT EXISTS leaderboard_metadata (id TEXT PRIMARY KEY, last_rebuild_at TEXT NOT NULL, players_processed INTEGER NOT NULL, matches_processed INTEGER NOT NULL, changed_entries INTEGER NOT NULL, warnings_json TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_standings (group_id TEXT NOT NULL, team_id TEXT NOT NULL, rank INTEGER NOT NULL, played INTEGER NOT NULL, wins INTEGER NOT NULL, draws INTEGER NOT NULL, losses INTEGER NOT NULL, goals_for INTEGER NOT NULL, goals_against INTEGER NOT NULL, goal_difference INTEGER NOT NULL, points INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (group_id, team_id));
     CREATE TABLE IF NOT EXISTS top_scorer_standings (id TEXT PRIMARY KEY, rank INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, goals INTEGER NOT NULL, assists INTEGER, minutes_played INTEGER, updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS result_manual_corrections (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, previous_home_score INTEGER, previous_away_score INTEGER, new_home_score INTEGER NOT NULL, new_away_score INTEGER NOT NULL, previous_status TEXT, new_status TEXT NOT NULL, source TEXT NOT NULL, confirmed_by TEXT NOT NULL, decided_after TEXT, penalty_winner_team_id TEXT, penalty_winner_team_code TEXT, notes TEXT, created_at TEXT NOT NULL);
   `);
 }
 
@@ -50,6 +51,7 @@ async function migratePostgres(): Promise<void> {
     CREATE TABLE IF NOT EXISTS leaderboard_metadata (id TEXT PRIMARY KEY, last_rebuild_at TEXT NOT NULL, players_processed INTEGER NOT NULL, matches_processed INTEGER NOT NULL, changed_entries INTEGER NOT NULL, warnings_json TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS group_standings (group_id TEXT NOT NULL, team_id TEXT NOT NULL, rank INTEGER NOT NULL, played INTEGER NOT NULL, wins INTEGER NOT NULL, draws INTEGER NOT NULL, losses INTEGER NOT NULL, goals_for INTEGER NOT NULL, goals_against INTEGER NOT NULL, goal_difference INTEGER NOT NULL, points INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (group_id, team_id));
     CREATE TABLE IF NOT EXISTS top_scorer_standings (id TEXT PRIMARY KEY, rank INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, goals INTEGER NOT NULL, assists INTEGER, minutes_played INTEGER, updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS result_manual_corrections (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, previous_home_score INTEGER, previous_away_score INTEGER, new_home_score INTEGER NOT NULL, new_away_score INTEGER NOT NULL, previous_status TEXT, new_status TEXT NOT NULL, source TEXT NOT NULL, confirmed_by TEXT NOT NULL, decided_after TEXT, penalty_winner_team_id TEXT, penalty_winner_team_code TEXT, notes TEXT, created_at TEXT NOT NULL);
   `);
 }
 
@@ -66,6 +68,7 @@ export async function resetDevData(options: { allowDestructive?: boolean; confir
   await migrate();
   await db.exec(`
     DELETE FROM top_scorer_standings;
+    DELETE FROM result_manual_corrections;
     DELETE FROM group_standings;
     DELETE FROM leaderboard_metadata;
     DELETE FROM leaderboard_entries;

@@ -21,6 +21,7 @@
     "simulate:reset": "node --run build:server && node dist/tools/simulateReset.js",
     "simulate:matchday1": "node --run build:server && node dist/tools/simulateMatchday1.js",
     "simulate:matchday1:disagreement": "node --run build:server && node dist/tools/simulateMatchday1.js --scenario=disagreement",
+    "results:confirm": "node --run build:server && node dist/tools/confirmResult.js",
     "ping:render": "node scripts/ping-render.mjs"
   },
   "dependencies": {

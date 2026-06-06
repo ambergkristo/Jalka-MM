@@ -5,8 +5,9 @@ import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
+import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { getCurrentLeaderboard, getResultsAgentRunPermission, getResultsAgentStatus, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 
 await seedTournamentData();
 
@@ -33,6 +34,13 @@ createServer(async (request, response) => {
       if (!permission.allowed) return json(response, permission.status, { error: permission.error });
       return json(response, 200, await runResultsAgentCycle(new Date(), { dryRun: permission.dryRun }));
     }
+    if (request.method === 'POST' && url.pathname === '/api/results-agent/manual-confirm') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      return json(response, 200, await confirmManualResultRuntime(await readJsonBody(request) as unknown as ManualResultConfirmationInput));
+    }
     if (url.pathname.startsWith('/api/')) return json(response, 404, { error: 'Not found' });
     if (request.method === 'GET' || request.method === 'HEAD') return serveFrontend(request, response, url.pathname);
     return json(response, 404, { error: 'Not found' });
@@ -53,6 +61,22 @@ function json(response: ServerResponse, status: number, payload: unknown) {
 
 function singleHeaderValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
+  return new Promise((resolveBody, reject) => {
+    const chunks: Buffer[] = [];
+    request.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+    request.on('end', () => {
+      try {
+        const raw = Buffer.concat(chunks).toString('utf8').trim();
+        resolveBody(raw ? JSON.parse(raw) as Record<string, unknown> : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    request.on('error', reject);
+  });
 }
 
 function serveFrontend(request: IncomingMessage, response: ServerResponse, pathname: string) {

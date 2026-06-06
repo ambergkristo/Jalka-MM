@@ -112,7 +112,62 @@ Consensus rules:
 
 `RESULT_CONFIRMATION_DELAY_MINUTES` defaults to `10`. It is only the single-provider fallback delay.
 
-Future manual override can confirm a result through the same model using `confirmationConfidence=manual`, but no manual UI is implemented yet.
+Manual override can confirm or correct a result through the same model using `confirmationConfidence=manual`. There is no public admin UI; the fallback is an operator-only CLI and protected API endpoint.
+
+## Manual Result Correction
+
+Use manual confirmation only when provider data is missing, delayed, wrong, mapped to the wrong fixture, or leaves a match in `NEEDS_REVIEW`.
+
+CLI example:
+
+```bash
+npm run results:confirm -- --matchId=1 --homeScore=2 --awayScore=1 --decidedAfter=FT --source=manual --confirmedBy=operator --notes="Verified from official broadcast"
+```
+
+Protected API endpoint:
+
+```http
+POST /api/results-agent/manual-confirm
+x-results-agent-secret: <RESULTS_AGENT_SECRET>
+content-type: application/json
+
+{
+  "matchId": 1,
+  "homeScore": 2,
+  "awayScore": 1,
+  "status": "CONFIRMED_FINAL",
+  "decidedAfter": "FT",
+  "source": "manual",
+  "confirmedBy": "operator",
+  "notes": "Verified from official broadcast"
+}
+```
+
+Security rules:
+
+- The CLI is for trusted server/operator environments only.
+- The API endpoint always requires `RESULTS_AGENT_SECRET`, regardless of mock/dry-run/live provider mode.
+- The secret must be sent as `x-results-agent-secret`.
+- The app never logs or returns the configured secret.
+
+Manual confirmation behavior:
+
+1. Validate that the match exists.
+2. Validate non-negative integer scores.
+3. Persist a `CONFIRMED_FINAL` result in `match_results`.
+4. Set `confirmationSource=manual` and `confirmationConfidence=manual`.
+5. Clear `NEEDS_REVIEW` metadata when a reviewed result is corrected.
+6. Rebuild and persist the leaderboard through the existing points engine.
+7. Update public dashboard/results/tournament state from persisted confirmed data.
+8. Write an audit row to `result_manual_corrections`.
+
+Correction behavior:
+
+- Same confirmed score submitted again: idempotent success; no duplicate leaderboard rows.
+- Different score for an already confirmed match: treated as a correction, audit stores previous and new score, and leaderboard is rebuilt.
+- Invalid match or invalid score: request fails safely and no result is persisted.
+
+Manual corrections do not bypass scoring rules or write public mock/frontend data directly.
 
 ## Leaderboard Rebuild
 

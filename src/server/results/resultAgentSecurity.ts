@@ -7,6 +7,12 @@ export interface ResultAgentRunPermission {
   error?: string;
 }
 
+export interface ManualResultPermission {
+  allowed: boolean;
+  status: number;
+  error?: string;
+}
+
 export function getResultAgentRunPermission(input: {
   config: ResultProviderConfig;
   dryRunRequested?: boolean;
@@ -36,4 +42,27 @@ export function getResultAgentRunPermission(input: {
   }
 
   return { allowed: true, dryRun: false, status: 200 };
+}
+
+export function getManualResultPermission(input: {
+  config: ResultProviderConfig;
+  providedSecret?: string;
+}): ManualResultPermission {
+  if (!input.config.agentSecret) {
+    return {
+      allowed: false,
+      status: 403,
+      error: 'RESULTS_AGENT_SECRET is required for manual result confirmation.'
+    };
+  }
+
+  if (input.providedSecret !== input.config.agentSecret) {
+    return {
+      allowed: false,
+      status: 403,
+      error: 'Invalid results-agent secret.'
+    };
+  }
+
+  return { allowed: true, status: 200 };
 }

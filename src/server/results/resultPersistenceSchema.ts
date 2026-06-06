@@ -110,6 +110,23 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       minutes_played INTEGER,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS result_manual_corrections (
+      id TEXT PRIMARY KEY,
+      match_id INTEGER NOT NULL,
+      previous_home_score INTEGER,
+      previous_away_score INTEGER,
+      new_home_score INTEGER NOT NULL,
+      new_away_score INTEGER NOT NULL,
+      previous_status TEXT,
+      new_status TEXT NOT NULL,
+      source TEXT NOT NULL,
+      confirmed_by TEXT NOT NULL,
+      decided_after TEXT,
+      penalty_winner_team_id TEXT,
+      penalty_winner_team_code TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    );
   `);
 
   await ensureColumn(db, 'match_results', 'minute', 'INTEGER');
@@ -146,6 +163,10 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
   await ensureColumn(db, 'leaderboard_entries', 'playoff_bonus_points', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn(db, 'leaderboard_entries', 'top_scorer_bonus_points', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn(db, 'leaderboard_entries', 'total_points', 'INTEGER NOT NULL DEFAULT 0');
+
+  await ensureColumn(db, 'result_manual_corrections', 'decided_after', 'TEXT');
+  await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_id', 'TEXT');
+  await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_code', 'TEXT');
 }
 
 async function ensureColumn(db: QueryableDatabase, table: string, column: string, definition: string): Promise<void> {

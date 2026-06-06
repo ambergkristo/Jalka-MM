@@ -1,5 +1,5 @@
 import { getResultAgentStatus, runResultUpdateCycle } from './resultAgent.js';
-import { getResultAgentRunPermission as resolveResultAgentRunPermission } from './resultAgentSecurity.js';
+import { getManualResultPermission as resolveManualResultPermission, getResultAgentRunPermission as resolveResultAgentRunPermission } from './resultAgentSecurity.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
 import { createResultProvider } from './resultProviderFactory.js';
 import { db } from '../db.js';
@@ -7,6 +7,7 @@ import { predictionRepository } from '../../domain/predictionRepository.js';
 import type { LeaderboardEntry, Player } from '../../domain/predictionRepository.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
+import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -20,6 +21,10 @@ export function getResultsAgentRunPermission(input: { dryRunRequested?: boolean;
   return resolveResultAgentRunPermission({ config: providerConfig, ...input });
 }
 
+export function getManualResultPermission(input: { providedSecret?: string }) {
+  return resolveManualResultPermission({ config: providerConfig, ...input });
+}
+
 export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boolean } = {}) {
   return runResultUpdateCycle({
     repository,
@@ -28,6 +33,15 @@ export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boole
     now,
     dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
     confirmationDelayMinutes: providerConfig.confirmationDelayMinutes
+  });
+}
+
+export function confirmManualResultRuntime(confirmation: ManualResultConfirmationInput) {
+  return confirmManualResult({
+    db,
+    repository,
+    leaderboardRepository: repository,
+    confirmation
   });
 }
 

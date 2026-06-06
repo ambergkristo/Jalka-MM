@@ -17,7 +17,7 @@ This audit covers the current MM 2026 Tournament & Prediction Tracker state befo
 | Final prediction data | Needs final data | Current import is a 24-player working import. Final 50+ player Excel still needs import. |
 | Playoff bracket gate | Ready | Public bracket stays placeholder-only until qualifier resolver supplies confirmed teams. |
 | Qualifier resolver | Release blocker before knockouts | Automatic group-to-playoff progression and best-third-place logic are deferred. |
-| Manual result correction | Risk | Model supports future manual confirmation concept, but no operator UI/tool exists yet. |
+| Manual result correction | Ready | Operator-only CLI and protected API fallback can confirm/correct results, rebuild leaderboard, and write audit trail. No public admin UI. |
 | Mobile usability | Needs final smoke test | Recent mobile/layout fixes are in place; final device pass is still required. |
 
 ## 2. Required Render Environment Variables
@@ -118,6 +118,14 @@ Run for DB readiness:
 
 ```bash
 npm run db:migrate
+```
+
+Run for manual fallback smoke testing:
+
+```bash
+npm run simulate:reset
+npm run results:confirm -- --matchId=1 --homeScore=2 --awayScore=1 --decidedAfter=FT --source=manual --confirmedBy=operator --notes="release smoke"
+npm run simulate:reset
 ```
 
 Run manually for keepalive verification:
@@ -245,6 +253,15 @@ Confirmed-results-only policy:
 - Public UI does not expose provisional final scores as official final scores.
 - Leaderboard rebuilds only after confirmed final results.
 
+Manual fallback:
+
+- Use `npm run results:confirm` only from a trusted environment.
+- Protected endpoint `POST /api/results-agent/manual-confirm` always requires `x-results-agent-secret`.
+- Manual confirmation writes `confirmationConfidence=manual`.
+- Same-score repeat is idempotent.
+- Different score for an already confirmed match is a correction and rebuilds the leaderboard.
+- Manual correction writes audit rows to `result_manual_corrections`.
+
 ## 7. Provider Readiness
 
 Recommended provider strategy:
@@ -322,8 +339,7 @@ Release blockers before knockout stage:
 
 Operational blockers before live result automation:
 
-- Manual correction/fallback flow is not implemented as an operator tool.
-- Provider disagreement handling stores `NEEDS_REVIEW`, but resolution still requires future manual workflow.
+- Provider disagreement handling stores `NEEDS_REVIEW`; operator resolution exists, but production runbook ownership must be assigned.
 - Real top scorer/event ingestion is not connected to a provider.
 
 ## 10. Known Acceptable Limitations
@@ -333,7 +349,7 @@ Acceptable before tournament start:
 - Playoff bracket remains placeholder-only.
 - Provider chain remains in mock/dry-run mode.
 - Top scorers are empty until confirmed scorer data exists.
-- Manual result correction is documented but not UI-based.
+- Manual result correction is operator-only and not UI-based.
 - Final UI smoke testing on real mobile devices remains a release task.
 
 Not acceptable before tournament start:
@@ -382,7 +398,7 @@ If provider results disagree:
 - Result becomes `NEEDS_REVIEW`.
 - Do not rebuild leaderboard.
 - Keep public result in confirming/review state.
-- Use a future manual/operator fallback to confirm the correct result.
+- Use `npm run results:confirm` or the protected manual-confirm endpoint to confirm the correct result after operator verification.
 
 ## 12. Next Sprint Recommendation
 
@@ -390,7 +406,7 @@ Recommended next sprint order:
 
 1. Final Excel import when final workbook arrives.
 2. Real provider dry-run / credential test.
-3. Manual result correction and audit fallback.
+3. Production runbook ownership for manual correction fallback.
 4. Qualifier resolver / group-to-playoff progression.
 5. Final production Render env and smoke test.
 
