@@ -11,15 +11,19 @@ npm run open-worldcup:discover
 Current discovery result:
 
 - API reachable: yes
+- Team endpoint reachable: yes, via `/get/teams`
 - Matches found: 104
 - Sample fixture data is returned
-- Confidence to auto-map fixtures into production is not ready yet
+- Team ids are now resolved to English team names before fixture matching
+- Confidence to auto-map fixtures into production is still conservative and must be reviewed
 - The generated candidate file is written to `imports/open-worldcup-fixtures-2026.candidate.json`
+- The generated team reference file is written to `imports/open-worldcup-teams-2026.candidate.json`
 
 Readiness notes:
 
 - Keep the provider disabled by default.
-- The hosted API currently returns match records, but the team labels are not specific enough for confident automatic fixture mapping.
+- The hosted API currently returns match records and a team list, so numeric ids can be resolved before mapping.
+- Fixture mapping still needs review before any production provider config is updated.
 - Review the candidate file before promoting any mapping into production provider config.
 
 Suggested env:

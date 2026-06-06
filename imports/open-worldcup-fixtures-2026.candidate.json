@@ -4,13 +4,21 @@
   "apiReachable": true,
   "hostedApi": true,
   "sourceRequiresHosting": false,
+  "teamEndpointReachable": true,
+  "teamsFound": 48,
   "matchesFound": 104,
-  "candidateMappingCanBeGenerated": false,
+  "candidateMappingCanBeGenerated": true,
+  "confidenceSummary": {
+    "high": 0,
+    "medium": 60,
+    "low": 44,
+    "unmatched": 44
+  },
   "sampleMatch": {
     "providerFixtureId": "1",
     "kickoffUtc": "2026-06-11T10:00:00.000Z",
-    "homeTeam": "1",
-    "awayTeam": "2",
+    "homeTeam": "Mexico",
+    "awayTeam": "South Africa",
     "status": "LIVE",
     "score": "0-0"
   },
@@ -32,800 +40,847 @@
     ]
   },
   "notes": [
-    "Hosted API returned match data."
+    "Hosted API returned match data.",
+    "Team endpoint returned 48 teams, so numeric ids can be resolved before mapping fixtures."
   ],
   "fixtures": [
     {
       "provider": "open-worldcup",
       "providerFixtureId": "1",
       "kickoffUtc": "2026-06-11T10:00:00.000Z",
-      "homeTeam": "1",
-      "awayTeam": "2",
+      "homeTeam": "Mexico",
+      "awayTeam": "South Africa",
       "venue": "1",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 1,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 1: kickoff 540m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "2",
       "kickoffUtc": "2026-06-11T17:00:00.000Z",
-      "homeTeam": "3",
-      "awayTeam": "4",
+      "homeTeam": "South Korea",
+      "awayTeam": "Czech Republic",
       "venue": "2",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 1: kickoff 120m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "3",
       "kickoffUtc": "2026-06-12T12:00:00.000Z",
-      "homeTeam": "5",
-      "awayTeam": "6",
+      "homeTeam": "Canada",
+      "awayTeam": "Bosnia and Herzegovina",
       "venue": "12",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 3,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 3: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "4",
       "kickoffUtc": "2026-06-12T15:00:00.000Z",
-      "homeTeam": "13",
-      "awayTeam": "14",
+      "homeTeam": "United States",
+      "awayTeam": "Paraguay",
       "venue": "16",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 2: kickoff 780m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "5",
       "kickoffUtc": "2026-06-13T18:00:00.000Z",
-      "homeTeam": "11",
-      "awayTeam": "12",
+      "homeTeam": "Haiti",
+      "awayTeam": "Scotland",
       "venue": "9",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 5,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 5: kickoff 420m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "6",
       "kickoffUtc": "2026-06-13T18:00:00.000Z",
-      "homeTeam": "15",
-      "awayTeam": "16",
+      "homeTeam": "Australia",
+      "awayTeam": "Turkey",
       "venue": "13",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 4: kickoff 1020m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "7",
       "kickoffUtc": "2026-06-13T15:00:00.000Z",
-      "homeTeam": "9",
-      "awayTeam": "10",
+      "homeTeam": "Brazil",
+      "awayTeam": "Morocco",
       "venue": "11",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 7,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 7: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "8",
       "kickoffUtc": "2026-06-13T09:00:00.000Z",
-      "homeTeam": "7",
-      "awayTeam": "8",
+      "homeTeam": "Qatar",
+      "awayTeam": "Switzerland",
       "venue": "15",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 8,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 8: kickoff 600m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "9",
       "kickoffUtc": "2026-06-14T16:00:00.000Z",
-      "homeTeam": "19",
-      "awayTeam": "20",
+      "homeTeam": "Ivory Coast",
+      "awayTeam": "Ecuador",
       "venue": "10",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 9: kickoff 420m off, same day yes, home none, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "10",
       "kickoffUtc": "2026-06-14T09:00:00.000Z",
-      "homeTeam": "17",
-      "awayTeam": "18",
+      "homeTeam": "Germany",
+      "awayTeam": "Curaçao",
       "venue": "5",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 10,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 10: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "11",
       "kickoffUtc": "2026-06-14T12:00:00.000Z",
-      "homeTeam": "21",
-      "awayTeam": "22",
+      "homeTeam": "Netherlands",
+      "awayTeam": "Japan",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 11,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 11: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "12",
       "kickoffUtc": "2026-06-14T17:00:00.000Z",
-      "homeTeam": "23",
-      "awayTeam": "24",
+      "homeTeam": "Sweden",
+      "awayTeam": "Tunisia",
       "venue": "3",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 10: kickoff 0m off, home none, away none"
+      "notes": "LIVE; scorers/events not present in sample; match 10: kickoff 0m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "13",
       "kickoffUtc": "2026-06-15T15:00:00.000Z",
-      "homeTeam": "27",
-      "awayTeam": "28",
+      "homeTeam": "Iran",
+      "awayTeam": "New Zealand",
       "venue": "16",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 15: kickoff 600m off, same day no, home partial, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "14",
       "kickoffUtc": "2026-06-15T09:00:00.000Z",
-      "homeTeam": "29",
-      "awayTeam": "30",
+      "homeTeam": "Spain",
+      "awayTeam": "Cape Verde",
       "venue": "7",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 14: kickoff 420m off, same day yes, home exact, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "15",
       "kickoffUtc": "2026-06-15T09:00:00.000Z",
-      "homeTeam": "25",
-      "awayTeam": "26",
+      "homeTeam": "Belgium",
+      "awayTeam": "Egypt",
       "venue": "14",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 16,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 16: kickoff 600m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "16",
       "kickoffUtc": "2026-06-15T15:00:00.000Z",
-      "homeTeam": "31",
-      "awayTeam": "32",
+      "homeTeam": "Saudi Arabia",
+      "awayTeam": "Uruguay",
       "venue": "8",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 13,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 13: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "17",
       "kickoffUtc": "2026-06-16T12:00:00.000Z",
-      "homeTeam": "33",
-      "awayTeam": "34",
+      "homeTeam": "France",
+      "awayTeam": "Senegal",
       "venue": "11",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 17,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 17: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "18",
       "kickoffUtc": "2026-06-16T15:00:00.000Z",
-      "homeTeam": "35",
-      "awayTeam": "36",
+      "homeTeam": "Iraq",
+      "awayTeam": "Norway",
       "venue": "9",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 18,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 18: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "19",
       "kickoffUtc": "2026-06-16T17:00:00.000Z",
-      "homeTeam": "37",
-      "awayTeam": "38",
+      "homeTeam": "Argentina",
+      "awayTeam": "Algeria",
       "venue": "6",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 19,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 19: kickoff 480m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "20",
       "kickoffUtc": "2026-06-16T18:00:00.000Z",
-      "homeTeam": "39",
-      "awayTeam": "40",
+      "homeTeam": "Austria",
+      "awayTeam": "Jordan",
       "venue": "15",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 20,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 20: kickoff 600m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "21",
       "kickoffUtc": "2026-06-17T09:00:00.000Z",
-      "homeTeam": "41",
-      "awayTeam": "42",
+      "homeTeam": "Portugal",
+      "awayTeam": "Democratic Republic of the Congo",
       "venue": "5",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 23: kickoff 480m off, same day yes, home exact, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "22",
       "kickoffUtc": "2026-06-17T12:00:00.000Z",
-      "homeTeam": "45",
-      "awayTeam": "46",
+      "homeTeam": "England",
+      "awayTeam": "Croatia",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 22,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 22: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "23",
       "kickoffUtc": "2026-06-17T17:00:00.000Z",
-      "homeTeam": "43",
-      "awayTeam": "44",
+      "homeTeam": "Uzbekistan",
+      "awayTeam": "Colombia",
       "venue": "1",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 23: kickoff 0m off, home none, away none"
+      "notes": "LIVE; scorers/events not present in sample; match 23: kickoff 0m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "24",
       "kickoffUtc": "2026-06-17T16:00:00.000Z",
-      "homeTeam": "47",
-      "awayTeam": "48",
+      "homeTeam": "Ghana",
+      "awayTeam": "Panama",
       "venue": "12",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 21,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 21: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "25",
       "kickoffUtc": "2026-06-18T16:00:00.000Z",
-      "homeTeam": "1",
-      "awayTeam": "3",
+      "homeTeam": "Mexico",
+      "awayTeam": "South Korea",
       "venue": "2",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 25: kickoff 0m off, home none, away none"
+      "notes": "LIVE; scorers/events not present in sample; match 25: kickoff 0m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "26",
       "kickoffUtc": "2026-06-18T09:00:00.000Z",
-      "homeTeam": "8",
-      "awayTeam": "6",
+      "homeTeam": "Switzerland",
+      "awayTeam": "Bosnia and Herzegovina",
       "venue": "16",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 26,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 26: kickoff 600m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "27",
       "kickoffUtc": "2026-06-18T12:00:00.000Z",
-      "homeTeam": "5",
-      "awayTeam": "7",
+      "homeTeam": "Canada",
+      "awayTeam": "Qatar",
       "venue": "13",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 27,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 27: kickoff 600m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "28",
       "kickoffUtc": "2026-06-18T09:00:00.000Z",
-      "homeTeam": "4",
-      "awayTeam": "2",
+      "homeTeam": "Czech Republic",
+      "awayTeam": "South Africa",
       "venue": "7",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 25: kickoff 420m off, same day yes, home none, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "29",
       "kickoffUtc": "2026-06-19T18:00:00.000Z",
-      "homeTeam": "9",
-      "awayTeam": "11",
+      "homeTeam": "Brazil",
+      "awayTeam": "Haiti",
       "venue": "10",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 29,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 29: kickoff 390m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "30",
       "kickoffUtc": "2026-06-19T15:00:00.000Z",
-      "homeTeam": "12",
-      "awayTeam": "10",
+      "homeTeam": "Scotland",
+      "awayTeam": "Morocco",
       "venue": "9",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 30,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 30: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "31",
       "kickoffUtc": "2026-06-19T09:00:00.000Z",
-      "homeTeam": "13",
-      "awayTeam": "15",
+      "homeTeam": "United States",
+      "awayTeam": "Australia",
       "venue": "14",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 32: kickoff 600m off, same day yes, home none, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "32",
       "kickoffUtc": "2026-06-19T17:00:00.000Z",
-      "homeTeam": "16",
-      "awayTeam": "14",
+      "homeTeam": "Turkey",
+      "awayTeam": "Paraguay",
       "venue": "15",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 4: kickoff 9600m off, same day no, home none, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "33",
       "kickoffUtc": "2026-06-20T13:00:00.000Z",
-      "homeTeam": "17",
-      "awayTeam": "19",
+      "homeTeam": "Germany",
+      "awayTeam": "Ivory Coast",
       "venue": "12",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 33: kickoff 420m off, same day yes, home exact, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "34",
       "kickoffUtc": "2026-06-20T16:00:00.000Z",
-      "homeTeam": "20",
-      "awayTeam": "18",
+      "homeTeam": "Ecuador",
+      "awayTeam": "Curaçao",
       "venue": "6",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 34,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 34: kickoff 480m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "35",
       "kickoffUtc": "2026-06-20T09:00:00.000Z",
-      "homeTeam": "21",
-      "awayTeam": "23",
+      "homeTeam": "Netherlands",
+      "awayTeam": "Sweden",
       "venue": "5",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 35,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 35: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "36",
       "kickoffUtc": "2026-06-20T19:00:00.000Z",
-      "homeTeam": "24",
-      "awayTeam": "22",
+      "homeTeam": "Tunisia",
+      "awayTeam": "Japan",
       "venue": "3",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 36,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 36: kickoff 540m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "37",
       "kickoffUtc": "2026-06-21T09:00:00.000Z",
-      "homeTeam": "25",
-      "awayTeam": "27",
+      "homeTeam": "Belgium",
+      "awayTeam": "Iran",
       "venue": "16",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 39: kickoff 600m off, same day yes, home exact, away partial"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "38",
       "kickoffUtc": "2026-06-21T15:00:00.000Z",
-      "homeTeam": "28",
-      "awayTeam": "26",
+      "homeTeam": "New Zealand",
+      "awayTeam": "Egypt",
       "venue": "13",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 40,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 40: kickoff 600m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "39",
       "kickoffUtc": "2026-06-21T09:00:00.000Z",
-      "homeTeam": "29",
-      "awayTeam": "31",
+      "homeTeam": "Spain",
+      "awayTeam": "Saudi Arabia",
       "venue": "7",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 38,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 38: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "40",
       "kickoffUtc": "2026-06-21T15:00:00.000Z",
-      "homeTeam": "32",
-      "awayTeam": "30",
+      "homeTeam": "Uruguay",
+      "awayTeam": "Cape Verde",
       "venue": "8",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 37: kickoff 420m off, same day yes, home exact, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "41",
       "kickoffUtc": "2026-06-22T14:00:00.000Z",
-      "homeTeam": "33",
-      "awayTeam": "35",
+      "homeTeam": "France",
+      "awayTeam": "Iraq",
       "venue": "10",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 42,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 42: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "42",
       "kickoffUtc": "2026-06-22T17:00:00.000Z",
-      "homeTeam": "36",
-      "awayTeam": "34",
+      "homeTeam": "Norway",
+      "awayTeam": "Senegal",
       "venue": "11",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 43: kickoff 0m off, home none, away none"
+      "notes": "LIVE; scorers/events not present in sample; match 43: kickoff 0m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "43",
       "kickoffUtc": "2026-06-22T09:00:00.000Z",
-      "homeTeam": "37",
-      "awayTeam": "39",
+      "homeTeam": "Argentina",
+      "awayTeam": "Austria",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 43,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 43: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "44",
       "kickoffUtc": "2026-06-22T17:00:00.000Z",
-      "homeTeam": "40",
-      "awayTeam": "38",
+      "homeTeam": "Jordan",
+      "awayTeam": "Algeria",
       "venue": "15",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 43: kickoff 0m off, home none, away none"
+      "notes": "LIVE; scorers/events not present in sample; match 43: kickoff 0m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "45",
       "kickoffUtc": "2026-06-23T09:00:00.000Z",
-      "homeTeam": "41",
-      "awayTeam": "43",
+      "homeTeam": "Portugal",
+      "awayTeam": "Uzbekistan",
       "venue": "5",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 47,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 47: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "46",
       "kickoffUtc": "2026-06-23T16:00:00.000Z",
-      "homeTeam": "48",
-      "awayTeam": "46",
+      "homeTeam": "Panama",
+      "awayTeam": "Croatia",
       "venue": "12",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 46,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 46: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "47",
       "kickoffUtc": "2026-06-23T17:00:00.000Z",
-      "homeTeam": "44",
-      "awayTeam": "42",
+      "homeTeam": "Colombia",
+      "awayTeam": "Democratic Republic of the Congo",
       "venue": "2",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 47: kickoff 0m off, home none, away none"
+      "notes": "LIVE; scorers/events not present in sample; match 47: kickoff 0m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "48",
       "kickoffUtc": "2026-06-23T13:00:00.000Z",
-      "homeTeam": "45",
-      "awayTeam": "47",
+      "homeTeam": "England",
+      "awayTeam": "Ghana",
       "venue": "9",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 45,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 45: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "49",
       "kickoffUtc": "2026-06-24T15:00:00.000Z",
-      "homeTeam": "12",
-      "awayTeam": "9",
+      "homeTeam": "Scotland",
+      "awayTeam": "Brazil",
       "venue": "8",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 49,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 49: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "50",
       "kickoffUtc": "2026-06-24T15:00:00.000Z",
-      "homeTeam": "10",
-      "awayTeam": "11",
+      "homeTeam": "Morocco",
+      "awayTeam": "Haiti",
       "venue": "7",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 50,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 50: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "51",
       "kickoffUtc": "2026-06-24T16:00:00.000Z",
-      "homeTeam": "2",
-      "awayTeam": "3",
+      "homeTeam": "South Africa",
+      "awayTeam": "South Korea",
       "venue": "3",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 48: kickoff 840m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "52",
       "kickoffUtc": "2026-06-24T16:00:00.000Z",
-      "homeTeam": "4",
-      "awayTeam": "1",
+      "homeTeam": "Czech Republic",
+      "awayTeam": "Mexico",
       "venue": "1",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 48: kickoff 840m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "53",
       "kickoffUtc": "2026-06-24T09:00:00.000Z",
-      "homeTeam": "6",
-      "awayTeam": "7",
+      "homeTeam": "Bosnia and Herzegovina",
+      "awayTeam": "Qatar",
       "venue": "14",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 52,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 52: kickoff 600m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "54",
       "kickoffUtc": "2026-06-24T09:00:00.000Z",
-      "homeTeam": "8",
-      "awayTeam": "5",
+      "homeTeam": "Switzerland",
+      "awayTeam": "Canada",
       "venue": "13",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 51,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 51: kickoff 600m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "55",
       "kickoffUtc": "2026-06-25T13:00:00.000Z",
-      "homeTeam": "18",
-      "awayTeam": "19",
+      "homeTeam": "Curaçao",
+      "awayTeam": "Ivory Coast",
       "venue": "10",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 55: kickoff 420m off, same day yes, home exact, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "56",
       "kickoffUtc": "2026-06-25T13:00:00.000Z",
-      "homeTeam": "20",
-      "awayTeam": "17",
+      "homeTeam": "Ecuador",
+      "awayTeam": "Germany",
       "venue": "11",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 56,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 56: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "57",
       "kickoffUtc": "2026-06-25T16:00:00.000Z",
-      "homeTeam": "14",
-      "awayTeam": "15",
+      "homeTeam": "Paraguay",
+      "awayTeam": "Australia",
       "venue": "15",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 60,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 60: kickoff 600m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "58",
       "kickoffUtc": "2026-06-25T16:00:00.000Z",
-      "homeTeam": "16",
-      "awayTeam": "13",
+      "homeTeam": "Turkey",
+      "awayTeam": "United States",
       "venue": "16",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 53: kickoff 900m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "59",
       "kickoffUtc": "2026-06-25T15:00:00.000Z",
-      "homeTeam": "22",
-      "awayTeam": "23",
+      "homeTeam": "Japan",
+      "awayTeam": "Sweden",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 57,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 57: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "60",
       "kickoffUtc": "2026-06-25T15:00:00.000Z",
-      "homeTeam": "24",
-      "awayTeam": "21",
+      "homeTeam": "Tunisia",
+      "awayTeam": "Netherlands",
       "venue": "6",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 58,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 58: kickoff 480m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "61",
       "kickoffUtc": "2026-06-26T12:00:00.000Z",
-      "homeTeam": "34",
-      "awayTeam": "35",
+      "homeTeam": "Senegal",
+      "awayTeam": "Iraq",
       "venue": "12",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 62,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 62: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "62",
       "kickoffUtc": "2026-06-26T12:00:00.000Z",
-      "homeTeam": "36",
-      "awayTeam": "33",
+      "homeTeam": "Norway",
+      "awayTeam": "France",
       "venue": "9",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 61,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 61: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "63",
       "kickoffUtc": "2026-06-26T17:00:00.000Z",
-      "homeTeam": "26",
-      "awayTeam": "27",
+      "homeTeam": "Egypt",
+      "awayTeam": "Iran",
       "venue": "14",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 63: kickoff 600m off, same day no, home exact, away partial"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "64",
       "kickoffUtc": "2026-06-26T17:00:00.000Z",
-      "homeTeam": "28",
-      "awayTeam": "25",
+      "homeTeam": "New Zealand",
+      "awayTeam": "Belgium",
       "venue": "13",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 64,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 64: kickoff 600m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "65",
       "kickoffUtc": "2026-06-26T16:00:00.000Z",
-      "homeTeam": "30",
-      "awayTeam": "31",
+      "homeTeam": "Cape Verde",
+      "awayTeam": "Saudi Arabia",
       "venue": "5",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 38: kickoff 7200m off, same day no, home none, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "66",
       "kickoffUtc": "2026-06-26T15:00:00.000Z",
-      "homeTeam": "32",
-      "awayTeam": "29",
+      "homeTeam": "Uruguay",
+      "awayTeam": "Spain",
       "venue": "2",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 66,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 66: kickoff 540m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "67",
       "kickoffUtc": "2026-06-27T14:00:00.000Z",
-      "homeTeam": "48",
-      "awayTeam": "45",
+      "homeTeam": "Panama",
+      "awayTeam": "England",
       "venue": "11",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 67,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 67: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "68",
       "kickoffUtc": "2026-06-27T14:00:00.000Z",
-      "homeTeam": "46",
-      "awayTeam": "47",
+      "homeTeam": "Croatia",
+      "awayTeam": "Ghana",
       "venue": "10",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 68,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 68: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "69",
       "kickoffUtc": "2026-06-27T18:00:00.000Z",
-      "homeTeam": "38",
-      "awayTeam": "39",
+      "homeTeam": "Algeria",
+      "awayTeam": "Austria",
       "venue": "6",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 69,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 69: kickoff 480m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "70",
       "kickoffUtc": "2026-06-27T18:00:00.000Z",
-      "homeTeam": "40",
-      "awayTeam": "37",
+      "homeTeam": "Jordan",
+      "awayTeam": "Argentina",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 70,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 70: kickoff 480m off, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "71",
       "kickoffUtc": "2026-06-27T16:30:00.000Z",
-      "homeTeam": "44",
-      "awayTeam": "41",
+      "homeTeam": "Colombia",
+      "awayTeam": "Portugal",
       "venue": "8",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "matchedInternalMatchId": 71,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 71: kickoff 420m off, same day yes, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
       "providerFixtureId": "72",
       "kickoffUtc": "2026-06-27T16:30:00.000Z",
-      "homeTeam": "42",
-      "awayTeam": "43",
+      "homeTeam": "Democratic Republic of the Congo",
+      "awayTeam": "Uzbekistan",
       "venue": "7",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 72: kickoff 420m off, same day yes, home none, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -836,7 +891,7 @@
       "venue": "16",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; no confident schedule match found"
+      "notes": "LIVE; scorers/events not present in sample; match 69: kickoff 420m off, same day yes, home none, away none"
     },
     {
       "provider": "open-worldcup",
@@ -1011,8 +1066,9 @@
       "awayTeam": "Winner Match 77",
       "venue": "10",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 89: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 89,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 89: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1022,8 +1078,9 @@
       "awayTeam": "Winner Match 75",
       "venue": "5",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 90: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 90,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 90: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1033,8 +1090,9 @@
       "awayTeam": "Winner Match 78",
       "venue": "11",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 91: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 91,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 91: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1044,8 +1102,9 @@
       "awayTeam": "Winner Match 80",
       "venue": "1",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 92: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 92,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 92: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1055,8 +1114,9 @@
       "awayTeam": "Winner Match 84",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 93: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 93,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 93: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1066,8 +1126,9 @@
       "awayTeam": "Winner Match 82",
       "venue": "14",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 94: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 94,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 94: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1077,8 +1138,9 @@
       "awayTeam": "Winner Match 88",
       "venue": "7",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 95: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 95,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 95: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1088,8 +1150,9 @@
       "awayTeam": "Winner Match 87",
       "venue": "13",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 96: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 96,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 96: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1099,8 +1162,9 @@
       "awayTeam": "Winner Match 90",
       "venue": "9",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 97: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 97,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 97: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1110,8 +1174,9 @@
       "awayTeam": "Winner Match 94",
       "venue": "16",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 98: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 98,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 98: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1133,7 +1198,7 @@
       "venue": "6",
       "rawStatus": "LIVE",
       "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 100: kickoff unknown, home none, away exact"
+      "notes": "LIVE; scorers/events not present in sample; match 100: kickoff unknown, same day no, home none, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1143,8 +1208,9 @@
       "awayTeam": "Winner Match 98",
       "venue": "4",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 101: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 101,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 101: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1154,8 +1220,9 @@
       "awayTeam": "Winner Match 100",
       "venue": "7",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 102: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 102,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 102: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1165,8 +1232,9 @@
       "awayTeam": "Loser Match 102",
       "venue": "8",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 103: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 103,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 103: kickoff unknown, same day no, home exact, away exact"
     },
     {
       "provider": "open-worldcup",
@@ -1176,8 +1244,9 @@
       "awayTeam": "Winner Match 102",
       "venue": "11",
       "rawStatus": "LIVE",
-      "confidence": "low",
-      "notes": "LIVE; scorers/events not present in sample; match 104: kickoff unknown, home exact, away exact"
+      "matchedInternalMatchId": 104,
+      "confidence": "medium",
+      "notes": "LIVE; scorers/events not present in sample; match 104: kickoff unknown, same day no, home exact, away exact"
     }
   ]
 }

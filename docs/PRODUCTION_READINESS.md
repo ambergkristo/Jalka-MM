@@ -13,7 +13,7 @@ This audit covers the current MM 2026 Tournament & Prediction Tracker state befo
 | Render deployment | Needs configuration | Existing Render URL can stay in use. Production env must be configured explicitly. |
 | Result-agent mock mode | Ready | Mock mode is default and safe for local/manual testing. |
 | Result-agent live mode | Needs configuration | Requires provider credentials, fixture mapping, and `RESULTS_AGENT_SECRET`. |
-| Provider chain | Needs configuration | API-Football, football-data.org, Sportmonks, and the open-worldcup candidate exist, but only verified mappings should be enabled in production. |
+| Provider chain | Needs configuration | API-Football, football-data.org, Sportmonks, and the open-worldcup candidate exist. The open-worldcup discovery now resolves `/get/teams` ids into candidate names, but only verified mappings should be enabled in production. |
 | Final prediction data | Needs final data | Current import is a 24-player working import. Final 50+ player Excel still needs import. |
 | Playoff bracket gate | Ready | Public bracket stays placeholder-only until qualifier resolver supplies confirmed teams. |
 | Qualifier resolver | Release blocker before knockouts | Automatic group-to-playoff progression and best-third-place logic are deferred. |
@@ -69,6 +69,11 @@ Open World Cup candidate:
 ```bash
 OPEN_WORLDCUP_API_BASE_URL=https://worldcup26.ir
 ```
+
+Discovery writes:
+
+- `imports/open-worldcup-fixtures-2026.candidate.json`
+- `imports/open-worldcup-teams-2026.candidate.json`
 
 football-data.org:
 
