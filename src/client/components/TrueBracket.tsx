@@ -1,6 +1,7 @@
 import type { BracketTree } from '../../domain/publicBracket.js';
 import { BracketMatchCard } from './BracketMatchCard.js';
 import { BracketSide } from './BracketSide.js';
+import { BracketTrophyVisual } from './BracketTrophyVisual.js';
 
 export function TrueBracket({ tree }: { tree: BracketTree }) {
   return (
@@ -11,6 +12,7 @@ export function TrueBracket({ tree }: { tree: BracketTree }) {
           <BracketSide side={tree.left} />
 
           <section className="true-bracket-center" aria-label="Finaal">
+            <BracketTrophyVisual />
             <div className="true-bracket-center-panel">
               <p>Finaal</p>
               <BracketMatchCard match={tree.final} compact />

@@ -18,6 +18,7 @@ describe('true playoff bracket', () => {
 
   it('renders public placeholder slots without pre-filled teams or scores', () => {
     const markup = renderToStaticMarkup(<TrueBracket tree={playoffBracketTree} />);
+    expect(markup).toContain('class="bracket-trophy"');
     expect(markup).toContain('A1');
     expect(markup).toContain('Parim 3. koht');
     expect(markup).toContain('1/16-3 võitja');
