@@ -68,7 +68,7 @@ Sprint 1 reset is in place. The repository now contains the foundation of the pu
 
 - Public React/Vite app shell
 - Mobile-first navigation
-- Premium Landing Dashboard with matchday, latest results, leaderboard, group leaders, and quick navigation sections
+- Premium Landing Dashboard with matchday, latest results, leaderboard preview, and quick navigation sections
 - Premium leaderboard with top-three highlighting and player profile links
 - Rich player profile pages with summary metrics, predicted champion, top scorer, knockout bracket, and group prediction accordions
 - Complete mock-data Tournament Center with summary metrics, Groups A-L standings, knockout progression, top scorers, statistics, and stage progress
@@ -91,6 +91,7 @@ Planning documents live in `docs/`:
 - `docs/SCORING_RULES.md`
 - `docs/RESULTS_AGENT.md`
 - `docs/RESULT_PROVIDER_OPTIONS.md`
+- `docs/PRODUCTION_READINESS.md`
 - `docs/UI_UX.md`
 - `docs/SPRINTS.md`
 - `docs/LEGACY_AUDIT.md`
@@ -132,21 +133,21 @@ The scheduled workflow runs in non-strict mode. It retries cold starts for a lon
 
 ## Routes
 
-- `/`: Premium mock-data landing dashboard with hero status, Today's Matches, Latest Results, Top 5 Leaderboard, Group Leaders, and Quick Navigation.
+- `/`: Public landing dashboard with hero status, upcoming matches, confirmed latest results, top 5 leaderboard, and quick navigation.
 - `/leaderboard`: Seed-data public leaderboard with rank movement, top-three highlighting, points, exact scores, and hit rate.
 - `/player/:playerId`: Seed-data public player profile with prediction summary, champion/top scorer picks, playoff bracket, and group prediction accordions.
-- `/results`: Placeholder matches and results page.
-- `/tournament`: Mock-data Tournament Center with tournament summary, all group standings, mobile-first knockout progression, top scorers, statistics, and match progress by stage.
+- `/results`: Public matches and results page with upcoming matches and confirmed results only.
+- `/tournament`: Tournament Center with group standings, gated placeholder-first play-off bracket, top scorers, and statistics.
 - `/not-found`: 404 page.
 
 ## API
 
 - `GET /api/state`: public read-only app state metadata.
 - `GET /api/health`: public health check.
-- `GET /api/leaderboard`: persisted leaderboard entries when available; seed leaderboard fallback before the first rebuild.
+- `GET /api/leaderboard`: persisted leaderboard entries when available; all-zero public leaderboard before confirmed results.
 - `GET /api/public-dashboard`: confirmed public results, recalculated group standings, group leaders, top scorers, tournament summary, and stage progress.
 - `GET /api/results`: upcoming public matches and confirmed results only.
-- `GET /api/tournament`: public group standings, top scorers, tournament summary, statistics, and stage progress.
+- `GET /api/tournament`: public group standings, top scorers, gated play-off bracket, tournament summary, statistics, and stage progress.
 - `GET /api/results-agent/status`: mock-default results-agent status with persisted stale-match and leaderboard rebuild metadata.
 - `POST /api/results-agent/run`: mock-default catch-up/update cycle endpoint that upserts match results and persisted leaderboard rows; must be protected before any real provider or production writes are connected.
 
