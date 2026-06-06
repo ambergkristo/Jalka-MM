@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { ProviderSpecificConfig } from './resultProviderConfig.js';
 import { toResultUpdate, type ResultProvider } from './resultProvider.js';
 import type { ResultUpdate, TrackedMatch } from './resultTypes.js';
@@ -32,20 +34,48 @@ interface OpenWorldCupGamesResponse {
   matches?: OpenWorldCupGameResponse[];
 }
 
+interface OpenWorldCupCandidateFile {
+  fixtures?: Array<{
+    providerFixtureId: string;
+    matchedInternalMatchId?: number;
+    confidence: 'high' | 'medium' | 'low';
+    notes?: string;
+  }>;
+}
+
+interface OpenWorldCupFixtureLookup {
+  fixtureIdByMatchId: Map<number, string>;
+}
+
+const OPEN_WORLDCUP_CANDIDATE_FILE = join(process.cwd(), 'imports', 'open-worldcup-fixtures-2026.candidate.json');
+const DEFAULT_FIXTURE_LOOKUP = loadFixtureLookup();
+
 export class OpenWorldCupResultProvider implements ResultProvider {
   readonly name = 'open-worldcup-result-provider';
   readonly mode = 'live' as const;
+  private gamesCachePromise?: Promise<OpenWorldCupGameResponse[]>;
 
   constructor(
     private readonly config: ProviderSpecificConfig,
-    private readonly fetchImpl: FetchLike = fetch
+    private readonly fetchImpl: FetchLike = fetch,
+    private readonly fixtureLookup: OpenWorldCupFixtureLookup = DEFAULT_FIXTURE_LOOKUP
   ) {}
 
   async fetchMatchUpdate(match: TrackedMatch, now: Date): Promise<ResultUpdate> {
     try {
-      const game = await this.fetchGame(String(match.id));
+      const providerFixtureId = this.fixtureLookup.fixtureIdByMatchId.get(match.id);
+      if (!providerFixtureId) {
+        return warningUpdate(
+          match,
+          now,
+          this.name,
+          `Open World Cup candidate map has no high-confidence fixture for internal match ${match.id}; skipped until manually verified.`
+        );
+      }
+
+      const game = await this.fetchGame(providerFixtureId);
       if (!game) {
-        return warningUpdate(match, now, this.name, `Open World Cup game ${match.id} response did not include match data.`);
+        return warningUpdate(match, now, this.name, `Open World Cup game ${providerFixtureId} response did not include match data.`);
       }
 
       const providerStatus = normalizeStatus(game);
@@ -54,7 +84,7 @@ export class OpenWorldCupResultProvider implements ResultProvider {
       return toResultUpdate({
         match,
         provider: this.name,
-        providerMatchId: String(game.id ?? match.id),
+        providerMatchId: providerFixtureId,
         providerStatus,
         now,
         homeScore,
@@ -75,8 +105,20 @@ export class OpenWorldCupResultProvider implements ResultProvider {
   private async fetchGame(gameId: string): Promise<OpenWorldCupGameResponse | undefined> {
     if (!this.config.apiBaseUrl) throw new Error('OPEN_WORLDCUP_API_BASE_URL is required for open-worldcup provider.');
 
+    const games = await this.fetchGames();
+    return games.find((game) => String(game.id ?? '') === gameId);
+  }
+
+  private async fetchGames(): Promise<OpenWorldCupGameResponse[]> {
+    if (!this.gamesCachePromise) this.gamesCachePromise = this.fetchGamesOnce();
+    return this.gamesCachePromise;
+  }
+
+  private async fetchGamesOnce(): Promise<OpenWorldCupGameResponse[]> {
+    if (!this.config.apiBaseUrl) throw new Error('OPEN_WORLDCUP_API_BASE_URL is required for open-worldcup provider.');
+
     const baseUrl = trimTrailingSlash(this.config.apiBaseUrl);
-    const directUrl = new URL(`${baseUrl}/get/game/${gameId}`);
+    const directUrl = new URL(`${baseUrl}/get/games`);
     const headers: Record<string, string> = { accept: 'application/json' };
     if (this.config.apiKey) headers.authorization = `Bearer ${this.config.apiKey}`;
 
@@ -86,7 +128,31 @@ export class OpenWorldCupResultProvider implements ResultProvider {
       throw new Error(`Open World Cup fixture request failed with HTTP ${response.status}${body ? `: ${body.slice(0, 160)}` : ''}`);
     }
     const payload = (await response.json()) as OpenWorldCupGamesResponse;
-    return firstGame(payload);
+    return collectGames(payload);
+  }
+}
+
+export function buildOpenWorldCupFixtureLookup(candidateFile: OpenWorldCupCandidateFile): OpenWorldCupFixtureLookup {
+  const fixtureIdByMatchId = new Map<number, string>();
+  for (const fixture of candidateFile.fixtures ?? []) {
+    if (fixture.confidence !== 'high') continue;
+    const internalMatchId = fixture.matchedInternalMatchId;
+    if (typeof internalMatchId !== 'number' || !Number.isInteger(internalMatchId) || internalMatchId <= 0) continue;
+    const providerFixtureId = fixture.providerFixtureId.trim();
+    if (!providerFixtureId) continue;
+    fixtureIdByMatchId.set(internalMatchId, providerFixtureId);
+  }
+  return { fixtureIdByMatchId };
+}
+
+export function loadFixtureLookup(): OpenWorldCupFixtureLookup {
+  try {
+    if (!existsSync(OPEN_WORLDCUP_CANDIDATE_FILE)) return { fixtureIdByMatchId: new Map() };
+    const raw = readFileSync(OPEN_WORLDCUP_CANDIDATE_FILE, 'utf8');
+    const parsed = JSON.parse(raw) as OpenWorldCupCandidateFile;
+    return buildOpenWorldCupFixtureLookup(parsed);
+  } catch {
+    return { fixtureIdByMatchId: new Map() };
   }
 }
 
@@ -114,10 +180,10 @@ function normalizeStatus(game: OpenWorldCupGameResponse): string {
   return raw.toUpperCase();
 }
 
-function firstGame(payload: OpenWorldCupGamesResponse): OpenWorldCupGameResponse | undefined {
+function collectGames(payload: OpenWorldCupGamesResponse): OpenWorldCupGameResponse[] {
   const direct = payload.response ?? payload.data ?? payload.games ?? payload.matches;
-  if (Array.isArray(direct)) return direct[0];
-  return direct ?? undefined;
+  if (Array.isArray(direct)) return direct.filter((item) => item && typeof item === 'object') as OpenWorldCupGameResponse[];
+  return direct && typeof direct === 'object' ? [direct as OpenWorldCupGameResponse] : [];
 }
 
 function warningUpdate(match: TrackedMatch, now: Date, provider: string, warning: string): ResultUpdate {

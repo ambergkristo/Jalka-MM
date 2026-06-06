@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { OpenWorldCupResultProvider, normalizeOpenWorldCupGame } from '../server/results/openWorldCupResultProvider.js';
+import { buildOpenWorldCupFixtureLookup, OpenWorldCupResultProvider, normalizeOpenWorldCupGame } from '../server/results/openWorldCupResultProvider.js';
 import type { TrackedMatch } from '../server/results/resultTypes.js';
 
 const match: TrackedMatch = {
@@ -23,6 +23,64 @@ describe('Open World Cup result provider', () => {
     expect(String(final.providerUpdatedAt ?? '')).toContain('2026-06-11');
   });
 
+  it('fetches mapped fixtures only for high-confidence candidate rows', async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      expect(url).toContain('/get/games');
+      return {
+        ok: true,
+        status: 200,
+        async text() {
+          return '';
+        },
+        async json() {
+          return { response: [sampleGame('finished', 3, 2, true, 42)] };
+        }
+      };
+    });
+    const provider = new OpenWorldCupResultProvider(
+      { apiBaseUrl: 'https://worldcup26.ir' },
+      fetchImpl,
+      buildOpenWorldCupFixtureLookup({
+        fixtures: [
+          { providerFixtureId: '42', matchedInternalMatchId: 1, confidence: 'high' }
+        ]
+      })
+    );
+
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(update).toMatchObject({
+      providerMatchId: '42',
+      status: 'FINISHED',
+      isFinal: true,
+      homeScore: 3,
+      awayScore: 2
+    });
+  });
+
+  it('skips non-high candidate rows without calling the API', async () => {
+    const fetchImpl = vi.fn();
+    const provider = new OpenWorldCupResultProvider(
+      { apiBaseUrl: 'https://worldcup26.ir' },
+      fetchImpl,
+      buildOpenWorldCupFixtureLookup({
+        fixtures: [
+          { providerFixtureId: '99', matchedInternalMatchId: 1, confidence: 'low' }
+        ]
+      })
+    );
+
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
+
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(update).toMatchObject({
+      provider: 'open-worldcup-result-provider',
+      isFinal: false,
+      warning: 'Open World Cup candidate map has no high-confidence fixture for internal match 1; skipped until manually verified.'
+    });
+  });
+
   it('returns a safe warning when the API base URL is missing', async () => {
     const fetchImpl = vi.fn();
     const provider = new OpenWorldCupResultProvider({} as never, fetchImpl);
@@ -41,7 +99,7 @@ function providerFor(game: Record<string, unknown>) {
   return new OpenWorldCupResultProvider(
     { apiBaseUrl: 'https://worldcup26.ir' },
     vi.fn(async (url) => {
-      expect(String(url)).toContain('/get/game/1');
+      expect(String(url)).toContain('/get/games');
       return {
         ok: true,
         status: 200,
@@ -56,9 +114,9 @@ function providerFor(game: Record<string, unknown>) {
   );
 }
 
-function sampleGame(status: string, homeScore = 0, awayScore = 0, finished = false) {
+function sampleGame(status: string, homeScore = 0, awayScore = 0, finished = false, id = 1) {
   return {
-    id: 1,
+    id,
     status,
     finished,
     local_date: '2026-06-11T19:00:00.000Z',

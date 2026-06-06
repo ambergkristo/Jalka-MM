@@ -62,15 +62,18 @@ describe('result agent update cycle', () => {
     expect(summary).toMatchObject({
       dryRun: true,
       checkedMatches: expect.any(Number),
+      observationsProcessed: expect.any(Number),
       updatesApplied: 0,
       updatedMatches: 0,
       finalizedResults: 0,
       confirmationPending: 0,
       needsReview: 0,
       leaderboardRebuilt: false,
-      warnings: ['Dry run completed without persisting result, run summary, or leaderboard changes.']
+      warnings: expect.arrayContaining(['Dry run completed without persisting result, run summary, or leaderboard changes.'])
     });
     expect(summary.checkedMatches).toBeGreaterThan(0);
+    expect(summary.observationsProcessed).toBeGreaterThan(0);
+    expect(summary.finalObservations + summary.provisionalObservations + summary.liveObservations + summary.scheduledObservations).toBeGreaterThan(0);
     await expect(repository.getFinalizedResults()).resolves.toEqual([]);
   });
 

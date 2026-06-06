@@ -59,3 +59,18 @@
 - `npm run build` passed.
 - `npx vitest run src/test/discoverApiFootball.test.ts` passed.
 - `npm run api-football:discover` failed clearly with the expected missing-key message because `API_FOOTBALL_API_KEY` is not set in the current environment.
+
+# Sprint 24 - Open WorldCup Dry-Run Provider Chain
+
+- [x] Add high-confidence-only open-worldcup fixture lookup to the provider path.
+- [x] Make result-agent dry-run run consensus without DB writes or leaderboard rebuilds.
+- [x] Add `npm run open-worldcup:dry-run`.
+- [x] Document the dry-run flow, high-confidence-only policy, and known knockout gap.
+- [x] Add targeted tests for open-worldcup mapping and dry-run behavior.
+- [x] Run build and targeted validation.
+
+## Review
+
+- `npm run build` passed.
+- `npx vitest run src/test/openWorldCupResultProvider.test.ts src/test/resultAgent.test.ts src/test/resultProviderFactory.test.ts` passed.
+- `npm run open-worldcup:dry-run -- --now=2026-06-11T19:30:00Z` reached the provider list endpoint, produced one observation, skipped no mappings in that run, and reported `dbWrites: 0`.

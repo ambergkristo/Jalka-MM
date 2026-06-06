@@ -293,7 +293,11 @@ Defaults are safe:
 - Missing API keys do not crash the app in mock mode.
 - Non-mock providers fail clearly if required provider config is missing.
 - `RESULTS_WRITE_MODE=live` requires `RESULTS_AGENT_SECRET`.
-- `RESULTS_WRITE_MODE=dry-run` fetches provider data but skips result, run summary, and leaderboard persistence.
+- `RESULTS_WRITE_MODE=dry-run` fetches provider data, runs consensus, but skips result, run summary, and leaderboard persistence.
+- Open World Cup dry-run uses `imports/open-worldcup-fixtures-2026.candidate.json` as a high-confidence-only lookup.
+- Medium, low, and unmatched open-worldcup rows are skipped and reported; they are never promoted automatically.
+- `npm run open-worldcup:dry-run -- --now=2026-06-11T19:30:00Z` exercises the open-worldcup candidate through the provider chain in dry-run mode.
+- Fixture `99` remains the known reversed knockout pairing and stays skipped until manual review.
 - `RESULT_CONFIRMATION_DELAY_MINUTES` defaults to `10` and controls only the single-provider fallback confirmation delay.
 
 `createResultProvider(config)` returns `MockResultProvider` by default. When `RESULTS_PROVIDER_CHAIN` contains multiple providers, it returns a `ProviderChainResultProvider` that fetches the primary provider first and asks verifier providers only when confirmation is useful.

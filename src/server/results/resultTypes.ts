@@ -107,11 +107,18 @@ export interface ResultAgentRunSummary extends ResultAgentStatus {
   startedAt: string;
   finishedAt: string;
   checkedMatches: number;
+  observationsProcessed: number;
   updatesApplied: number;
   finalizedResults: number;
   dryRun: boolean;
   updatedMatches: number;
   finalizedMatches: number;
+  wouldConfirm: number;
+  wouldNeedsReview: number;
+  finalObservations: number;
+  provisionalObservations: number;
+  liveObservations: number;
+  scheduledObservations: number;
   confirmationPending: number;
   needsReview: number;
   leaderboardRebuilt: boolean;
