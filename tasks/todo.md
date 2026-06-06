@@ -41,3 +41,21 @@
 - `npm run simulate:reset` passed.
 - `npm run results:confirm -- --matchId=1 --homeScore=2 --awayScore=1 --decidedAfter=FT --source=manual --confirmedBy=codex-test --notes=CLI-smoke-test` passed.
 - Final `npm run simulate:reset` passed and returned the app to pre-result mode.
+
+# Sprint 23 - API-Football Discovery
+
+- [x] Add a minimal `npm run api-football:discover` command.
+- [x] Read `API_FOOTBALL_API_KEY` and fail clearly when it is missing.
+- [x] Use `league=1` and `season=2026` for discovery calls.
+- [x] Write a candidate map under `imports/` without touching the production provider map.
+- [x] Add a focused test for the matching helper and missing-key guard.
+- [x] Document the discovery workflow and required env vars.
+- [x] Run the discovery command with the current environment and verify the missing-key failure path.
+- [ ] Run the discovery command with a real API key if one is available.
+- [ ] Verify commit hash and `origin/main` alignment after push.
+
+## Review
+
+- `npm run build` passed.
+- `npx vitest run src/test/discoverApiFootball.test.ts` passed.
+- `npm run api-football:discover` failed clearly with the expected missing-key message because `API_FOOTBALL_API_KEY` is not set in the current environment.
