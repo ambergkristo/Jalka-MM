@@ -1,11 +1,10 @@
 import { Card } from '../components/Card.js';
-import { GroupLeaderGrid } from '../components/GroupLeaderGrid.js';
 import { HeroCard } from '../components/HeroCard.js';
 import { LeaderboardPreview } from '../components/LeaderboardPreview.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { NavigationCards } from '../components/NavigationCards.js';
 import { ResultCard } from '../components/ResultCard.js';
-import { groupLeaders, heroMetrics, navigationCards } from '../data/mock.js';
+import { heroMetrics, navigationCards } from '../data/mock.js';
 import { confirmedLatestResults, getPublicMatchSection } from '../data/publicDashboard.js';
 import { usePersistedLeaderboardRows, usePublicDashboardSnapshot } from '../lib/publicApi.js';
 import { getZeroedLeaderboardRows } from '../lib/predictionViewModels.js';
@@ -15,7 +14,6 @@ export function LandingDashboard() {
   const leaderboardPreview = usePersistedLeaderboardRows(getZeroedLeaderboardRows()).slice(0, 5);
   const matchSection = getPublicMatchSection();
   const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
-  const visibleGroupLeaders = dashboardSnapshot?.groupLeaders ?? groupLeaders;
 
   return (
     <div className="landing-dashboard">
@@ -51,17 +49,6 @@ export function LandingDashboard() {
       </Card>
 
       <LeaderboardPreview rows={leaderboardPreview} />
-
-      <Card>
-        <div className="section-title-row">
-          <div>
-            <p className="eyebrow">Turniiri seis</p>
-            <h2>Alagruppide liidrid</h2>
-          </div>
-          <span className="section-count">A-L</span>
-        </div>
-        <GroupLeaderGrid groups={visibleGroupLeaders} />
-      </Card>
 
       <Card>
         <div className="section-title-row">

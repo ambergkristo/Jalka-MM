@@ -14,12 +14,13 @@ describe('public dashboard pages', () => {
     vi.useRealTimers();
   });
 
-  it('renders landing with opening fixtures, empty latest results, and group shortcuts', () => {
+  it('renders landing with opening fixtures, empty latest results, and no group leaders block', () => {
     const markup = renderToStaticMarkup(<LandingDashboard />);
 
     expect(markup).toContain('Avapäeva mängud');
     expect(markup).toContain('Lõppenud mänge veel ei ole.');
-    expect(markup).toContain('href="/tournament#group-a"');
+    expect(markup).not.toContain('Alagruppide liidrid');
+    expect(markup).not.toContain('href="/tournament#group-a"');
     expect(markup).not.toContain('Brasiilia');
     expect(markup).not.toContain('Horvaatia');
     expect(markup).not.toContain('Hispaania');
@@ -37,6 +38,8 @@ describe('public dashboard pages', () => {
     const markup = renderToStaticMarkup(<TournamentPage />);
     const bracketMarkup = markup.slice(markup.indexOf('Play-off'));
 
+    expect(markup).not.toContain('Turniiri kokkuvõte');
+    expect(markup).not.toContain('Mängude edenemine etappide kaupa');
     expect(bracketMarkup).toContain('A1');
     expect(bracketMarkup).toContain('Parim 3. koht');
     expect(bracketMarkup).toContain('1/16-1 võitja');

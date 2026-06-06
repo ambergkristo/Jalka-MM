@@ -487,7 +487,7 @@ main {
 
 .match-teams {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(78px, auto) minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -501,13 +501,17 @@ main {
   display: grid;
   place-items: center;
   min-width: 0;
+  padding: 0 8px;
   min-height: 38px;
   border: 1px solid rgba(212, 175, 55, .38);
   border-radius: var(--radius);
   background: rgba(212, 175, 55, .12);
   color: #ffe996;
-  font-size: .86rem;
+  font-size: .78rem;
   font-weight: 950;
+  line-height: 1.05;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .match-card-premium p,
@@ -527,6 +531,7 @@ main {
 }
 
 .result-team {
+  display: block;
   min-width: 0;
 }
 
@@ -1802,12 +1807,12 @@ td a {
     font-size: .96rem;
   }
   .match-teams {
-    grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(88px, auto) minmax(0, 1fr);
     gap: 10px;
   }
   .match-kickoff {
     min-height: 44px;
-    font-size: .9rem;
+    font-size: .86rem;
   }
   .result-scoreline {
     grid-template-columns: minmax(0, 1fr) 34px 10px 34px minmax(0, 1fr);
@@ -1818,7 +1823,10 @@ td a {
     height: 38px;
   }
   .match-card-grid,
-  .result-card-grid,
+  .result-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .navigation-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1891,6 +1899,10 @@ td a {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .group-standings-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .match-card-grid,
+  .result-card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .knockout-progression {
