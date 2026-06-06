@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+﻿import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import matchesSeed from '../data/worldcup2026/matches.json' with { type: 'json' };
@@ -6,6 +6,33 @@ import matchesSeed from '../data/worldcup2026/matches.json' with { type: 'json' 
 const DEFAULT_API_BASE_URL = 'https://worldcup26.ir';
 const CANDIDATE_FILE_PATH = fileURLToPath(new URL('../../imports/open-worldcup-fixtures-2026.candidate.json', import.meta.url));
 const TEAM_CANDIDATE_FILE_PATH = fileURLToPath(new URL('../../imports/open-worldcup-teams-2026.candidate.json', import.meta.url));
+const TEAM_ALIAS_BY_NORMALIZED_NAME: Record<string, string> = {
+  'bosnia': 'Bosnia and Herzegovina',
+  'bosnia and herzegovina': 'Bosnia and Herzegovina',
+  'cabo verde': 'Cabo Verde',
+  'cape verde': 'Cabo Verde',
+  'cote d ivoire': 'C?te d’Ivoire',
+  'curacao': 'Cura?ao',
+  'cura ao': 'Cura?ao',
+  'czech republic': 'Czechia',
+  'czechia': 'Czechia',
+  'democratic republic of the congo': 'Congo DR',
+  'congo dr': 'Congo DR',
+  'ir iran': 'IR Iran',
+  'iran': 'IR Iran',
+  'ivory coast': 'C?te d’Ivoire',
+  'korea republic': 'Korea Republic',
+  'south korea': 'Korea Republic',
+  'saudi arabia': 'Saudi Arabia',
+  'south africa': 'South Africa',
+  'turkey': 'Türkiye',
+  'turkiye': 'Türkiye',
+  't rkiye': 'Türkiye',
+  'united arab emirates': 'United Arab Emirates',
+  'uae': 'United Arab Emirates',
+  'united states': 'USA',
+  'usa': 'USA'
+};
 
 interface OpenWorldCupConfig {
   apiBaseUrl: string;
@@ -60,6 +87,14 @@ interface CandidateFile {
     low: number;
     unmatched: number;
   };
+  unmatchedReport: Array<{
+    providerFixtureId: string;
+    kickoffUtc: string;
+    homeTeam: string;
+    awayTeam: string;
+    closestInternalMatchId?: number;
+    reason: string;
+  }>;
   sampleMatch?: Record<string, unknown>;
   availableFields: {
     statusFields: string[];
@@ -76,6 +111,7 @@ interface CandidateFile {
     venue?: string;
     rawStatus: string;
     matchedInternalMatchId?: number;
+    closestInternalMatchId?: number;
     confidence: 'high' | 'medium' | 'low';
     notes: string;
   }>;
@@ -121,6 +157,7 @@ export async function runOpenWorldCupDiscovery(env: NodeJS.ProcessEnv = process.
   if (teamResult.apiReachable) notes.push(`Team endpoint returned ${teamResult.teams.length} teams, so numeric ids can be resolved before mapping fixtures.`);
   const fixtures = result.games.map((game) => buildCandidateFixture(game, matchesSeed, teamLookup));
   const confidenceSummary = summarizeConfidenceSummary(fixtures);
+  const unmatchedReport = buildUnmatchedReport(fixtures);
   const candidateFile: CandidateFile = {
     provider: 'open-worldcup',
     apiBaseUrl: config.apiBaseUrl,
@@ -132,6 +169,7 @@ export async function runOpenWorldCupDiscovery(env: NodeJS.ProcessEnv = process.
     matchesFound: result.games.length,
     candidateMappingCanBeGenerated: confidenceSummary.high > 0 || confidenceSummary.medium > 0,
     confidenceSummary,
+    unmatchedReport,
     sampleMatch: result.games[0] ? summarizeGame(result.games[0], teamLookup) : undefined,
     availableFields: {
       statusFields: ['status', 'state', 'type', 'finished'],
@@ -264,6 +302,7 @@ export function buildCandidateFixture(game: OpenWorldCupGame, seedMatches: SeedM
     venue: game.stadium_name ? String(game.stadium_name) : game.stadium_id ? String(game.stadium_id) : undefined,
     rawStatus: normalizeStatus(game),
     matchedInternalMatchId: bestMatch.confidence !== 'low' ? bestMatch.match.id : undefined,
+    closestInternalMatchId: bestMatch.match.id,
     confidence: bestMatch.confidence,
     notes: [summarizeNotes(game), bestMatch.notes].filter(Boolean).join('; ')
   };
@@ -289,6 +328,15 @@ export function summarizeNotes(game: OpenWorldCupGame): string {
 }
 
 export function findBestSeedMatch(game: OpenWorldCupGame, seedMatches: SeedMatch[], resolvedHomeTeam: string, resolvedAwayTeam: string): { match: SeedMatch; confidence: 'high' | 'medium' | 'low'; notes: string } {
+  const exactMatch = seedMatches.find((match) => compareTeamNames(resolvedHomeTeam, match.homeSlot) === 'exact' && compareTeamNames(resolvedAwayTeam, match.awaySlot) === 'exact');
+  if (exactMatch) {
+    return {
+      match: exactMatch,
+      confidence: 'high',
+      notes: `match ${exactMatch.id}: exact canonical team pair`
+    };
+  }
+
   const scoredMatches = seedMatches.map((match) => {
     const kickoffDifference = kickoffDifferenceMinutes(game.local_date, match.kickoffAt);
     const sameCalendarDay = isSameCalendarDay(game.local_date, match.kickoffAt);
@@ -298,18 +346,16 @@ export function findBestSeedMatch(game: OpenWorldCupGame, seedMatches: SeedMatch
     const exactNames = homeMatch === 'exact' && awayMatch === 'exact';
     const partialNames = homeMatch !== 'none' || awayMatch !== 'none';
     const score = (exactKickoff ? 6 : 0) + (sameCalendarDay ? 3 : 0) + (homeMatch === 'exact' ? 3 : homeMatch === 'partial' ? 1 : 0) + (awayMatch === 'exact' ? 3 : awayMatch === 'partial' ? 1 : 0);
-    const confidence: 'high' | 'medium' | 'low' = exactKickoff && exactNames
+    const confidence: 'high' | 'medium' | 'low' = exactNames
       ? 'high'
-      : exactNames
+      : partialNames
         ? 'medium'
-        : partialNames
-          ? 'low'
-          : 'low';
+        : 'low';
     return {
       match,
       score,
       confidence,
-      notes: `match ${match.id}: kickoff ${kickoffDifference === null ? 'unknown' : `${Math.abs(kickoffDifference)}m off`}, same day ${sameCalendarDay ? 'yes' : 'no'}, home ${homeMatch}, away ${awayMatch}`
+      notes: `match ${match.id}: kickoff ${kickoffDifference === null ? 'unknown' : `${Math.abs(kickoffDifference)}m off`}, exact kickoff ${exactKickoff ? 'yes' : 'no'}, same day ${sameCalendarDay ? 'yes' : 'no'}, home ${homeMatch}, away ${awayMatch}`
     };
   });
 
@@ -355,7 +401,7 @@ export function buildTeamCandidateFile(config: OpenWorldCupConfig, teamResult: {
 export function resolveTeamLabel(teamId: number | string | undefined, fallbackName: string | undefined, teamLookup: Map<string, OpenWorldCupTeam>): string {
   const normalizedId = String(teamId ?? '').trim();
   const lookup = normalizedId ? teamLookup.get(normalizedId) : undefined;
-  return String(lookup?.name_en ?? fallbackName ?? normalizedId ?? '').trim();
+  return canonicalizeWorldCupTeamName(lookup?.name_en ?? fallbackName ?? normalizedId);
 }
 
 export function summarizeConfidenceSummary(fixtures: Array<{ confidence: 'high' | 'medium' | 'low'; matchedInternalMatchId?: number }>): CandidateFile['confidenceSummary'] {
@@ -366,14 +412,114 @@ export function summarizeConfidenceSummary(fixtures: Array<{ confidence: 'high' 
   }, { high: 0, medium: 0, low: 0, unmatched: 0 });
 }
 
+export function buildUnmatchedReport(fixtures: Array<{
+  providerFixtureId: string;
+  kickoffUtc: string;
+  homeTeam: string;
+  awayTeam: string;
+  closestInternalMatchId?: number;
+  confidence: 'high' | 'medium' | 'low';
+  notes: string;
+}>): CandidateFile['unmatchedReport'] {
+  return fixtures
+    .filter((fixture) => fixture.confidence === 'low')
+    .map((fixture) => ({
+      providerFixtureId: fixture.providerFixtureId,
+      kickoffUtc: fixture.kickoffUtc,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam,
+      closestInternalMatchId: fixture.closestInternalMatchId,
+      reason: summarizeMismatchReason(fixture.notes, fixture.confidence)
+    }))
+    .slice(0, 25);
+}
+
+function summarizeMismatchReason(notes: string, confidence: 'high' | 'medium' | 'low'): string {
+  if (confidence === 'medium') return 'alias/time normalized; review still recommended';
+  if (/no confident schedule match found/i.test(notes)) return 'missing internal match';
+  if (/home none|away none/i.test(notes)) return 'team mismatch';
+  if (/partial/i.test(notes)) return 'ambiguous alias match';
+  return 'team mismatch';
+}
+
 function compareTeamNames(actual: string | number | undefined, expected: string | number | undefined): 'exact' | 'partial' | 'none' {
-  const left = normalizeTeamName(actual);
-  const right = normalizeTeamName(expected);
+  const left = normalizeWorldCupTeamName(actual);
+  const right = normalizeWorldCupTeamName(expected);
   if (!left || !right) return 'none';
   if (left === right) return 'exact';
   if (left.includes(right) || right.includes(left)) return 'partial';
   return 'none';
 }
+
+function normalizeWorldCupTeamName(value: string | number | undefined): string {
+  return normalizeTeamName(canonicalizeWorldCupTeamName(value));
+}
+
+export function canonicalizeWorldCupTeamName(value: string | number | undefined): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const placeholder = canonicalizeWorldCupPlaceholder(raw);
+  if (placeholder) return placeholder;
+
+  const normalized = normalizeTeamName(raw);
+  return WORLD_CUP_TEAM_ALIASES[normalized] ?? raw;
+}
+
+export function canonicalizeWorldCupPlaceholder(value: string): string | undefined {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+
+  let match = normalized.match(/^runner-?up group (.+)$/i);
+  if (match) return `Group ${match[1]} runners-up`;
+
+  match = normalized.match(/^group (.+) runners-?up$/i);
+  if (match) return `Group ${match[1]} runners-up`;
+
+  match = normalized.match(/^winner group (.+)$/i);
+  if (match) return `Group ${match[1]} winners`;
+
+  match = normalized.match(/^group (.+) winners$/i);
+  if (match) return `Group ${match[1]} winners`;
+
+  match = normalized.match(/^(?:3rd|third place) group (.+)$/i);
+  if (match) return `Group ${match[1]} third place`;
+
+  match = normalized.match(/^group (.+) third place$/i);
+  if (match) return `Group ${match[1]} third place`;
+
+  match = normalized.match(/^(winner|loser) match (\d+)$/i);
+  if (match) return `${match[1][0].toUpperCase()}${match[1].slice(1).toLowerCase()} Match ${match[2]}`;
+
+  return undefined;
+}
+
+const WORLD_CUP_TEAM_ALIASES: Record<string, string> = {
+  'bosnia': 'Bosnia and Herzegovina',
+  'bosnia and herzegovina': 'Bosnia and Herzegovina',
+  'cabo verde': 'Cabo Verde',
+  'cape verde': 'Cabo Verde',
+  'cote d ivoire': 'Cote d Ivoire',
+  'curacao': 'Curacao',
+  'cura ao': 'Curacao',
+  'czech republic': 'Czechia',
+  'czechia': 'Czechia',
+  'democratic republic of the congo': 'Congo DR',
+  'congo dr': 'Congo DR',
+  'ir iran': 'IR Iran',
+  'iran': 'IR Iran',
+  'ivory coast': 'Cote d Ivoire',
+  'korea republic': 'Korea Republic',
+  'south korea': 'Korea Republic',
+  'saudi arabia': 'Saudi Arabia',
+  'south africa': 'South Africa',
+  'turkey': 'Turkiye',
+  'turkiye': 'Turkiye',
+  't rkiye': 'Turkiye',
+  'united arab emirates': 'United Arab Emirates',
+  'uae': 'United Arab Emirates',
+  'united states': 'USA',
+  'usa': 'USA'
+};
 
 function normalizeTeamName(value: string | number | undefined): string {
   return String(value ?? '')
@@ -459,6 +605,7 @@ async function run(): Promise<void> {
     goalscorerFields: discovery.availableFields.goalscorerFields,
     candidateMappingCanBeGenerated: discovery.candidateMappingCanBeGenerated,
     confidenceSummary: discovery.confidenceSummary,
+    unmatchedReport: discovery.unmatchedReport,
     notes: discovery.notes,
     candidateFiles: [
       'imports/open-worldcup-fixtures-2026.candidate.json',
@@ -466,3 +613,4 @@ async function run(): Promise<void> {
     ]
   }, null, 2));
 }
+
