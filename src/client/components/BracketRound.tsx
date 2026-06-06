@@ -1,4 +1,4 @@
-import type { BracketRound as BracketRoundData } from '../data/mock.js';
+import type { BracketRound as BracketRoundData } from '../../domain/publicBracket.js';
 import { BracketMatchCard } from './BracketMatchCard.js';
 
 export function BracketRound({ round }: { round: BracketRoundData }) {

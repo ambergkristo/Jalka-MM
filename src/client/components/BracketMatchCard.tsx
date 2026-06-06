@@ -1,9 +1,9 @@
-import type { BracketMatch } from '../data/mock.js';
+import type { BracketMatch } from '../../domain/publicBracket.js';
 import { BracketTeamSlot } from './BracketTeamSlot.js';
 
 export function BracketMatchCard({ match, compact = false }: { match: BracketMatch; compact?: boolean }) {
-  const homeWinner = match.winnerTeamId === match.homeSlot.teamId;
-  const awayWinner = match.winnerTeamId === match.awaySlot.teamId;
+  const homeWinner = Boolean(match.winnerTeamId && match.winnerTeamId === match.homeSlot.teamId);
+  const awayWinner = Boolean(match.winnerTeamId && match.winnerTeamId === match.awaySlot.teamId);
 
   return (
     <article className={`true-bracket-match ${match.stage === 'FINAL' ? 'final' : ''} ${compact ? 'compact' : ''}`.trim()} aria-label={`${matchLabel(match.stage)} ${match.id}`}>

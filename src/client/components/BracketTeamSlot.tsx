@@ -1,4 +1,4 @@
-import type { BracketSlot } from '../data/mock.js';
+import type { BracketSlot } from '../../domain/publicBracket.js';
 import { TeamBadge } from './TeamBadge.js';
 
 export function BracketTeamSlot({ slot, score, isWinner = false }: { slot: BracketSlot; score?: number; isWinner?: boolean }) {

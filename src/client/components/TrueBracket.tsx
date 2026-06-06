@@ -1,4 +1,4 @@
-import type { BracketTree } from '../data/mock.js';
+import type { BracketTree } from '../../domain/publicBracket.js';
 import { BracketMatchCard } from './BracketMatchCard.js';
 import { BracketSide } from './BracketSide.js';
 

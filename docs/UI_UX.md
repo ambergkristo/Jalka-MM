@@ -131,6 +131,8 @@ The tournament play-off bracket must not be shown as disconnected stage cards. I
 - Third-place match as a separate center/near-final match.
 - Slot labels such as `A1`, `B2`, `Parim 3. koht`, and `1/16-1 võitja` when teams are not known.
 
+The public tournament bracket must be gated by confirmed results. Before group-stage qualifiers are resolved, it must not show pre-filled country names, flags, fake scores, or `Lõppenud` states from demo/mock data.
+
 On mobile, the bracket may use a contained horizontal scroll area or a segmented view. Page-level horizontal overflow is not acceptable.
 
 ## Visual Assets

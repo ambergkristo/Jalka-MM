@@ -178,7 +178,16 @@ The simulation proves:
 - derived group standings and simulation top scorers refresh after confirmation
 - provider disagreement becomes `NEEDS_REVIEW` and does not rebuild the leaderboard
 
-The public frontend consumes this state through `GET /api/public-dashboard`, `GET /api/results`, `GET /api/leaderboard`, and `GET /api/tournament`. These endpoints intentionally omit provider raw payloads and provisional final scores.
+The public frontend consumes one synchronized confirmed-results state through `GET /api/public-dashboard`, `GET /api/results`, `GET /api/leaderboard`, and `GET /api/tournament`. These endpoints intentionally omit provider raw payloads and provisional final scores.
+
+Public tournament state rules:
+
+- Group standings update from confirmed group-stage results only.
+- Group leaders are derived from the same group standings.
+- Latest results include confirmed final results only.
+- Top scorer standings are derived from confirmed scorer data only.
+- Playoff bracket slots stay as placeholders until qualifiers are explicitly resolved from confirmed group standings.
+- Knockout scores are public only after confirmed knockout results.
 
 See `docs/E2E_SIMULATION.md` for the exact simulated matches and expected output.
 

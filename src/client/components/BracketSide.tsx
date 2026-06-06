@@ -1,4 +1,4 @@
-import type { BracketSide as BracketSideData } from '../data/mock.js';
+import type { BracketSide as BracketSideData } from '../../domain/publicBracket.js';
 import { BracketRound } from './BracketRound.js';
 
 export function BracketSide({ side }: { side: BracketSideData }) {

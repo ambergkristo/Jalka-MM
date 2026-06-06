@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LandingDashboard } from '../client/pages/LandingDashboard.js';
 import { ResultsPage } from '../client/pages/ResultsPage.js';
+import { TournamentPage } from '../client/pages/TournamentPage.js';
 
 describe('public dashboard pages', () => {
   beforeEach(() => {
@@ -30,5 +31,17 @@ describe('public dashboard pages', () => {
     expect(markup).toContain('Lõppenud mänge veel ei ole.');
     expect(markup).not.toContain('Punktid läksid jagamisele');
     expect(markup).not.toContain('võttis tähtsa võidu');
+  });
+
+  it('renders tournament page with placeholder playoff bracket before qualifiers are resolved', () => {
+    const markup = renderToStaticMarkup(<TournamentPage />);
+    const bracketMarkup = markup.slice(markup.indexOf('Play-off'));
+
+    expect(bracketMarkup).toContain('A1');
+    expect(bracketMarkup).toContain('Parim 3. koht');
+    expect(bracketMarkup).toContain('1/16-1 võitja');
+    expect(bracketMarkup).not.toContain('Mehhiko');
+    expect(bracketMarkup).not.toContain('Brasiilia');
+    expect(bracketMarkup).not.toContain('Lõppenud');
   });
 });

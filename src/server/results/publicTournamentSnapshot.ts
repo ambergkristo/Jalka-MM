@@ -1,6 +1,7 @@
 import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultUpdate } from './resultTypes.js';
+import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/publicBracket.js';
 
 export interface PublicDashboardSnapshot {
   upcomingMatches: PublicMatchCard[];
@@ -8,6 +9,7 @@ export interface PublicDashboardSnapshot {
   groupStandings: PublicGroupStanding[];
   groupLeaders: Array<{ group: string; team?: string; points?: number; record?: string }>;
   topScorers: PublicTopScorer[];
+  playoffBracket: BracketTree;
   tournamentSummary: Array<{ label: string; value: string; detail: string; tone: 'gold' | 'blue' | 'green' | 'red' }>;
   tournamentStats: Array<{ label: string; value: string; detail: string }>;
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
@@ -97,6 +99,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
     groupStandings,
     groupLeaders,
     topScorers,
+    playoffBracket: buildPublicPlayoffBracketTree(),
     tournamentSummary: [
       { label: 'Turniiri faas', value: 'Alagrupid', detail: completed > 0 ? 'Turniir on alanud' : 'Avamängu ootel', tone: 'gold' },
       { label: 'Mängitud', value: `${completed} / ${totalMatches}`, detail: `${Math.max(totalMatches - completed, 0)} kohtumist on veel ees`, tone: 'blue' },
@@ -135,6 +138,7 @@ export async function getPublicResultsPayload(db: QueryableDatabase): Promise<{
 export async function getPublicTournamentPayload(db: QueryableDatabase): Promise<{
   groupStandings: PublicGroupStanding[];
   topScorers: PublicTopScorer[];
+  playoffBracket: BracketTree;
   tournamentSummary: PublicDashboardSnapshot['tournamentSummary'];
   tournamentStats: PublicDashboardSnapshot['tournamentStats'];
   tournamentProgressByStage: PublicDashboardSnapshot['tournamentProgressByStage'];
@@ -143,6 +147,7 @@ export async function getPublicTournamentPayload(db: QueryableDatabase): Promise
   return {
     groupStandings: snapshot.groupStandings,
     topScorers: snapshot.topScorers,
+    playoffBracket: snapshot.playoffBracket,
     tournamentSummary: snapshot.tournamentSummary,
     tournamentStats: snapshot.tournamentStats,
     tournamentProgressByStage: snapshot.tournamentProgressByStage

@@ -7,9 +7,10 @@ import { createDatabase, type QueryableDatabase } from '../server/databaseAdapte
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
 import { getCurrentLeaderboard } from '../server/results/resultAgentRuntime.js';
 import { resetSimulationState, runMatchday1DisagreementSimulation, runMatchday1Simulation, simulatedTopScorers, MATCHDAY1_CONFIRM_AT, MATCHDAY1_PROVISIONAL_AT } from '../server/results/matchdaySimulation.js';
-import { getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
+import { getPublicTournamentPayload, getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { SimulationResultProvider } from '../server/results/simulationResultProvider.js';
+import type { BracketTree } from '../domain/publicBracket.js';
 
 describe('matchday 1 simulation with persistent storage', () => {
   it('keeps first final observations provisional and hides latest public results', async () => {
@@ -35,6 +36,7 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(snapshot.upcomingMatches.length > 0, true);
       assert.equal(snapshot.upcomingMatches[0]?.homeTeam, 'Mexico');
       assert.match(snapshot.upcomingMatches[0]?.kickoffTime ?? '', /^\d{2}\.\d{2} • \d{2}:\d{2}$/);
+      assertPublicBracketIsPlaceholderOnly(snapshot.playoffBracket);
       assert.equal(leaderboard.mode, 'pre-results');
       assert.equal(leaderboard.entries.every((entry) => entry.points === 0 && entry.exactScores === 0 && entry.correctResults === 0 && entry.hitRate === 0), true);
     });
@@ -72,6 +74,10 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(snapshot.groupStandings.find((group) => group.group === 'A')?.teams[0]?.points, 3);
       assert.equal(snapshot.groupStandings.find((group) => group.group === 'B')?.teams[0]?.team, 'Canada');
       assert.equal(snapshot.groupStandings.find((group) => group.group === 'B')?.teams[0]?.points, 3);
+      assertPublicBracketIsPlaceholderOnly(snapshot.playoffBracket);
+      const tournamentPayload = await getPublicTournamentPayload(db);
+      assert.deepEqual(tournamentPayload.playoffBracket, snapshot.playoffBracket);
+      assertPublicBracketIsPlaceholderOnly(tournamentPayload.playoffBracket);
       assert.equal(snapshot.topScorers.length, simulatedTopScorers().length);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
 
@@ -107,6 +113,7 @@ describe('matchday 1 simulation with persistent storage', () => {
 
       assert.deepEqual(snapshot.latestResults, []);
       assert.deepEqual(snapshot.topScorers, []);
+      assertPublicBracketIsPlaceholderOnly(snapshot.playoffBracket);
       assert.equal(snapshot.upcomingMatches.length > 0, true);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 0);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM match_results'))?.count), 0);
@@ -132,4 +139,27 @@ async function withSimulationDb(callback: (db: QueryableDatabase) => Promise<voi
   } finally {
     await db.close();
   }
+}
+
+function assertPublicBracketIsPlaceholderOnly(tree: BracketTree): void {
+  const slots = [
+    ...tree.left.rounds.flatMap((round) => round.matches.flatMap((match) => [match.homeSlot, match.awaySlot])),
+    ...tree.right.rounds.flatMap((round) => round.matches.flatMap((match) => [match.homeSlot, match.awaySlot])),
+    tree.final.homeSlot,
+    tree.final.awaySlot,
+    tree.thirdPlace.homeSlot,
+    tree.thirdPlace.awaySlot
+  ];
+  const matches = [
+    ...tree.left.rounds.flatMap((round) => round.matches),
+    ...tree.right.rounds.flatMap((round) => round.matches),
+    tree.final,
+    tree.thirdPlace
+  ];
+
+  assert.equal(slots.some((slot) => slot.teamName || slot.teamId || slot.teamCode), false);
+  assert.equal(matches.some((match) => typeof match.homeScore === 'number' || typeof match.awayScore === 'number' || match.status === 'finished'), false);
+  assert.equal(slots.some((slot) => slot.seedLabel === 'A1'), true);
+  assert.equal(slots.some((slot) => slot.seedLabel === 'Parim 3. koht'), true);
+  assert.equal(slots.some((slot) => slot.seedLabel === '1/16-1 võitja'), true);
 }

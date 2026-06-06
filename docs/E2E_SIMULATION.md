@@ -88,6 +88,7 @@ Disagreement run:
 - `tournamentSummary`
 - `tournamentStats`
 - `tournamentProgressByStage`
+- `playoffBracket`
 
 Only `CONFIRMED_FINAL` match results are exposed as final scores.
 
@@ -95,7 +96,13 @@ Additional public route-specific endpoints:
 
 - `GET /api/results` returns upcoming matches and confirmed results only.
 - `GET /api/leaderboard` returns persisted recalculated leaderboard rows when available.
-- `GET /api/tournament` returns public group standings, top scorers, tournament summary, statistics, and stage progress.
+- `GET /api/tournament` returns public group standings, top scorers, playoff bracket, tournament summary, statistics, and stage progress.
+
+The playoff bracket is gated by confirmed tournament state:
+
+- Before group qualifiers are resolved, bracket slots remain placeholders such as `A1`, `B2`, `Parim 3. koht`, and `1/16-1 võitja`.
+- Simulated first matchday results update group standings, latest results, leaderboard, and top scorers, but do not populate playoff teams.
+- Knockout country names and scores must come only from confirmed knockout state, not demo/mock bracket data.
 
 ## Frontend Verification
 
@@ -118,6 +125,7 @@ Manual verification sequence:
 7. Open `/tournament`.
    - Group A and B standings should reflect the confirmed results.
    - Simulated top scorers should be visible.
+   - Play-off should still show placeholder slots only.
 8. Run `npm run simulate:reset` again.
 9. Reopen `/`.
    - Confirmed latest results should be empty again.

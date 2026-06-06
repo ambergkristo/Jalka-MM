@@ -6,22 +6,22 @@ import { TournamentStatsCards } from '../components/TournamentStatsCards.js';
 import { TournamentSummaryCards } from '../components/TournamentSummaryCards.js';
 import { TrueBracket } from '../components/TrueBracket.js';
 import {
-  groupStandings,
-  playoffBracketTree,
-  tournamentProgressByStage,
-  tournamentStats,
-  tournamentSummary,
-  tournamentTopScorers
-} from '../data/mock.js';
+  initialGroupStandings,
+  initialPlayoffBracket,
+  initialTournamentProgressByStage,
+  initialTournamentStats,
+  initialTournamentSummary
+} from '../data/publicTournamentFallback.js';
 import { usePublicDashboardSnapshot } from '../lib/publicApi.js';
 
 export function TournamentPage() {
   const dashboardSnapshot = usePublicDashboardSnapshot();
-  const visibleSummary = dashboardSnapshot?.tournamentSummary ?? tournamentSummary;
-  const visibleProgress = dashboardSnapshot?.tournamentProgressByStage ?? tournamentProgressByStage;
-  const visibleGroups = dashboardSnapshot?.groupStandings ?? groupStandings;
-  const visibleTopScorers = dashboardSnapshot ? dashboardSnapshot.topScorers : tournamentTopScorers;
-  const visibleStats = dashboardSnapshot?.tournamentStats ?? tournamentStats;
+  const visibleSummary = dashboardSnapshot?.tournamentSummary ?? initialTournamentSummary;
+  const visibleProgress = dashboardSnapshot?.tournamentProgressByStage ?? initialTournamentProgressByStage;
+  const visibleGroups = dashboardSnapshot?.groupStandings ?? initialGroupStandings;
+  const visibleTopScorers = dashboardSnapshot?.topScorers ?? [];
+  const visibleStats = dashboardSnapshot?.tournamentStats ?? initialTournamentStats;
+  const visibleBracket = dashboardSnapshot?.playoffBracket ?? initialPlayoffBracket;
 
   return (
     <section className="tournament-center-page">
@@ -57,7 +57,7 @@ export function TournamentPage() {
       </Card>
 
       <Card title="Play-off" eyebrow="Tabelipuu" className="tournament-section bracket-section">
-        <TrueBracket tree={playoffBracketTree} />
+        <TrueBracket tree={visibleBracket} />
       </Card>
 
       <section className="tournament-secondary-grid">

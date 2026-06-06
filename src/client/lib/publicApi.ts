@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
 import type { LeaderboardRowView } from './predictionViewModels.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import type { BracketTree } from '../../domain/publicBracket.js';
 
 export interface PublicDashboardSnapshot {
   upcomingMatches: DashboardMatch[];
@@ -9,6 +10,7 @@ export interface PublicDashboardSnapshot {
   groupStandings: GroupStanding[];
   groupLeaders: GroupLeader[];
   topScorers: TournamentTopScorer[];
+  playoffBracket: BracketTree;
   tournamentSummary: TournamentSummaryMetric[];
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
