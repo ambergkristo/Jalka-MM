@@ -45,6 +45,40 @@ describe('manual result correction with persistent storage', () => {
     });
   });
 
+  it('persists manual scorers and updates the public top scorers table', async () => {
+    await withSimulationDb(async (db) => {
+      const repository = new DatabaseResultRepository(db);
+      await confirmManualResult({
+        db,
+        repository,
+        leaderboardRepository: repository,
+        confirmation: {
+          matchId: 1,
+          homeScore: 2,
+          awayScore: 1,
+          source: 'manual',
+          confirmedBy: 'test-operator',
+          scorers: [{
+            playerName: 'Santiago Gimenez',
+            teamCode: 'MEX',
+            goals: 2
+          }],
+          now: new Date('2026-06-11T23:59:00.000Z')
+        }
+      });
+
+      const scorerRow = await db.one('SELECT player_name, team_id, team_code, goals FROM result_manual_scorers WHERE match_id = ?', [1]);
+      const topScorerRow = await db.one('SELECT player_name, team_id, goals, rank FROM top_scorer_standings WHERE player_name = ?', ['Santiago Gimenez']);
+      assert.equal(scorerRow?.player_name, 'Santiago Gimenez');
+      assert.equal(scorerRow?.team_code, 'MEX');
+      assert.equal(Number(scorerRow?.goals), 2);
+      assert.equal(topScorerRow?.player_name, 'Santiago Gimenez');
+      assert.equal(Number(topScorerRow?.goals), 2);
+      assert.equal(Number(topScorerRow?.rank), 1);
+      assert.equal(String((await db.one('SELECT scorers_json FROM result_manual_corrections ORDER BY created_at DESC LIMIT 1'))?.scorers_json ?? ''), JSON.stringify([{ playerName: 'Santiago Gimenez', teamCode: 'MEX', goals: 2 }]));
+    });
+  });
+
   it('is idempotent for the same confirmed score and does not duplicate leaderboard rows', async () => {
     await withSimulationDb(async (db) => {
       const repository = new DatabaseResultRepository(db);
@@ -91,6 +125,49 @@ describe('manual result correction with persistent storage', () => {
       assert.equal(result?.confirmedAwayScore, 1);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_corrections'))?.count), 2);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
+    });
+  });
+
+  it('replaces previously stored manual scorers for the same match', async () => {
+    await withSimulationDb(async (db) => {
+      const repository = new DatabaseResultRepository(db);
+      await confirmManualResult({
+        db,
+        repository,
+        leaderboardRepository: repository,
+        confirmation: {
+          matchId: 1,
+          homeScore: 2,
+          awayScore: 1,
+          source: 'manual',
+          confirmedBy: 'test-operator',
+          scorers: [{ playerName: 'Santiago Gimenez', teamCode: 'MEX', goals: 1 }],
+          now: new Date('2026-06-11T23:59:00.000Z')
+        }
+      });
+      await confirmManualResult({
+        db,
+        repository,
+        leaderboardRepository: repository,
+        confirmation: {
+          matchId: 1,
+          homeScore: 1,
+          awayScore: 1,
+          source: 'manual',
+          confirmedBy: 'test-operator',
+          scorers: [{ playerName: 'Raul Jimenez', teamCode: 'MEX', goals: 1 }],
+          now: new Date('2026-06-12T00:05:00.000Z')
+        }
+      });
+
+      const manualScorers = await db.all('SELECT player_name, goals FROM result_manual_scorers WHERE match_id = ? ORDER BY player_name', [1]);
+      const topScorers = await db.all('SELECT player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.equal(manualScorers.length, 1);
+      assert.equal(String(manualScorers[0]?.player_name), 'Raul Jimenez');
+      assert.equal(Number(manualScorers[0]?.goals), 1);
+      assert.equal(topScorers.length, 1);
+      assert.equal(String(topScorers[0]?.player_name), 'Raul Jimenez');
+      assert.equal(Number(topScorers[0]?.goals), 1);
     });
   });
 

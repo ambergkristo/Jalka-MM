@@ -1,6 +1,6 @@
 # Results Agent Plan
 
-The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 17 adds a free/low-cost provider-chain foundation: API-Football can act as the primary candidate, football-data.org can act as a verifier, Sportmonks remains an optional paid provider, and manual/open-data confirmation remains a future fallback. Live use still requires credentials, confirmed fixture mapping, and endpoint protection. Provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
+The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 17 adds a free/low-cost provider-chain foundation: API-Football can act as the primary candidate, football-data.org can act as a verifier, Sportmonks remains an optional paid provider, and an open World Cup API candidate plus operator/manual confirmation now provide a fallback path. Live use still requires credentials, confirmed fixture mapping, and endpoint protection. Provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
 
 Current implementation modules live in `src/server/results/`:
 
@@ -159,7 +159,8 @@ Manual confirmation behavior:
 5. Clear `NEEDS_REVIEW` metadata when a reviewed result is corrected.
 6. Rebuild and persist the leaderboard through the existing points engine.
 7. Update public dashboard/results/tournament state from persisted confirmed data.
-8. Write an audit row to `result_manual_corrections`.
+8. Replace manual scorer rows for the same match when scorer input is supplied.
+9. Write an audit row to `result_manual_corrections`.
 
 Correction behavior:
 
@@ -168,6 +169,8 @@ Correction behavior:
 - Invalid match or invalid score: request fails safely and no result is persisted.
 
 Manual corrections do not bypass scoring rules or write public mock/frontend data directly.
+
+The protected operator UI lives at `/operator` and uses the same protected endpoint.
 
 ## Leaderboard Rebuild
 

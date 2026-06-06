@@ -1,4 +1,4 @@
-export type ResultsProviderName = 'mock' | 'api-football' | 'football-data' | 'sportmonks';
+export type ResultsProviderName = 'mock' | 'api-football' | 'football-data' | 'sportmonks' | 'open-worldcup';
 export type ResultsWriteMode = 'mock' | 'dry-run' | 'live';
 
 export interface ProviderSpecificConfig {
@@ -19,6 +19,7 @@ export interface ResultProviderConfig {
   apiFootball: ProviderSpecificConfig;
   footballData: ProviderSpecificConfig;
   sportmonks: ProviderSpecificConfig;
+  openWorldCup: ProviderSpecificConfig;
   writeMode: ResultsWriteMode;
   agentSecret?: string;
   confirmationDelayMinutes?: number;
@@ -52,6 +53,10 @@ export function loadResultProviderConfig(env: NodeJS.ProcessEnv = process.env): 
       competitionId: emptyToUndefined(env.SPORTMONKS_COMPETITION_ID ?? (provider === 'sportmonks' ? env.RESULTS_COMPETITION_ID : undefined)),
       season: emptyToUndefined(env.SPORTMONKS_SEASON ?? (provider === 'sportmonks' ? env.RESULTS_SEASON : undefined))
     },
+    openWorldCup: {
+      apiBaseUrl: emptyToUndefined(env.OPEN_WORLDCUP_API_BASE_URL ?? (provider === 'open-worldcup' ? env.RESULTS_API_BASE_URL : undefined)),
+      apiKey: emptyToUndefined(env.OPEN_WORLDCUP_API_TOKEN ?? env.OPEN_WORLDCUP_API_KEY ?? env.RESULTS_API_KEY)
+    },
     writeMode: parseWriteMode(env.RESULTS_WRITE_MODE ?? 'mock'),
     agentSecret: emptyToUndefined(env.RESULTS_AGENT_SECRET),
     confirmationDelayMinutes: parseConfirmationDelayMinutes(env.RESULT_CONFIRMATION_DELAY_MINUTES ?? '10')
@@ -76,6 +81,9 @@ export function validateResultProviderConfig(config: ResultProviderConfig): stri
       if (!config.sportmonks.competitionId) errors.push('SPORTMONKS_COMPETITION_ID or RESULTS_COMPETITION_ID is required when Sportmonks is enabled');
       if (!config.sportmonks.season) errors.push('SPORTMONKS_SEASON or RESULTS_SEASON is required when Sportmonks is enabled');
     }
+    if (provider === 'open-worldcup') {
+      if (!config.openWorldCup.apiBaseUrl) errors.push('OPEN_WORLDCUP_API_BASE_URL is required when open-worldcup is enabled');
+    }
   }
   if (config.writeMode === 'live' && !config.agentSecret) {
     errors.push('RESULTS_AGENT_SECRET is required when RESULTS_WRITE_MODE=live');
@@ -87,8 +95,8 @@ export function validateResultProviderConfig(config: ResultProviderConfig): stri
 }
 
 function parseProviderName(value: string): ResultsProviderName {
-  if (value === 'mock' || value === 'api-football' || value === 'football-data' || value === 'sportmonks') return value;
-  throw new Error(`Unsupported RESULTS_PROVIDER "${value}". Use mock, api-football, football-data, or sportmonks.`);
+  if (value === 'mock' || value === 'api-football' || value === 'football-data' || value === 'sportmonks' || value === 'open-worldcup') return value;
+  throw new Error(`Unsupported RESULTS_PROVIDER "${value}". Use mock, api-football, football-data, sportmonks, or open-worldcup.`);
 }
 
 function parseWriteMode(value: string): ResultsWriteMode {

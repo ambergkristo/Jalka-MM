@@ -188,6 +188,7 @@ export async function resetPublicTournamentRuntimeState(db: QueryableDatabase): 
   await migrateResultPersistenceSchema(db);
   await db.exec(`
     DELETE FROM top_scorer_standings;
+    DELETE FROM result_manual_scorers;
     DELETE FROM result_manual_corrections;
     DELETE FROM group_standings;
     DELETE FROM leaderboard_metadata;

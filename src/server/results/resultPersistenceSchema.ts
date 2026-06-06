@@ -110,6 +110,15 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       minutes_played INTEGER,
       updated_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS result_manual_scorers (
+      id TEXT PRIMARY KEY,
+      match_id INTEGER NOT NULL,
+      player_name TEXT NOT NULL,
+      team_id TEXT,
+      team_code TEXT,
+      goals INTEGER NOT NULL,
+      created_at TEXT NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS result_manual_corrections (
       id TEXT PRIMARY KEY,
       match_id INTEGER NOT NULL,
@@ -125,6 +134,7 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       penalty_winner_team_id TEXT,
       penalty_winner_team_code TEXT,
       notes TEXT,
+      scorers_json TEXT,
       created_at TEXT NOT NULL
     );
   `);
@@ -167,6 +177,7 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
   await ensureColumn(db, 'result_manual_corrections', 'decided_after', 'TEXT');
   await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_id', 'TEXT');
   await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_code', 'TEXT');
+  await ensureColumn(db, 'result_manual_corrections', 'scorers_json', 'TEXT');
 }
 
 async function ensureColumn(db: QueryableDatabase, table: string, column: string, definition: string): Promise<void> {

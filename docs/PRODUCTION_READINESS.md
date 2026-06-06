@@ -13,11 +13,11 @@ This audit covers the current MM 2026 Tournament & Prediction Tracker state befo
 | Render deployment | Needs configuration | Existing Render URL can stay in use. Production env must be configured explicitly. |
 | Result-agent mock mode | Ready | Mock mode is default and safe for local/manual testing. |
 | Result-agent live mode | Needs configuration | Requires provider credentials, fixture mapping, and `RESULTS_AGENT_SECRET`. |
-| Provider chain | Needs configuration | API-Football and football-data.org skeletons exist but must be verified with real accounts. |
+| Provider chain | Needs configuration | API-Football, football-data.org, Sportmonks, and the open-worldcup candidate exist, but only verified mappings should be enabled in production. |
 | Final prediction data | Needs final data | Current import is a 24-player working import. Final 50+ player Excel still needs import. |
 | Playoff bracket gate | Ready | Public bracket stays placeholder-only until qualifier resolver supplies confirmed teams. |
 | Qualifier resolver | Release blocker before knockouts | Automatic group-to-playoff progression and best-third-place logic are deferred. |
-| Manual result correction | Ready | Operator-only CLI and protected API fallback can confirm/correct results, rebuild leaderboard, and write audit trail. No public admin UI. |
+| Manual result correction | Ready | Operator-only CLI, protected API fallback, and `/operator` UI can confirm/correct results, rebuild leaderboard, and write audit trail. Controls stay protected. |
 | Mobile usability | Needs final smoke test | Recent mobile/layout fixes are in place; final device pass is still required. |
 
 ## 2. Required Render Environment Variables
@@ -62,6 +62,12 @@ API_FOOTBALL_API_BASE_URL=https://v3.football.api-sports.io
 API_FOOTBALL_HOST=v3.football.api-sports.io
 API_FOOTBALL_COMPETITION_ID=world-cup
 API_FOOTBALL_SEASON=2026
+```
+
+Open World Cup candidate:
+
+```bash
+OPEN_WORLDCUP_API_BASE_URL=https://worldcup26.ir
 ```
 
 football-data.org:
@@ -261,6 +267,8 @@ Manual fallback:
 - Same-score repeat is idempotent.
 - Different score for an already confirmed match is a correction and rebuilds the leaderboard.
 - Manual correction writes audit rows to `result_manual_corrections`.
+- Manual scorer input replaces prior manual scorer rows for the same match.
+- The protected `/operator` UI uses the same backend guard and should not be linked from public navigation.
 
 ## 7. Provider Readiness
 

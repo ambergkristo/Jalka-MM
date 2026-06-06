@@ -3,6 +3,7 @@ import { Layout } from './components/Layout.js';
 import { LandingDashboard } from './pages/LandingDashboard.js';
 import { LeaderboardPage } from './pages/LeaderboardPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
+import { OperatorPage } from './pages/OperatorPage.js';
 import { PlayerDetailPage } from './pages/PlayerDetailPage.js';
 import { ResultsPage } from './pages/ResultsPage.js';
 import { TournamentPage } from './pages/TournamentPage.js';
@@ -22,6 +23,7 @@ export function App() {
       {route.name === 'dashboard' && <LandingDashboard />}
       {route.name === 'leaderboard' && <LeaderboardPage />}
       {route.name === 'player' && <PlayerDetailPage playerId={route.playerId} />}
+      {route.name === 'operator' && <OperatorPage />}
       {route.name === 'results' && <ResultsPage />}
       {route.name === 'tournament' && <TournamentPage />}
       {route.name === 'not-found' && <NotFoundPage />}
@@ -33,13 +35,15 @@ type Route =
   | { name: 'dashboard' }
   | { name: 'leaderboard' }
   | { name: 'player'; playerId: string }
+  | { name: 'operator' }
   | { name: 'results' }
   | { name: 'tournament' }
   | { name: 'not-found' };
 
-function matchRoute(pathname: string): Route {
+export function matchRoute(pathname: string): Route {
   if (pathname === '/') return { name: 'dashboard' };
   if (pathname === '/leaderboard') return { name: 'leaderboard' };
+  if (pathname === '/operator') return { name: 'operator' };
   if (pathname === '/results') return { name: 'results' };
   if (pathname === '/tournament') return { name: 'tournament' };
   if (pathname === '/not-found') return { name: 'not-found' };

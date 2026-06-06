@@ -51,6 +51,13 @@ describe('result provider config and factory', () => {
     ]);
   });
 
+  it('requires open-worldcup config only when the open provider is enabled', () => {
+    const config = loadResultProviderConfig({ RESULTS_PROVIDER: 'open-worldcup' });
+    expect(validateResultProviderConfig(config)).toEqual([
+      'OPEN_WORLDCUP_API_BASE_URL is required when open-worldcup is enabled'
+    ]);
+  });
+
   it('creates the Sportmonks provider when required config is present', () => {
     const provider = createResultProvider(
       loadResultProviderConfig({
@@ -78,6 +85,18 @@ describe('result provider config and factory', () => {
     );
 
     expect(provider.name).toBe('api-football-result-provider');
+    expect(provider.mode).toBe('live');
+  });
+
+  it('creates the open-worldcup provider when required config is present', () => {
+    const provider = createResultProvider(
+      loadResultProviderConfig({
+        RESULTS_PROVIDER: 'open-worldcup',
+        OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir'
+      })
+    );
+
+    expect(provider.name).toBe('open-worldcup-result-provider');
     expect(provider.mode).toBe('live');
   });
 
@@ -134,7 +153,7 @@ describe('result provider config and factory', () => {
   it('creates a configured provider chain in the requested order', () => {
     const provider = createResultProvider(
       loadResultProviderConfig({
-        RESULTS_PROVIDER_CHAIN: 'api-football,football-data,sportmonks',
+        RESULTS_PROVIDER_CHAIN: 'api-football,football-data,sportmonks,open-worldcup',
         API_FOOTBALL_API_KEY: 'api-football-key',
         API_FOOTBALL_API_BASE_URL: 'https://api-football.example',
         FOOTBALL_DATA_API_KEY: 'football-data-key',
@@ -142,11 +161,12 @@ describe('result provider config and factory', () => {
         SPORTMONKS_API_KEY: 'sportmonks-key',
         SPORTMONKS_API_BASE_URL: 'https://sportmonks.example',
         SPORTMONKS_COMPETITION_ID: '732',
-        SPORTMONKS_SEASON: '2026'
+        SPORTMONKS_SEASON: '2026',
+        OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir'
       })
     );
 
-    expect(provider.name).toBe('provider-chain:api-football-result-provider,football-data-result-provider,sportmonks-result-provider');
+    expect(provider.name).toBe('provider-chain:api-football-result-provider,football-data-result-provider,sportmonks-result-provider,open-worldcup-result-provider');
     expect(provider.mode).toBe('live');
   });
 });
