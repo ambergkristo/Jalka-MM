@@ -3,10 +3,21 @@ import { ChampionCard } from '../components/ChampionCard.js';
 import { GroupPredictionAccordion } from '../components/GroupPredictionAccordion.js';
 import { PlayerSummaryCard } from '../components/PlayerSummaryCard.js';
 import { TopScorerCard } from '../components/TopScorerCard.js';
-import { getPlayerProfile } from '../lib/predictionViewModels.js';
+import { usePublicLeaderboardRow } from '../lib/publicApi.js';
+import { applyLeaderboardRowToPlayerProfile, getPlayerProfile } from '../lib/predictionViewModels.js';
 
 export function PlayerDetailPage({ playerId }: { playerId: string }) {
   const player = getPlayerProfile(playerId);
+  const publicLeaderboardRow = usePublicLeaderboardRow(playerId, player ? {
+    rank: player.rank,
+    playerId: player.playerId,
+    player: player.name,
+    points: player.points,
+    exactScores: player.exactScores,
+    correctResults: player.correctResults,
+    hitRate: player.hitRate,
+    positionChange: player.positionChange
+  } : undefined);
 
   if (!player) {
     return (
@@ -21,17 +32,19 @@ export function PlayerDetailPage({ playerId }: { playerId: string }) {
     );
   }
 
+  const visiblePlayer = applyLeaderboardRowToPlayerProfile(player, publicLeaderboardRow);
+
   return (
     <div className="player-profile-page">
-      <PlayerSummaryCard player={player} />
+      <PlayerSummaryCard player={visiblePlayer} />
 
       <section className="profile-feature-grid">
-        <ChampionCard player={player} />
-        <TopScorerCard player={player} />
+        <ChampionCard player={visiblePlayer} />
+        <TopScorerCard player={visiblePlayer} />
       </section>
 
-      <BracketCard rounds={player.knockoutPrediction} />
-      <GroupPredictionAccordion groups={player.groupPredictions} />
+      <BracketCard rounds={visiblePlayer.knockoutPrediction} />
+      <GroupPredictionAccordion groups={visiblePlayer.groupPredictions} />
     </div>
   );
 }

@@ -69,6 +69,11 @@ export function usePersistedLeaderboardRows(fallback: LeaderboardRowView[]): Lea
   return rows;
 }
 
+export function usePublicLeaderboardRow(playerId: string, fallback?: LeaderboardRowView): LeaderboardRowView | undefined {
+  const rows = usePersistedLeaderboardRows(fallback ? [fallback] : []);
+  return rows.find((row) => row.playerId === playerId) ?? fallback;
+}
+
 function toLeaderboardRow(entry: LeaderboardApiResponse['entries'][number]): LeaderboardRowView {
   const player = predictionRepository.getPlayerById(entry.playerId);
   return {

@@ -889,6 +889,16 @@ main {
   display: none;
 }
 
+.group-accordion h3 {
+  margin: 0;
+  padding: 0 12px 8px;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 950;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 .group-accordion ol {
   display: grid;
   gap: 7px;
@@ -914,6 +924,43 @@ main {
 .group-accordion li strong {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.group-match-predictions {
+  display: grid;
+  gap: 8px;
+  padding: 2px 12px 12px;
+}
+
+.group-match-predictions h3 {
+  padding: 0;
+}
+
+.group-match-prediction-list {
+  display: grid;
+  gap: 7px;
+}
+
+.group-match-prediction-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 7px 8px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 10px;
+  background: rgba(10, 18, 32, .42);
+}
+
+.group-match-prediction-row > strong {
+  min-width: 42px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, .16);
+  color: var(--gold);
+  font-size: .9rem;
+  text-align: center;
 }
 
 .group-leader-grid {

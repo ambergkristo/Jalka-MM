@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LandingDashboard } from '../client/pages/LandingDashboard.js';
+import { PlayerDetailPage } from '../client/pages/PlayerDetailPage.js';
 import { ResultsPage } from '../client/pages/ResultsPage.js';
 import { TournamentPage } from '../client/pages/TournamentPage.js';
 
@@ -46,5 +47,16 @@ describe('public dashboard pages', () => {
     expect(bracketMarkup).not.toContain('Mehhiko');
     expect(bracketMarkup).not.toContain('Brasiilia');
     expect(bracketMarkup).not.toContain('Lõppenud');
+  });
+
+  it('renders player profile with zero public stats and grouped match score predictions', () => {
+    const markup = renderToStaticMarkup(<PlayerDetailPage playerId="kristo-amberg" />);
+
+    expect(markup).toContain('Kristo Amberg');
+    expect(markup).toContain('Mängude ennustused');
+    expect(markup).toContain('Mehhiko');
+    expect(markup).toContain('Lõuna-Aafrika');
+    expect(markup).toContain('0%');
+    expect(markup).not.toContain('@');
   });
 });

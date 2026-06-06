@@ -1,6 +1,9 @@
+import matchesJson from '../../data/worldcup2026/matches.json';
+import type { Match } from '../../domain/types.js';
 import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { resolveScorerTeam } from './scorerTeamLookup.js';
+import { teamFromName } from './teamLookup.js';
 
 export interface LeaderboardRowView {
   rank: number;
@@ -33,9 +36,26 @@ export interface PlayerProfileView {
   championStatus: PredictionStatus;
   topScorerPrediction: TopScorerPredictionView;
   knockoutPrediction: KnockoutRoundPrediction[];
-  groupPredictions: GroupPrediction[];
+  groupPredictions: PlayerGroupPredictionView[];
   errors: string[];
 }
+
+export interface PlayerGroupPredictionView extends GroupPrediction {
+  matchPredictions: GroupMatchPredictionView[];
+}
+
+export interface GroupMatchPredictionView {
+  matchId: number;
+  kickoffAt?: string;
+  homeTeam: string;
+  homeTeamCode?: string;
+  awayTeam: string;
+  awayTeamCode?: string;
+  homeScore: number;
+  awayScore: number;
+}
+
+const matchesById = new Map((matchesJson as Match[]).map((match) => [match.id, match]));
 
 export function getLeaderboardRows(): LeaderboardRowView[] {
   return predictionRepository.getLeaderboard().map((entry) => {
@@ -84,6 +104,19 @@ export function getPlayerProfile(playerId: string): PlayerProfileView | undefine
   return toPlayerProfileView(bundle);
 }
 
+export function applyLeaderboardRowToPlayerProfile(profile: PlayerProfileView, row: LeaderboardRowView | undefined): PlayerProfileView {
+  if (!row) return profile;
+  return {
+    ...profile,
+    rank: row.rank,
+    points: row.points,
+    exactScores: row.exactScores,
+    correctResults: row.correctResults,
+    hitRate: row.hitRate,
+    positionChange: row.positionChange
+  };
+}
+
 export function getPredictionSeedErrors(): string[] {
   return predictionRepository.getErrors();
 }
@@ -95,11 +128,11 @@ function toPlayerProfileView(bundle: PredictionBundle): PlayerProfileView {
     playerId: bundle.player.id,
     name: bundle.player.name,
     rank: entry?.rank ?? 0,
-    points: entry?.points ?? 0,
-    exactScores: entry?.exactScores ?? 0,
-    correctResults: entry?.correctResults ?? 0,
-    hitRate: entry ? formatHitRate(entry.hitRate) : '0%',
-    positionChange: entry?.previousRank ? entry.previousRank - entry.rank : 0,
+    points: 0,
+    exactScores: 0,
+    correctResults: 0,
+    hitRate: '0%',
+    positionChange: 0,
     predictedChampion: awards?.championTeam ?? 'Ennustus puudub',
     championStatus: awards?.championStatus ?? 'Eliminated',
     topScorerPrediction: {
@@ -109,9 +142,42 @@ function toPlayerProfileView(bundle: PredictionBundle): PlayerProfileView {
       status: awards?.topScorerStatus ?? 'Eliminated'
     },
     knockoutPrediction: bundle.knockoutPrediction?.rounds ?? [],
-    groupPredictions: bundle.groupPredictions,
+    groupPredictions: withGroupMatchPredictions(bundle),
     errors: bundle.errors
   };
+}
+
+function withGroupMatchPredictions(bundle: PredictionBundle): PlayerGroupPredictionView[] {
+  const matchPredictionsByGroup = new Map<string, GroupMatchPredictionView[]>();
+  for (const prediction of bundle.matchPredictions) {
+    const match = matchesById.get(prediction.matchId);
+    if (!match?.groupId) continue;
+    const homeTeam = prediction.predictedHomeTeam ?? match.homeSlot;
+    const awayTeam = prediction.predictedAwayTeam ?? match.awaySlot;
+    const home = teamFromName(homeTeam);
+    const away = teamFromName(awayTeam);
+    const rows = matchPredictionsByGroup.get(match.groupId) ?? [];
+    rows.push({
+      matchId: prediction.matchId,
+      kickoffAt: match.kickoffAt,
+      homeTeam: home.name,
+      homeTeamCode: home.code,
+      awayTeam: away.name,
+      awayTeamCode: away.code,
+      homeScore: prediction.homeScore,
+      awayScore: prediction.awayScore
+    });
+    matchPredictionsByGroup.set(match.groupId, rows);
+  }
+
+  for (const rows of matchPredictionsByGroup.values()) {
+    rows.sort((a, b) => a.matchId - b.matchId);
+  }
+
+  return bundle.groupPredictions.map((group) => ({
+    ...group,
+    matchPredictions: matchPredictionsByGroup.get(group.group) ?? []
+  }));
 }
 
 function formatHitRate(hitRate: number): string {
