@@ -8,11 +8,11 @@ import { ResultCard } from '../components/ResultCard.js';
 import { groupLeaders, heroMetrics, navigationCards } from '../data/mock.js';
 import { confirmedLatestResults, getPublicMatchSection } from '../data/publicDashboard.js';
 import { usePersistedLeaderboardRows, usePublicDashboardSnapshot } from '../lib/publicApi.js';
-import { getLeaderboardRows } from '../lib/predictionViewModels.js';
+import { getZeroedLeaderboardRows } from '../lib/predictionViewModels.js';
 
 export function LandingDashboard() {
   const dashboardSnapshot = usePublicDashboardSnapshot();
-  const leaderboardPreview = usePersistedLeaderboardRows(getLeaderboardRows()).slice(0, 5);
+  const leaderboardPreview = usePersistedLeaderboardRows(getZeroedLeaderboardRows()).slice(0, 5);
   const matchSection = getPublicMatchSection();
   const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
   const visibleGroupLeaders = dashboardSnapshot?.groupLeaders ?? groupLeaders;

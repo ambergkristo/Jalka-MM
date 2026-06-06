@@ -12,6 +12,7 @@ describe('public dashboard data', () => {
     expect(section.matches[0]).toMatchObject({
       homeTeam: 'Mexico',
       awayTeam: 'South Africa',
+      kickoffTime: '11.06 • 22:00',
       status: 'scheduled',
       stage: 'Alagrupp A'
     });

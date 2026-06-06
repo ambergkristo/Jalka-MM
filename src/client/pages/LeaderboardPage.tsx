@@ -2,10 +2,10 @@ import { Card } from '../components/Card.js';
 import { LeaderboardTable } from '../components/LeaderboardTable.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { usePersistedLeaderboardRows } from '../lib/publicApi.js';
-import { getLeaderboardRows } from '../lib/predictionViewModels.js';
+import { getZeroedLeaderboardRows } from '../lib/predictionViewModels.js';
 
 export function LeaderboardPage() {
-  const leaderboardRows = usePersistedLeaderboardRows(getLeaderboardRows());
+  const leaderboardRows = usePersistedLeaderboardRows(getZeroedLeaderboardRows());
 
   return (
     <>

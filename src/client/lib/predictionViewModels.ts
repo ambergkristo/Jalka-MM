@@ -1,5 +1,6 @@
 import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import { resolveScorerTeam } from './scorerTeamLookup.js';
 
 export interface LeaderboardRowView {
   rank: number;
@@ -52,6 +53,31 @@ export function getLeaderboardRows(): LeaderboardRowView[] {
   });
 }
 
+export function getZeroedLeaderboardRows(): LeaderboardRowView[] {
+  const rows = getLeaderboardRows();
+  const sourceRows = rows.length > 0
+    ? rows
+    : predictionRepository.getPlayers().map((player, index) => ({
+      rank: index + 1,
+      playerId: player.id,
+      player: player.name,
+      points: 0,
+      exactScores: 0,
+      correctResults: 0,
+      hitRate: '0%',
+      positionChange: 0
+    }));
+  return sourceRows.map((row, index) => ({
+    ...row,
+    rank: index + 1,
+    points: 0,
+    exactScores: 0,
+    correctResults: 0,
+    hitRate: '0%',
+    positionChange: 0
+  }));
+}
+
 export function getPlayerProfile(playerId: string): PlayerProfileView | undefined {
   const bundle = predictionRepository.getPlayerPredictionBundle(playerId);
   if (!bundle) return undefined;
@@ -78,7 +104,7 @@ function toPlayerProfileView(bundle: PredictionBundle): PlayerProfileView {
     championStatus: awards?.championStatus ?? 'Eliminated',
     topScorerPrediction: {
       name: awards?.topScorerName ?? 'Ennustus puudub',
-      team: !awards?.topScorerTeam || awards.topScorerTeam === 'Unknown team' ? 'Võistkond teadmata' : awards.topScorerTeam,
+      team: awards?.topScorerName ? resolveScorerTeam(awards.topScorerName, awards.topScorerTeam) : 'Võistkond teadmata',
       currentGoals: awards?.topScorerCurrentGoals ?? 0,
       status: awards?.topScorerStatus ?? 'Eliminated'
     },

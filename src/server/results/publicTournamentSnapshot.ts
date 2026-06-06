@@ -410,7 +410,9 @@ function highestScoringMatch(results: PublicResultCard[]): string {
 }
 
 function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat('et-EE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value));
+  const date = new Intl.DateTimeFormat('et-EE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value)).replace(/\.$/, '');
+  const time = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value));
+  return `${date} • ${time}`;
 }
 
 function formatDecimal(value: number): string {

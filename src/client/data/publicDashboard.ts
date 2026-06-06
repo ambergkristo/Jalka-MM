@@ -84,11 +84,17 @@ function sameTallinnDate(kickoffAt: string, now: Date): boolean {
 }
 
 function formatKickoff(kickoffAt: string): string {
-  return new Intl.DateTimeFormat('et-EE', {
+  const date = new Intl.DateTimeFormat('et-EE', {
+    timeZone: 'Europe/Tallinn',
+    day: '2-digit',
+    month: '2-digit'
+  }).format(new Date(kickoffAt)).replace(/\.$/, '');
+  const time = new Intl.DateTimeFormat('et-EE', {
     timeZone: 'Europe/Tallinn',
     hour: '2-digit',
     minute: '2-digit'
   }).format(new Date(kickoffAt));
+  return `${date} • ${time}`;
 }
 
 function venueCity(venue: string | undefined): string {

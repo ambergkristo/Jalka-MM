@@ -15,7 +15,7 @@ export interface PublicDashboardSnapshot {
 }
 
 interface LeaderboardApiResponse {
-  mode: 'persisted' | 'seed';
+  mode: 'persisted' | 'seed' | 'pre-results';
   recalculatedAt?: string;
   warnings: string[];
   entries: Array<{

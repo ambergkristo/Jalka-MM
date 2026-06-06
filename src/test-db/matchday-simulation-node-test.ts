@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { createDatabase, type QueryableDatabase } from '../server/databaseAdapter.js';
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
+import { getCurrentLeaderboard } from '../server/results/resultAgentRuntime.js';
 import { resetSimulationState, runMatchday1DisagreementSimulation, runMatchday1Simulation, simulatedTopScorers, MATCHDAY1_CONFIRM_AT, MATCHDAY1_PROVISIONAL_AT } from '../server/results/matchdaySimulation.js';
 import { getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
@@ -29,9 +30,13 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(summary.leaderboardRebuilt, false);
       assert.deepEqual(await repository.getLeaderboard(), []);
       const snapshot = await getPublicTournamentSnapshot(db);
+      const leaderboard = await getCurrentLeaderboard(repository);
       assert.deepEqual(snapshot.latestResults, []);
       assert.equal(snapshot.upcomingMatches.length > 0, true);
       assert.equal(snapshot.upcomingMatches[0]?.homeTeam, 'Mexico');
+      assert.match(snapshot.upcomingMatches[0]?.kickoffTime ?? '', /^\d{2}\.\d{2} • \d{2}:\d{2}$/);
+      assert.equal(leaderboard.mode, 'pre-results');
+      assert.equal(leaderboard.entries.every((entry) => entry.points === 0 && entry.exactScores === 0 && entry.correctResults === 0 && entry.hitRate === 0), true);
     });
   });
 
@@ -48,6 +53,9 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(report.confirmedResultsCount, 3);
       assert.equal(report.leaderboardRows, 24);
       assert.equal((await repository.getLeaderboard()).length, 24);
+      const leaderboard = await getCurrentLeaderboard(repository);
+      assert.equal(leaderboard.mode, 'persisted');
+      assert.equal(leaderboard.entries.some((entry) => entry.points > 0), true);
       assert.equal(snapshot.latestResults.length, 3);
       assert.equal(snapshot.upcomingMatches.some((match) => match.id === '1'), false);
       assert.deepEqual(snapshot.latestResults[0], {
@@ -102,6 +110,9 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(snapshot.upcomingMatches.length > 0, true);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 0);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM match_results'))?.count), 0);
+      const leaderboard = await getCurrentLeaderboard(new DatabaseResultRepository(db));
+      assert.equal(leaderboard.mode, 'pre-results');
+      assert.equal(leaderboard.entries.every((entry) => entry.points === 0), true);
     });
   });
 });

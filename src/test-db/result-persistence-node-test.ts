@@ -187,6 +187,18 @@ describe('persistent result and leaderboard repositories', () => {
       assert.equal(response.entries[0]?.points, 12);
     });
   });
+
+  it('leaderboard API response is zeroed before persisted result scoring exists', async () => {
+    await withRepository(async ({ repository }) => {
+      const response = await getCurrentLeaderboard(repository);
+      assert.equal(response.mode, 'pre-results');
+      assert.equal(response.entries.length, 24);
+      assert.equal(response.entries.every((entry) => entry.points === 0), true);
+      assert.equal(response.entries.every((entry) => entry.exactScores === 0), true);
+      assert.equal(response.entries.every((entry) => entry.correctResults === 0), true);
+      assert.equal(response.entries.every((entry) => entry.hitRate === 0), true);
+    });
+  });
 });
 
 async function withRepository(callback: (input: { db: QueryableDatabase; repository: DatabaseResultRepository }) => Promise<void>): Promise<void> {

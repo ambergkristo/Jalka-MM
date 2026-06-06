@@ -4,7 +4,7 @@ import { loadResultProviderConfig } from './resultProviderConfig.js';
 import { createResultProvider } from './resultProviderFactory.js';
 import { db } from '../db.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
-import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
+import type { LeaderboardEntry, Player } from '../../domain/predictionRepository.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 
@@ -42,11 +42,37 @@ export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRe
       entries: persisted
     };
   }
-  console.warn('Leaderboard API falling back to seed leaderboard because no persisted leaderboard rows exist yet.');
   return {
-    mode: 'seed',
+    mode: 'pre-results',
     recalculatedAt: undefined,
     warnings: [],
-    entries: predictionRepository.getLeaderboard() satisfies LeaderboardEntry[]
+    entries: getZeroedPublicLeaderboard()
   };
+}
+
+export function getZeroedPublicLeaderboard(): LeaderboardEntry[] {
+  const playersById = new Map(predictionRepository.getPlayers().map((player) => [player.id, player]));
+  const seeded = predictionRepository.getLeaderboard();
+  const orderedPlayers = seeded.length > 0
+    ? seeded.flatMap((entry) => playersById.get(entry.playerId) ?? [])
+    : predictionRepository.getPlayers().sort(byName);
+  return orderedPlayers.map((player, index) => ({
+    playerId: player.id,
+    rank: index + 1,
+    points: 0,
+    exactScores: 0,
+    correctResults: 0,
+    hitRate: 0,
+    matchesScored: 0,
+    matchPoints: 0,
+    groupBonusPoints: 0,
+    playoffBonusPoints: 0,
+    topScorerBonusPoints: 0,
+    totalPoints: 0,
+    lastUpdatedAt: ''
+  }));
+}
+
+function byName(a: Player, b: Player): number {
+  return a.name.localeCompare(b.name, 'et');
 }
