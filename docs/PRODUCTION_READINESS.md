@@ -13,6 +13,7 @@ This audit covers the current MM 2026 Tournament & Prediction Tracker state befo
 | Render deployment | Needs configuration | Existing Render URL can stay in use. Production env must be configured explicitly. |
 | Result-agent mock mode | Ready | Mock mode is default and safe for local/manual testing. |
 | Result-agent live mode | Needs configuration | Requires provider credentials, fixture mapping, and `RESULTS_AGENT_SECRET`. |
+| External cron trigger | Needs configuration | Use cron-job.org or similar HTTP cron to POST `/api/results-agent/run` with the secret header. |
 | Provider chain | Needs configuration | API-Football, football-data.org, Sportmonks, and the open-worldcup candidate exist. The open-worldcup discovery now resolves `/get/teams` ids into candidate names, and dry-run mode can read only high-confidence candidate mappings; only verified mappings should be enabled in production. |
 | Final prediction data | Needs final data | Current import is a 24-player working import. Final 50+ player Excel still needs import. |
 | Playoff bracket gate | Ready | Public bracket stays placeholder-only until qualifier resolver supplies confirmed teams. |
@@ -44,6 +45,16 @@ RESULTS_AGENT_SECRET=<long-random-secret-before-live-mode>
 RESULT_CONFIRMATION_DELAY_MINUTES=10
 ```
 
+Open World Cup live-write rollout:
+
+```bash
+RESULTS_PROVIDER_CHAIN=open-worldcup
+RESULTS_WRITE_MODE=live
+OPEN_WORLDCUP_API_BASE_URL=https://worldcup26.ir
+RESULTS_AGENT_SECRET=<set in Render>
+RESULT_CONFIRMATION_DELAY_MINUTES=10
+```
+
 Safe defaults:
 
 - `RESULTS_PROVIDER` defaults to `mock`.
@@ -53,6 +64,8 @@ Safe defaults:
 - Live runs require request header `x-results-agent-secret: <RESULTS_AGENT_SECRET>`.
 - Dry-run can fetch provider data without persisting match results or leaderboard rows.
 - No API keys or secrets are committed.
+- Open World Cup live runs only auto-process high-confidence fixture mappings; medium/low/unmatched rows remain skipped.
+- External cron is required on this Render setup because Shell/Cron is unavailable.
 
 API-Football / API-Sports:
 
@@ -256,6 +269,14 @@ Live mode:
 - Call `POST /api/results-agent/run` with `x-results-agent-secret`.
 - Do not enable live mode until provider dry-run and fixture mapping pass.
 
+External cron:
+
+- Configure an HTTP cron service such as `cron-job.org`.
+- POST `https://jalka-mm.onrender.com/api/results-agent/run`.
+- Include `x-results-agent-secret: <RESULTS_AGENT_SECRET>`.
+- Use every 10 minutes on matchdays; stretch to 15 minutes if stability matters more.
+- Check `GET /api/results-agent/status` from a phone to confirm the last run and warning counts.
+
 Confirmed-results-only policy:
 
 - Two independent providers agreeing on final score can confirm immediately.
@@ -274,6 +295,7 @@ Manual fallback:
 - Manual correction writes audit rows to `result_manual_corrections`.
 - Manual scorer input replaces prior manual scorer rows for the same match.
 - The protected `/operator` UI uses the same backend guard and should not be linked from public navigation.
+- If live automation misses or misreads a result, use `/operator` to confirm or correct it immediately.
 
 ## 7. Provider Readiness
 

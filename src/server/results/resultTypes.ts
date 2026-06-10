@@ -101,6 +101,20 @@ export interface ResultAgentStatus {
   provider: string;
   mode: 'mock' | 'live';
   lastLeaderboardRebuildAt?: string;
+  providerChain?: string[];
+  writeMode?: 'mock' | 'dry-run' | 'live';
+  providerReachable?: boolean;
+  pendingWarningsCount?: number;
+  latestConfirmedResultCount?: number;
+  lastRunSummary?: {
+    startedAt: string;
+    finishedAt: string;
+    checkedMatches: number;
+    updatedMatches: number;
+    finalizedMatches: number;
+    dryRun: boolean;
+    warningsCount: number;
+  };
 }
 
 export interface ResultAgentRunSummary extends ResultAgentStatus {

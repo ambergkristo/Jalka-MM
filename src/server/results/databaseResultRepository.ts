@@ -183,14 +183,37 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
   async getStatus(provider: string, now: Date): Promise<ResultAgentStatus> {
     const plans = planMatchUpdates(await this.listTrackedMatches(), now);
     const metadata = await this.getLeaderboardMetadata();
-    const latestRun = await this.db.one('SELECT finished_at FROM result_agent_runs ORDER BY finished_at DESC LIMIT 1').catch(() => null);
+    const latestRun = await this.db.one(`
+      SELECT started_at, finished_at, checked_matches, updated_matches, finalized_matches, leaderboard_rebuilt, warnings_json
+      FROM result_agent_runs
+      ORDER BY finished_at DESC
+      LIMIT 1
+    `).catch(() => null);
+    const latestConfirmedResultCount = Number((await this.db.one(`
+      SELECT COUNT(*) AS count
+      FROM match_results
+      WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    `))?.count ?? 0);
+    const warnings = parseWarnings(latestRun?.warnings_json);
     return {
       lastRunAt: nullableString(latestRun?.finished_at),
       nextSuggestedRunAt: findNextSuggestedRunAt(plans),
       staleMatchesCount: plans.filter((plan) => plan.shouldCheckNow).length,
       provider,
       mode: provider === 'mock-result-provider' ? 'mock' : 'live',
-      lastLeaderboardRebuildAt: metadata.lastRebuildAt
+      lastLeaderboardRebuildAt: metadata.lastRebuildAt,
+      providerReachable: latestRun ? !warnings.some((warning) => /failed/i.test(warning)) : undefined,
+      pendingWarningsCount: warnings.length,
+      latestConfirmedResultCount,
+      lastRunSummary: latestRun ? {
+        startedAt: nullableString(latestRun.started_at) ?? nullableString(latestRun.finished_at) ?? '',
+        finishedAt: nullableString(latestRun.finished_at) ?? '',
+        checkedMatches: Number(latestRun.checked_matches ?? 0),
+        updatedMatches: Number(latestRun.updated_matches ?? 0),
+        finalizedMatches: Number(latestRun.finalized_matches ?? 0),
+        dryRun: Number(latestRun.leaderboard_rebuilt ?? 0) === 0 && warnings.some((warning) => /dry run/i.test(warning)),
+        warningsCount: warnings.length
+      } : undefined
     };
   }
 

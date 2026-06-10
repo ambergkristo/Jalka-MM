@@ -5,6 +5,7 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
   private readonly matches = new Map<number, TrackedMatch>();
   private readonly updates = new Map<number, ResultUpdate>();
   private lastRunAt?: string;
+  private lastRunSummary?: ResultAgentRunSummary;
 
   constructor(matches: TrackedMatch[] = createDefaultMockMatches()) {
     for (const match of matches) this.matches.set(match.id, { ...match });
@@ -61,7 +62,21 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
       staleMatchesCount: plans.filter((plan) => plan.shouldCheckNow).length,
       provider,
       mode: 'mock',
-      lastLeaderboardRebuildAt: undefined
+      lastLeaderboardRebuildAt: undefined,
+      providerChain: [provider],
+      writeMode: 'mock',
+      providerReachable: this.lastRunSummary ? !this.lastRunSummary.warnings.some((warning) => /failed/i.test(warning)) : undefined,
+      pendingWarningsCount: this.lastRunSummary?.warnings.length,
+      latestConfirmedResultCount: [...this.updates.values()].filter((update) => update.isFinal && update.publicStatus === 'CONFIRMED_FINAL').length,
+      lastRunSummary: this.lastRunSummary ? {
+        startedAt: this.lastRunSummary.startedAt,
+        finishedAt: this.lastRunSummary.finishedAt,
+        checkedMatches: this.lastRunSummary.checkedMatches,
+        updatedMatches: this.lastRunSummary.updatedMatches,
+        finalizedMatches: this.lastRunSummary.finalizedMatches,
+        dryRun: this.lastRunSummary.dryRun,
+        warningsCount: this.lastRunSummary.warnings.length
+      } : undefined
     };
   }
 
@@ -72,6 +87,7 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
 
   async saveRunSummary(summary: ResultAgentRunSummary): Promise<void> {
     this.lastRunAt = summary.finishedAt;
+    this.lastRunSummary = { ...summary, warnings: [...summary.warnings], leaderboardRebuilds: [...summary.leaderboardRebuilds] };
   }
 }
 

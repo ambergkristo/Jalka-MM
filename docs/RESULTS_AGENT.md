@@ -330,6 +330,38 @@ Free and low-cost result providers can have small request budgets. The chain the
 - Provider failures are returned as warnings so another provider can still contribute an observation.
 - Dry-run mode should be used before live writes to observe payload shape and request volume.
 
+## External Cron on Render Free
+
+Render Free in this setup does not provide Shell/Cron, so trigger the agent from an external cron service.
+
+Recommended option: `cron-job.org`
+
+Example request:
+
+- Method: `POST`
+- URL: `https://jalka-mm.onrender.com/api/results-agent/run`
+- Headers: `x-results-agent-secret: <RESULTS_AGENT_SECRET>`
+- Body: empty JSON `{}` if the cron service requires a body
+- Schedule: every 10 minutes during matchdays, or every 15 minutes if stability matters more than freshness
+
+Expected success:
+
+- `200` response with a JSON summary
+- `dryRun: false`
+- no raw provider payloads
+- no secret echoed back
+
+Phone check:
+
+- `GET /api/results-agent/status`
+- Shows provider chain, write mode, last run summary, pending warnings count, and confirmed-result count
+- Does not expose secrets or raw provider data
+
+Operator fallback:
+
+- Use `/operator` when a result is missing, wrong, or needs scorer correction.
+- The manual confirm endpoint remains the recovery path for ambiguous or corrected results.
+
 ## Provider Contract
 
 The provider contract remains provider-agnostic. Providers return normalized `ResultUpdate` objects with optional provider metadata:
@@ -391,6 +423,33 @@ Sportmonks fixture mapping process:
 - API keys must stay server-side and must never be committed.
 - Provider raw payload storage should be bounded and optional.
 - Provider calls must be made only from the backend result agent.
+
+## Live Open World Cup Rollout
+
+Render environment checklist:
+
+```bash
+RESULTS_PROVIDER_CHAIN=open-worldcup
+RESULTS_WRITE_MODE=live
+OPEN_WORLDCUP_API_BASE_URL=https://worldcup26.ir
+RESULTS_AGENT_SECRET=<set in Render>
+RESULT_CONFIRMATION_DELAY_MINUTES=10
+```
+
+Safety rules:
+
+- Only high-confidence open-worldcup mappings are used automatically.
+- Medium, low, and unmatched mappings are skipped and reported.
+- Fixture `99` remains the known reversed knockout pairing and is not processed automatically.
+- Non-final provider statuses never confirm a result.
+- Confirmed-final persistence and leaderboard rebuilds still happen only through the existing consensus pipeline.
+
+Rollback:
+
+- Set `RESULTS_WRITE_MODE=mock` to stop live writes while leaving the provider config in place.
+- Or set `RESULTS_PROVIDER_CHAIN=mock` to disable open-worldcup entirely.
+- Redeploy after changing env vars.
+- The operator UI remains available for manual correction when live automation is paused.
 
 ## Sprint 5 Deferred Work
 

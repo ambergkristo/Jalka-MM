@@ -32,7 +32,9 @@ Readiness notes:
 - The hosted API currently returns match records and a team list, so numeric ids can be resolved before mapping.
 - Fixture mapping still needs review before any production provider config is updated.
 - Dry-run mode can read the candidate fixture map, process observations, and skip medium/low/unmatched rows without DB writes.
+- Live mode uses the same high-confidence-only lookup and still relies on the existing confirmation pipeline before any public final result is persisted.
 - Fixture 99 remains the known reversed knockout pairing and is skipped until manually verified.
+- Non-final statuses are treated as non-final and do not confirm results.
 - Review the candidate file before promoting any mapping into production provider config.
 
 Suggested env:

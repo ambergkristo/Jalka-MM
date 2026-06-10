@@ -14,7 +14,11 @@ const providerConfig = loadResultProviderConfig();
 const provider = createResultProvider(providerConfig);
 
 export function getResultsAgentStatus(now = new Date()) {
-  return getResultAgentStatus({ repository, provider, now });
+  return getResultAgentStatus({ repository, provider, now }).then((status) => ({
+    ...status,
+    providerChain: providerConfig.providerChain,
+    writeMode: providerConfig.writeMode
+  }));
 }
 
 export function getResultsAgentRunPermission(input: { dryRunRequested?: boolean; providedSecret?: string }) {

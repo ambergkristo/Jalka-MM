@@ -74,3 +74,18 @@
 - `npm run build` passed.
 - `npx vitest run src/test/openWorldCupResultProvider.test.ts src/test/resultAgent.test.ts src/test/resultProviderFactory.test.ts` passed.
 - `npm run open-worldcup:dry-run -- --now=2026-06-11T19:30:00Z` reached the provider list endpoint, produced one observation, skipped no mappings in that run, and reported `dbWrites: 0`.
+
+# Sprint 25 - Open WorldCup Live-Write Operations
+
+- [x] Verify `/api/results-agent/run` rejects missing/wrong secret in live mode.
+- [x] Expose a safe operational `/api/results-agent/status` summary for phone checks.
+- [x] Document Render live env, cron-job.org, and rollback steps.
+- [x] Prove open-worldcup live mode remains high-confidence-only and non-final guarded.
+- [x] Add or update targeted tests for live-write security and status output.
+- [x] Run build, targeted tests, and a live-mode safety check.
+
+## Review
+
+- `npm run build` passed.
+- `npx vitest run src/test/resultAgentSecurity.test.ts src/test/openWorldCupResultProvider.test.ts src/test/resultAgent.test.ts` passed.
+- `npm run open-worldcup:dry-run -- --now=2026-06-11T19:30:00Z` still worked and reported `dbWrites: 0`.

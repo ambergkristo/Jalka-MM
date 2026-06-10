@@ -59,6 +59,36 @@ describe('Open World Cup result provider', () => {
     });
   });
 
+  it('treats live provider status as non-final', async () => {
+    const provider = new OpenWorldCupResultProvider(
+      { apiBaseUrl: 'https://worldcup26.ir' },
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        async text() {
+          return '';
+        },
+        async json() {
+          return { response: [sampleGame('LIVE', 1, 0, false, 42)] };
+        }
+      })),
+      buildOpenWorldCupFixtureLookup({
+        fixtures: [
+          { providerFixtureId: '42', matchedInternalMatchId: 1, confidence: 'high' }
+        ]
+      })
+    );
+
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T19:30:00.000Z'));
+
+    expect(update).toMatchObject({
+      status: 'LIVE',
+      isFinal: false,
+      homeScore: 1,
+      awayScore: 0
+    });
+  });
+
   it('skips non-high candidate rows without calling the API', async () => {
     const fetchImpl = vi.fn();
     const provider = new OpenWorldCupResultProvider(

@@ -3,7 +3,7 @@ import { InMemoryResultRepository, createDefaultMockMatches } from '../server/re
 import { rebuildLeaderboardAfterFinalResult } from '../server/results/leaderboardRebuild.js';
 import { MockResultProvider } from '../server/results/mockResultProvider.js';
 import { ProviderChainResultProvider } from '../server/results/providerChainResultProvider.js';
-import { runResultUpdateCycle } from '../server/results/resultAgent.js';
+import { getResultAgentStatus, runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { toResultUpdate, type ResultProvider } from '../server/results/resultProvider.js';
 
 describe('result agent update cycle', () => {
@@ -114,6 +114,109 @@ describe('result agent update cycle', () => {
     expect(summary.needsReview).toBe(1);
     expect(summary.leaderboardRebuilt).toBe(false);
     expect(summary.warnings).toContain('Provider final scores disagree for match 4.');
+  });
+
+  it('does not confirm a non-final open-worldcup observation in live mode', async () => {
+    const now = new Date('2026-06-11T19:30:00.000Z');
+    const repository = new InMemoryResultRepository([{
+      id: 1,
+      kickoffUtc: '2026-06-11T19:00:00.000Z',
+      status: 'SCHEDULED',
+      homeTeam: 'Mexico',
+      awayTeam: 'South Africa',
+      isFinal: false
+    }]);
+    const provider: ResultProvider = {
+      name: 'open-worldcup-result-provider',
+      mode: 'live' as const,
+      async fetchMatchUpdate(match, now) {
+        return toResultUpdate({
+          match,
+          provider: 'open-worldcup-result-provider',
+          providerStatus: 'LIVE',
+          now,
+          homeScore: 1,
+          awayScore: 0,
+          minute: 30,
+          providerMatchId: '1'
+        });
+      }
+    };
+
+    const summary = await runResultUpdateCycle({ repository, provider, now });
+
+    expect(summary).toMatchObject({
+      finalizedResults: 0,
+      confirmationPending: 0,
+      needsReview: 0,
+      leaderboardRebuilt: false
+    });
+    await expect(repository.getFinalizedResults()).resolves.toHaveLength(0);
+  });
+
+  it('returns a safe operational status summary without secrets', async () => {
+    const now = new Date('2026-06-15T18:00:00.000Z');
+    const repository = new InMemoryResultRepository(createDefaultMockMatches(now).filter((match) => match.id === 4));
+    await repository.saveResultUpdate({
+      matchId: 4,
+      status: 'FINISHED',
+      publicStatus: 'CONFIRMED_FINAL',
+      homeScore: 2,
+      awayScore: 1,
+      isFinal: true,
+      lastCheckedAt: now.toISOString(),
+      provider: 'open-worldcup-result-provider',
+      confirmedHomeScore: 2,
+      confirmedAwayScore: 1,
+      confirmedAt: now.toISOString(),
+      confirmationSource: 'manual',
+      confirmationConfidence: 'manual'
+    });
+    await repository.saveRunSummary({
+      startedAt: '2026-06-15T17:55:00.000Z',
+      finishedAt: now.toISOString(),
+      checkedMatches: 1,
+      observationsProcessed: 1,
+      updatesApplied: 1,
+      finalizedResults: 1,
+      dryRun: false,
+      updatedMatches: 1,
+      finalizedMatches: 1,
+      wouldConfirm: 1,
+      wouldNeedsReview: 0,
+      finalObservations: 1,
+      provisionalObservations: 0,
+      liveObservations: 0,
+      scheduledObservations: 0,
+      confirmationPending: 0,
+      needsReview: 0,
+      leaderboardRebuilt: true,
+      playersProcessed: 24,
+      warnings: ['Dry run completed without persisting result, run summary, or leaderboard changes.'],
+      leaderboardRebuilds: [],
+      lastRunAt: now.toISOString(),
+      nextSuggestedRunAt: now.toISOString(),
+      staleMatchesCount: 0,
+      provider: 'open-worldcup-result-provider',
+      mode: 'live'
+    });
+
+    const status = await getResultAgentStatus({ repository, provider: new MockResultProvider(), now });
+
+    expect(status).toMatchObject({
+      provider: 'mock-result-provider',
+      mode: 'mock',
+      staleMatchesCount: expect.any(Number),
+      latestConfirmedResultCount: 1,
+      pendingWarningsCount: 1,
+      providerReachable: true,
+      lastRunSummary: expect.objectContaining({
+        checkedMatches: 1,
+        updatedMatches: 1,
+        finalizedMatches: 1,
+        warningsCount: 1
+      })
+    });
   });
 });
 
