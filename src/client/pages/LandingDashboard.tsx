@@ -5,10 +5,11 @@ import { MatchCard } from '../components/MatchCard.js';
 import { NavigationCards } from '../components/NavigationCards.js';
 import { ResultCard } from '../components/ResultCard.js';
 import { navigationCards } from '../data/navigation.js';
-import { usePublicTournamentState, buildCanonicalMatchSection } from '../lib/publicApi.js';
+import { usePublicTournamentState, buildCanonicalLiveMatchSection, buildCanonicalMatchSection } from '../lib/publicApi.js';
 
 export function LandingDashboard() {
   const tournamentState = usePublicTournamentState();
+  const liveSection = buildCanonicalLiveMatchSection(tournamentState.snapshot, 3);
   const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 3);
   const latestResults = tournamentState.latestResults;
   const leaderboardPreview = tournamentState.leaderboardRows.slice(0, 5);
@@ -16,6 +17,16 @@ export function LandingDashboard() {
   return (
     <div className="landing-dashboard">
       <HeroCard metrics={tournamentState.heroMetrics} />
+
+      <Card title={liveSection.title} eyebrow={liveSection.eyebrow}>
+        {liveSection.matches.length > 0 ? (
+          <div className="match-card-grid">
+            {liveSection.matches.map((match) => <MatchCard match={match} key={match.id} />)}
+          </div>
+        ) : (
+          <p className="empty-state">Hetkel ei ole käimasolevaid mänge.</p>
+        )}
+      </Card>
 
       <Card className="today-card">
         <div className="section-title-row">

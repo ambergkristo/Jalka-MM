@@ -21,7 +21,8 @@ import { TournamentPage } from '../client/pages/TournamentPage.js';
 
 function createConfirmedSnapshot(): PublicDashboardSnapshotLike {
   return {
-    upcomingMatches: [
+    liveMatches: [],
+    todayMatches: [
       {
         id: '3',
         homeTeam: 'Germany',
@@ -37,6 +38,17 @@ function createConfirmedSnapshot(): PublicDashboardSnapshotLike {
         awayTeam: 'Korea Republic',
         kickoffTime: '12.06.2026 20:00',
         stage: 'Alagrupp F',
+        status: 'scheduled',
+        venue: ''
+      }
+    ],
+    upcomingMatches: [
+      {
+        id: '5',
+        homeTeam: 'Spain',
+        awayTeam: 'Senegal',
+        kickoffTime: '13.06.2026 17:00',
+        stage: 'Alagrupp G',
         status: 'scheduled',
         venue: ''
       }
@@ -116,7 +128,9 @@ describe('public dashboard pages', () => {
     const player = renderToStaticMarkup(<PlayerDetailPage playerId="kristo-amberg" />);
 
     expect(landing).toContain('Kinnitatud tulemusi veel ei ole');
+    expect(landing).toContain('Hetkel ei ole käimasolevaid mänge.');
     expect(landing).toContain('Lõppenud mänge veel ei ole.');
+    expect(results).toContain('Hetkel ei ole käimasolevaid mänge.');
     expect(results).toContain('Lõppenud mänge veel ei ole.');
     expect(leaderboard).toContain('0%');
     expect(tournament).toContain('Alagrupitabelid');
@@ -133,6 +147,7 @@ describe('public dashboard pages', () => {
     const tournament = renderToStaticMarkup(<TournamentPage />);
 
     expect(landing).toContain('2 / 104');
+    expect(landing).toContain('Hetkel ei ole käimasolevaid mänge.');
     expect(landing).toContain('Mehhiko');
     expect(landing).toContain('Lõuna-Aafrika');
     expect(landing).toContain('Lõuna-Korea');

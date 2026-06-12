@@ -22,7 +22,7 @@ export function MatchCard({ match }: { match: DashboardMatch }) {
 function statusLabel(status: DashboardMatch['status']) {
   return {
     scheduled: 'Algamas',
-    live: 'Otse',
+    live: 'OTSE',
     confirming: 'Kinnitamisel',
     final: 'Lõppenud'
   }[status];

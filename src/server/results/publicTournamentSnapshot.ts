@@ -6,6 +6,8 @@ import { getCurrentLeaderboard } from './resultAgentRuntime.js';
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 
 export interface PublicDashboardSnapshot {
+  liveMatches: PublicMatchCard[];
+  todayMatches: PublicMatchCard[];
   upcomingMatches: PublicMatchCard[];
   latestResults: PublicResultCard[];
   groupStandings: PublicGroupStanding[];
@@ -79,7 +81,10 @@ interface StandingRow {
 
 export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promise<PublicDashboardSnapshot> {
   await migrateResultPersistenceSchema(db);
-  const upcomingMatches = await getUpcomingMatches(db);
+  const matches = await getPublicMatches(db);
+  const liveMatches = matches.filter((match) => match.state === 'live').map(toMatchCard);
+  const todayMatches = matches.filter((match) => match.state === 'today').map(toMatchCard);
+  const upcomingMatches = matches.filter((match) => match.state === 'upcoming').map(toMatchCard);
   const latestResults = await getConfirmedLatestResults(db);
   const groupStandings = await getPublicGroupStandings(db);
   const topScorers = await getPublicTopScorers(db);
@@ -98,6 +103,8 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   });
 
   return {
+    liveMatches,
+    todayMatches,
     upcomingMatches,
     latestResults,
     groupStandings,
@@ -242,6 +249,20 @@ async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicR
 }
 
 async function getUpcomingMatches(db: QueryableDatabase): Promise<PublicMatchCard[]> {
+  return (await getPublicMatches(db))
+    .filter((match) => match.state === 'upcoming')
+    .map(toMatchCard);
+}
+
+async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
+  id: number;
+  groupId?: string;
+  kickoffAt: string;
+  homeTeam: string;
+  awayTeam: string;
+  publicStatus: string;
+  state: 'live' | 'today' | 'upcoming';
+}>> {
   const rows = await db.all(`
     SELECT
       m.id,
@@ -249,24 +270,53 @@ async function getUpcomingMatches(db: QueryableDatabase): Promise<PublicMatchCar
       m.kickoff_at,
       COALESCE(home.name, m.home_slot) AS home_team,
       COALESCE(away.name, m.away_slot) AS away_team,
-      r.public_status
+      r.public_status,
+      r.is_final
     FROM matches m
     LEFT JOIN match_results r ON r.match_id = m.id
     LEFT JOIN teams home ON home.id = m.home_team_id
     LEFT JOIN teams away ON away.id = m.away_team_id
-    WHERE COALESCE(r.public_status, 'SCHEDULED') IN ('SCHEDULED', 'LIVE', 'CONFIRMING', 'NEEDS_REVIEW')
     ORDER BY m.kickoff_at, m.id
-    LIMIT 8
   `);
-  return rows.map((row) => ({
-    id: String(row.id),
-    homeTeam: String(row.home_team),
-    awayTeam: String(row.away_team),
-    kickoffTime: formatDateTime(String(row.kickoff_at)),
-    stage: row.group_id ? `Alagrupp ${row.group_id}` : 'Turniir',
-    status: publicMatchStatus(String(row.public_status ?? 'SCHEDULED')),
+  const now = new Date();
+  return rows.flatMap((row) => {
+    const kickoffAt = String(row.kickoff_at);
+    if (Number.isNaN(Date.parse(kickoffAt))) return [];
+    const publicStatus = String(row.public_status ?? 'SCHEDULED');
+    const isFinal = Number(row.is_final ?? 0) === 1 && publicStatus === 'CONFIRMED_FINAL';
+    if (isFinal) return [];
+    const kickoffMs = Date.parse(kickoffAt);
+    const state = kickoffMs <= now.getTime() ? 'live' : sameTallinnDate(kickoffAt, now) ? 'today' : 'upcoming';
+    return [{
+      id: Number(row.id),
+      groupId: row.group_id ? String(row.group_id) : undefined,
+      kickoffAt,
+      homeTeam: String(row.home_team),
+      awayTeam: String(row.away_team),
+      publicStatus,
+      state
+    }];
+  });
+}
+
+function toMatchCard(match: {
+  id: number;
+  groupId?: string;
+  kickoffAt: string;
+  homeTeam: string;
+  awayTeam: string;
+  publicStatus: string;
+  state: 'live' | 'today' | 'upcoming';
+}): PublicMatchCard {
+  return {
+    id: String(match.id),
+    homeTeam: match.homeTeam,
+    awayTeam: match.awayTeam,
+    kickoffTime: formatDateTime(match.kickoffAt),
+    stage: match.groupId ? `Alagrupp ${match.groupId}` : 'Turniir',
+    status: match.state === 'live' ? 'live' : publicMatchStatus(match.publicStatus),
     venue: ''
-  }));
+  };
 }
 
 async function getPublicGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
@@ -435,6 +485,16 @@ function publicMatchStatus(publicStatus: string): PublicMatchCard['status'] {
   if (publicStatus === 'LIVE') return 'live';
   if (publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW') return 'confirming';
   return 'scheduled';
+}
+
+function sameTallinnDate(kickoffAt: string, now: Date): boolean {
+  const formatter = new Intl.DateTimeFormat('et-EE', {
+    timeZone: 'Europe/Tallinn',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  return formatter.format(new Date(kickoffAt)) === formatter.format(now);
 }
 
 function slug(value: string): string {

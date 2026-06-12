@@ -5,7 +5,7 @@ import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } 
 import type { BracketTree } from '../../domain/publicBracket.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
-import { getZeroedLeaderboardRows, type LeaderboardRowView } from './predictionViewModels.js';
+import { type LeaderboardRowView } from './predictionViewModels.js';
 
 export interface PublicLeaderboardEntry {
   playerId: string;
@@ -18,6 +18,8 @@ export interface PublicLeaderboardEntry {
 }
 
 export interface PublicDashboardSnapshotLike {
+  liveMatches: DashboardMatch[];
+  todayMatches: DashboardMatch[];
   upcomingMatches: DashboardMatch[];
   latestResults: DashboardResult[];
   groupStandings: GroupStanding[];
@@ -35,6 +37,8 @@ export interface PublicTournamentState {
   playedCount: number;
   totalMatches: number;
   heroMetrics: DashboardMetric[];
+  liveMatches: DashboardMatch[];
+  todayMatches: DashboardMatch[];
   latestResults: DashboardResult[];
   upcomingMatches: DashboardMatch[];
   leaderboardRows: LeaderboardRowView[];
@@ -51,6 +55,8 @@ const totalMatches = (matchesJson as { id: number }[]).length;
 
 export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLike, now = new Date()): PublicTournamentState {
   const playedCount = snapshot?.latestResults.length ?? 0;
+  const liveMatches = snapshot?.liveMatches ?? [];
+  const todayMatches = snapshot?.todayMatches ?? [];
   const upcomingMatches = snapshot?.upcomingMatches ?? getPublicMatchSection(now).matches;
   const latestResults = snapshot?.latestResults ?? [];
   const groupStandings = snapshot?.groupStandings ?? initialGroupStandings;
@@ -85,7 +91,9 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
     snapshot,
     playedCount,
     totalMatches,
-    heroMetrics: buildHeroMetrics(playedCount, upcomingMatches),
+    heroMetrics: buildHeroMetrics(playedCount, liveMatches, todayMatches, upcomingMatches, now),
+    liveMatches,
+    todayMatches,
     latestResults,
     upcomingMatches,
     leaderboardRows: buildLeaderboardRows(snapshot),
@@ -99,11 +107,33 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
   };
 }
 
+export function selectLiveMatchSection(snapshot: PublicDashboardSnapshotLike | undefined, limit = 3): MatchSection {
+  if (!snapshot || snapshot.liveMatches.length === 0) {
+    return {
+      eyebrow: 'Otse',
+      title: 'Otsemängud',
+      matches: []
+    };
+  }
+  return {
+    eyebrow: 'Otse',
+    title: 'Otsemängud',
+    matches: snapshot.liveMatches.slice(0, limit)
+  };
+}
+
 export function selectPublicMatchSection(snapshot: PublicDashboardSnapshotLike | undefined, now = new Date(), limit = 3): MatchSection {
   if (!snapshot) return getPublicMatchSection(now);
+  if (snapshot.todayMatches.length > 0) {
+    return {
+      eyebrow: 'Täna',
+      title: 'Tänased mängud',
+      matches: snapshot.todayMatches.slice(0, limit)
+    };
+  }
   return {
-    eyebrow: snapshot.latestResults.length > 0 ? 'Ajakava' : getPublicMatchSection(now).eyebrow,
-    title: snapshot.latestResults.length > 0 ? 'Tulevad mängud' : getPublicMatchSection(now).title,
+    eyebrow: 'Ajakava',
+    title: 'Tulevad mängud',
     matches: snapshot.upcomingMatches.slice(0, limit)
   };
 }
@@ -113,8 +143,14 @@ export function buildLeaderboardRows(snapshot?: PublicDashboardSnapshotLike): Le
   return entries.map(toLeaderboardRow);
 }
 
-function buildHeroMetrics(playedCount: number, upcomingMatches: DashboardMatch[]): DashboardMetric[] {
-  const nextMatch = upcomingMatches[0];
+function buildHeroMetrics(
+  playedCount: number,
+  liveMatches: DashboardMatch[],
+  todayMatches: DashboardMatch[],
+  upcomingMatches: DashboardMatch[],
+  now: Date
+): DashboardMetric[] {
+  const nextMatch = liveMatches[0] ?? todayMatches[0] ?? upcomingMatches[0];
   return [
     { label: 'Turniiri algus', value: '11.06', detail: 'Esimene mäng 11. juunil 2026' },
     {
@@ -125,7 +161,7 @@ function buildHeroMetrics(playedCount: number, upcomingMatches: DashboardMatch[]
     {
       label: 'Järgmine',
       value: nextMatch ? nextMatch.stage : 'Avapäev',
-      detail: nextMatch ? `${nextMatch.homeTeam} vs ${nextMatch.awayTeam}` : 'Ajakava algab Mehhikos'
+      detail: nextMatch ? `${nextMatch.homeTeam} vs ${nextMatch.awayTeam}` : `Ajakava algab ${formatFallbackDate(now)}`
     }
   ];
 }
@@ -142,4 +178,12 @@ function toLeaderboardRow(entry: PublicLeaderboardEntry): LeaderboardRowView {
     hitRate: `${Math.round(entry.hitRate * 100)}%`,
     positionChange: entry.previousRank ? entry.previousRank - entry.rank : 0
   };
+}
+
+function formatFallbackDate(now: Date): string {
+  return new Intl.DateTimeFormat('et-EE', {
+    timeZone: 'Europe/Tallinn',
+    day: '2-digit',
+    month: '2-digit'
+  }).format(now).replace(/\.$/, '');
 }

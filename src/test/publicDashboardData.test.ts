@@ -1,11 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { buildPublicTournamentState, selectPublicMatchSection, type PublicDashboardSnapshotLike } from '../client/lib/publicTournamentState.js';
+import { buildPublicTournamentState, selectLiveMatchSection, selectPublicMatchSection, type PublicDashboardSnapshotLike } from '../client/lib/publicTournamentState.js';
 import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../client/data/publicTournamentFallback.js';
 import { predictionRepository } from '../domain/predictionRepository.js';
 import type { LeaderboardEntry } from '../domain/predictionRepository.js';
 
 function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): PublicDashboardSnapshotLike {
   return {
+    liveMatches: [],
+    todayMatches: [
+      {
+        id: '1',
+        homeTeam: 'Mexico',
+        awayTeam: 'South Africa',
+        kickoffTime: '12.06.2026 10:00',
+        stage: 'Alagrupp A',
+        status: 'scheduled',
+        venue: ''
+      },
+      {
+        id: '2',
+        homeTeam: 'Korea Republic',
+        awayTeam: 'Czechia',
+        kickoffTime: '12.06.2026 13:00',
+        stage: 'Alagrupp B',
+        status: 'scheduled',
+        venue: ''
+      }
+    ],
     upcomingMatches: [
       {
         id: '3',
@@ -96,14 +117,49 @@ function leaderboardRow(input: Partial<LeaderboardEntry> & Pick<LeaderboardEntry
 
 describe('public tournament state', () => {
   it('returns zeroed public state when no confirmed results exist', () => {
-    const state = buildPublicTournamentState(undefined, new Date('2026-06-06T12:00:00.000Z'));
+    const state = buildPublicTournamentState({
+      liveMatches: [],
+      todayMatches: [
+        {
+          id: '1',
+          homeTeam: 'Mexico',
+          awayTeam: 'South Africa',
+          kickoffTime: '12.06.2026 10:00',
+          stage: 'Alagrupp A',
+          status: 'scheduled',
+          venue: ''
+        }
+      ],
+      upcomingMatches: [],
+      latestResults: [],
+      groupStandings: initialGroupStandings,
+      groupLeaders: initialGroupStandings.map((group) => ({ group: group.group })),
+      topScorers: [],
+      playoffBracket: initialPlayoffBracket,
+      tournamentSummary: [
+        { label: 'Turniiri faas', value: 'Alagrupid', detail: 'Turniir on alanud', tone: 'gold' },
+        { label: 'Mängitud', value: '0 / 104', detail: 'Kinnitatud tulemusi veel ei ole', tone: 'blue' },
+        { label: 'Väravad', value: '0', detail: 'Kinnitatud väravaid veel ei ole', tone: 'green' },
+        { label: 'Võistkonnad', value: '48', detail: 'Alagrupid A-L', tone: 'red' }
+      ],
+      tournamentStats: initialTournamentStats,
+      tournamentProgressByStage: [
+        { stage: 'Alagrupid', completed: 0, total: 72 },
+        { stage: '1/16-finaalid', completed: 0, total: 16 },
+        { stage: 'Kaheksandikfinaalid', completed: 0, total: 8 },
+        { stage: 'Veerandfinaalid', completed: 0, total: 4 },
+        { stage: 'Poolfinaalid', completed: 0, total: 2 },
+        { stage: 'Finaalid', completed: 0, total: 2 }
+      ],
+      leaderboard: []
+    }, new Date('2026-06-06T12:00:00.000Z'));
 
     expect(state.playedCount).toBe(0);
     expect(state.latestResults).toEqual([]);
     expect(state.leaderboardRows).toHaveLength(109);
     expect(state.leaderboardRows.every((row) => row.points === 0 && row.exactScores === 0 && row.correctResults === 0 && row.hitRate === '0%')).toBe(true);
 
-    const matchSection = selectPublicMatchSection(undefined, new Date('2026-06-06T12:00:00.000Z'), 3);
+    const matchSection = selectPublicMatchSection(state.snapshot, new Date('2026-06-06T12:00:00.000Z'), 3);
     expect(matchSection.matches.length).toBeGreaterThan(0);
     expect(matchSection.matches[0]).toMatchObject({
       homeTeam: 'Mexico',
@@ -119,6 +175,8 @@ describe('public tournament state', () => {
 
     expect(state.playedCount).toBe(2);
     expect(state.latestResults).toHaveLength(2);
+    expect(state.liveMatches).toHaveLength(0);
+    expect(state.todayMatches).toHaveLength(2);
     expect(state.upcomingMatches).toHaveLength(2);
     expect(state.leaderboardRows).toHaveLength(109);
     expect(state.leaderboardRows.find((row) => row.playerId === 'kristo-amberg')).toMatchObject({
@@ -130,7 +188,8 @@ describe('public tournament state', () => {
     expect(state.groupStandings).toBe(initialGroupStandings);
     expect(state.playoffBracket).toBe(initialPlayoffBracket);
     expect(state.tournamentStats).toBe(initialTournamentStats);
-    expect(matchSection.matches.map((match) => match.id)).toEqual(['3', '4']);
+    expect(matchSection.title).toBe('Tänased mängud');
+    expect(matchSection.matches.map((match) => match.id)).toEqual(['1', '2']);
   });
 
   it('fills partial leaderboard snapshots to all 109 players', () => {
@@ -169,5 +228,70 @@ describe('public tournament state', () => {
     expect(state.leaderboardRows[0].rank).toBe(1);
     expect(state.leaderboardRows[1].rank).toBe(2);
     expect(state.leaderboardRows[2].points).toBe(0);
+  });
+
+  it('selects live matches before today and upcoming matches after confirmation', () => {
+    const liveSnapshot = createSnapshot({
+      liveMatches: [
+        {
+          id: '8',
+          homeTeam: 'Canada',
+          awayTeam: 'Bosnia and Herzegovina',
+          kickoffTime: '12.06.2026 19:00',
+          stage: 'Alagrupp C',
+          status: 'live',
+          venue: ''
+        },
+        {
+          id: '9',
+          homeTeam: 'Brazil',
+          awayTeam: 'Croatia',
+          kickoffTime: '12.06.2026 21:00',
+          stage: 'Alagrupp D',
+          status: 'live',
+          venue: ''
+        }
+      ],
+      todayMatches: [],
+      latestResults: [],
+      upcomingMatches: []
+    });
+
+    const liveSection = selectLiveMatchSection(liveSnapshot, 3);
+    expect(liveSection.title).toBe('Otsemängud');
+    expect(liveSection.matches).toHaveLength(2);
+    expect(liveSection.matches.every((match) => match.status === 'live')).toBe(true);
+
+    const upcomingSnapshot = createSnapshot({
+      liveMatches: [],
+      todayMatches: [
+        {
+          id: '9',
+          homeTeam: 'Germany',
+          awayTeam: 'Colombia',
+          kickoffTime: '12.06.2026 17:00',
+          stage: 'Alagrupp E',
+          status: 'scheduled',
+          venue: ''
+        }
+      ],
+      latestResults: [],
+      upcomingMatches: [
+        {
+          id: '10',
+          homeTeam: 'Argentina',
+          awayTeam: 'Korea Republic',
+          kickoffTime: '14.06.2026 20:00',
+          stage: 'Alagrupp F',
+          status: 'scheduled',
+          venue: ''
+        }
+      ]
+    });
+
+    const section = selectPublicMatchSection(upcomingSnapshot, new Date('2026-06-12T12:00:00.000Z'), 3);
+    expect(section.title).toBe('Tänased mängud');
+    expect(section.matches).toHaveLength(1);
+    expect(section.matches[0].status).toBe('scheduled');
   });
 });
