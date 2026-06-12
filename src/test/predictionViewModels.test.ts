@@ -27,6 +27,7 @@ describe('prediction view models', () => {
     expect(profile?.groupPredictions).toHaveLength(12);
     expect(profile?.knockoutPrediction.length).toBeGreaterThan(0);
     expect(profile?.predictedChampion).not.toBe('Ennustus puudub');
+    expect(profile?.topScorerPrediction.team).toBe('Prantsusmaa');
     expect(getPlayerProfile('missing-player')).toBeUndefined();
   });
 
@@ -86,6 +87,16 @@ describe('prediction view models', () => {
     expect(resolveScorerTeam('Mbappe', 'Unknown team')).toBe('Prantsusmaa');
     expect(resolveScorerTeam('Harry Kane', 'Unknown team')).toBe('Inglismaa');
     expect(resolveScorerTeam('Haaland', 'Unknown team')).toBe('Norra');
+    expect(resolveScorerTeam('Kylian Mpabbe', 'Unknown team')).toBe('Prantsusmaa');
+    expect(resolveScorerTeam('Lautaro Martinez', 'Unknown team')).toBe('Argentina');
+    expect(resolveScorerTeam('Michael Olise', 'Unknown team')).toBe('Prantsusmaa');
+    expect(resolveScorerTeam('Cody Gakpo', 'Unknown team')).toBe('Holland');
+    expect(resolveScorerTeam('Pedri', 'Unknown team')).toBe('Hispaania');
+    expect(resolveScorerTeam('Haaland , Norra', 'Unknown team')).toBe('Norra');
+    expect(resolveScorerTeam('Prediction unavailable', 'Unknown team')).toBe('Võistkond teadmata');
+    expect(resolveScorerTeam('TBD', 'TBC')).toBe('Võistkond teadmata');
+    expect(resolveScorerTeam('Jude Bellingham', 'Unknown team')).toBe('Inglismaa');
+    expect(resolveScorerTeam('Neymar', 'Unknown team')).toBe('Brasiilia');
     expect(resolveScorerTeam('Unknown Player', 'Unknown team')).toBe('Võistkond teadmata');
   });
 });
