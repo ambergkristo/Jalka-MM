@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
-import type { LeaderboardRowView } from './predictionViewModels.js';
-import { predictionRepository } from '../../domain/predictionRepository.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
+import { buildLeaderboardRows, buildPublicTournamentState, selectPublicMatchSection, type PublicDashboardSnapshotLike, type PublicTournamentState } from './publicTournamentState.js';
+import type { LeaderboardRowView } from './predictionViewModels.js';
 
-export interface PublicDashboardSnapshot {
+export interface PublicDashboardSnapshot extends PublicDashboardSnapshotLike {
+}
+
+interface PublicDashboardApiResponse {
   upcomingMatches: DashboardMatch[];
   latestResults: DashboardResult[];
   groupStandings: GroupStanding[];
@@ -14,21 +17,7 @@ export interface PublicDashboardSnapshot {
   tournamentSummary: TournamentSummaryMetric[];
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
-}
-
-interface LeaderboardApiResponse {
-  mode: 'persisted' | 'seed' | 'pre-results';
-  recalculatedAt?: string;
-  warnings: string[];
-  entries: Array<{
-    playerId: string;
-    rank: number;
-    points: number;
-    exactScores: number;
-    correctResults: number;
-    hitRate: number;
-    previousRank?: number;
-  }>;
+  leaderboard: PublicDashboardSnapshotLike['leaderboard'];
 }
 
 export function usePublicDashboardSnapshot(): PublicDashboardSnapshot | undefined {
@@ -37,9 +26,11 @@ export function usePublicDashboardSnapshot(): PublicDashboardSnapshot | undefine
   useEffect(() => {
     let cancelled = false;
     fetch('/api/public-dashboard')
-      .then((response) => response.ok ? response.json() as Promise<PublicDashboardSnapshot> : undefined)
+      .then((response) => response.ok ? response.json() as Promise<PublicDashboardApiResponse> : undefined)
       .then((data) => {
-        if (!cancelled && data) setSnapshot(data);
+        if (!cancelled && data) {
+          setSnapshot(data);
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -50,40 +41,24 @@ export function usePublicDashboardSnapshot(): PublicDashboardSnapshot | undefine
   return snapshot;
 }
 
+export function usePublicTournamentState(): PublicTournamentState {
+  return buildPublicTournamentState(usePublicDashboardSnapshot());
+}
+
 export function usePersistedLeaderboardRows(fallback: LeaderboardRowView[]): LeaderboardRowView[] {
-  const [rows, setRows] = useState<LeaderboardRowView[]>(fallback);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/leaderboard')
-      .then((response) => response.ok ? response.json() as Promise<LeaderboardApiResponse> : undefined)
-      .then((data) => {
-        if (!cancelled && data?.entries?.length) setRows(data.entries.map(toLeaderboardRow));
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return rows;
+  const { leaderboardRows } = usePublicTournamentState();
+  return leaderboardRows.length > 0 ? leaderboardRows : fallback;
 }
 
 export function usePublicLeaderboardRow(playerId: string, fallback?: LeaderboardRowView): LeaderboardRowView | undefined {
-  const rows = usePersistedLeaderboardRows(fallback ? [fallback] : []);
+  const rows = usePublicTournamentState().leaderboardRows;
   return rows.find((row) => row.playerId === playerId) ?? fallback;
 }
 
-function toLeaderboardRow(entry: LeaderboardApiResponse['entries'][number]): LeaderboardRowView {
-  const player = predictionRepository.getPlayerById(entry.playerId);
-  return {
-    rank: entry.rank,
-    playerId: entry.playerId,
-    player: player?.name ?? entry.playerId,
-    points: entry.points,
-    exactScores: entry.exactScores,
-    correctResults: entry.correctResults,
-    hitRate: `${Math.round(entry.hitRate * 100)}%`,
-    positionChange: entry.previousRank ? entry.previousRank - entry.rank : 0
-  };
+export function buildCanonicalMatchSection(snapshot: PublicDashboardSnapshot | undefined, now = new Date(), limit = 3) {
+  return selectPublicMatchSection(snapshot, now, limit);
+}
+
+export function buildCanonicalLeaderboardRows(snapshot: PublicDashboardSnapshot | undefined): LeaderboardRowView[] {
+  return buildLeaderboardRows(snapshot);
 }

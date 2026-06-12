@@ -4,20 +4,18 @@ import { LeaderboardPreview } from '../components/LeaderboardPreview.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { NavigationCards } from '../components/NavigationCards.js';
 import { ResultCard } from '../components/ResultCard.js';
-import { heroMetrics, navigationCards } from '../data/mock.js';
-import { confirmedLatestResults, getPublicMatchSection } from '../data/publicDashboard.js';
-import { usePersistedLeaderboardRows, usePublicDashboardSnapshot } from '../lib/publicApi.js';
-import { getZeroedLeaderboardRows } from '../lib/predictionViewModels.js';
+import { navigationCards } from '../data/navigation.js';
+import { usePublicTournamentState, buildCanonicalMatchSection } from '../lib/publicApi.js';
 
 export function LandingDashboard() {
-  const dashboardSnapshot = usePublicDashboardSnapshot();
-  const leaderboardPreview = usePersistedLeaderboardRows(getZeroedLeaderboardRows()).slice(0, 5);
-  const matchSection = getPublicMatchSection();
-  const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
+  const tournamentState = usePublicTournamentState();
+  const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 3);
+  const latestResults = tournamentState.latestResults;
+  const leaderboardPreview = tournamentState.leaderboardRows.slice(0, 5);
 
   return (
     <div className="landing-dashboard">
-      <HeroCard metrics={heroMetrics} />
+      <HeroCard metrics={tournamentState.heroMetrics} />
 
       <Card className="today-card">
         <div className="section-title-row">

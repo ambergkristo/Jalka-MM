@@ -2,6 +2,8 @@ import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultUpdate } from './resultTypes.js';
 import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/publicBracket.js';
+import { getCurrentLeaderboard } from './resultAgentRuntime.js';
+import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 
 export interface PublicDashboardSnapshot {
   upcomingMatches: PublicMatchCard[];
@@ -13,6 +15,7 @@ export interface PublicDashboardSnapshot {
   tournamentSummary: Array<{ label: string; value: string; detail: string; tone: 'gold' | 'blue' | 'green' | 'red' }>;
   tournamentStats: Array<{ label: string; value: string; detail: string }>;
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+  leaderboard: LeaderboardEntry[];
 }
 
 export interface PublicMatchCard {
@@ -80,6 +83,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   const latestResults = await getConfirmedLatestResults(db);
   const groupStandings = await getPublicGroupStandings(db);
   const topScorers = await getPublicTopScorers(db);
+  const leaderboard = await getCurrentLeaderboard();
   const completed = latestResults.length;
   const totalMatches = Number((await db.one('SELECT COUNT(*) AS count FROM matches'))?.count ?? 104);
   const goals = latestResults.reduce((sum, result) => sum + result.homeScore + result.awayScore, 0);
@@ -100,6 +104,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
     groupLeaders,
     topScorers,
     playoffBracket: buildPublicPlayoffBracketTree(),
+    leaderboard: leaderboard.entries,
     tournamentSummary: [
       { label: 'Turniiri faas', value: 'Alagrupid', detail: completed > 0 ? 'Turniir on alanud' : 'Avamängu ootel', tone: 'gold' },
       { label: 'Mängitud', value: `${completed} / ${totalMatches}`, detail: `${Math.max(totalMatches - completed, 0)} kohtumist on veel ees`, tone: 'blue' },

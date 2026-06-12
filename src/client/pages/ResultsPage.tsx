@@ -2,14 +2,13 @@ import { Card } from '../components/Card.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { ResultCard } from '../components/ResultCard.js';
-import { confirmedLatestResults, getPublicMatchSection, upcomingFixtures } from '../data/publicDashboard.js';
-import { usePublicDashboardSnapshot } from '../lib/publicApi.js';
+import { usePublicTournamentState, buildCanonicalMatchSection } from '../lib/publicApi.js';
 
 export function ResultsPage() {
-  const dashboardSnapshot = usePublicDashboardSnapshot();
-  const matchSection = getPublicMatchSection();
-  const upcoming = dashboardSnapshot?.upcomingMatches?.length ? dashboardSnapshot.upcomingMatches.slice(0, 6) : upcomingFixtures(new Date(), 6);
-  const latestResults = dashboardSnapshot?.latestResults ?? confirmedLatestResults;
+  const tournamentState = usePublicTournamentState();
+  const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 6);
+  const upcoming = tournamentState.upcomingMatches.slice(0, 6);
+  const latestResults = tournamentState.latestResults;
 
   return (
     <>
