@@ -82,6 +82,7 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       leaderboard_rebuilt INTEGER NOT NULL,
       players_processed INTEGER NOT NULL,
       warnings_json TEXT NOT NULL,
+      warning_details_json TEXT NOT NULL DEFAULT '[]',
       provider TEXT NOT NULL,
       mode TEXT NOT NULL
     );
@@ -178,6 +179,7 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
   await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_id', 'TEXT');
   await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_code', 'TEXT');
   await ensureColumn(db, 'result_manual_corrections', 'scorers_json', 'TEXT');
+  await ensureColumn(db, 'result_agent_runs', 'warning_details_json', "TEXT NOT NULL DEFAULT '[]'");
 }
 
 async function ensureColumn(db: QueryableDatabase, table: string, column: string, definition: string): Promise<void> {

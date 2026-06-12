@@ -185,5 +185,6 @@ describe('provider status normalization', () => {
     expect(normalizeProviderStatusDetail('extra-time')).toMatchObject({ status: 'ET', period: 'EXTRA_TIME', isFinal: false });
     expect(normalizeProviderStatusDetail('penalty-shootout')).toMatchObject({ status: 'PEN', period: 'PENALTIES', isFinal: false });
     expect(normalizeProviderStatusDetail('after penalties')).toMatchObject({ status: 'FINISHED', isFinal: true });
+    expect(normalizeProviderStatusDetail('TRUE')).toMatchObject({ status: 'FINISHED', isFinal: true });
   });
 });

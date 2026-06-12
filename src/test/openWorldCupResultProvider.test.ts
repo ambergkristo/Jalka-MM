@@ -23,6 +23,15 @@ describe('Open World Cup result provider', () => {
     expect(String(final.providerUpdatedAt ?? '')).toContain('2026-06-11');
   });
 
+  it('treats finished string flags as final even when the match type is group', async () => {
+    const game = sampleGame('group', 2, 0, 'TRUE');
+    const provider = providerFor(game);
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
+
+    expect(normalizeOpenWorldCupGame(game)).toMatchObject({ rawStatus: 'FINISHED', homeScore: 2, awayScore: 0 });
+    expect(update).toMatchObject({ status: 'FINISHED', isFinal: true, homeScore: 2, awayScore: 0 });
+  });
+
   it('fetches mapped fixtures only for high-confidence candidate rows', async () => {
     const fetchImpl = vi.fn(async (url: string) => {
       expect(url).toContain('/get/games');
@@ -144,7 +153,7 @@ function providerFor(game: Record<string, unknown>) {
   );
 }
 
-function sampleGame(status: string, homeScore = 0, awayScore = 0, finished = false, id = 1) {
+function sampleGame(status: string, homeScore = 0, awayScore = 0, finished: unknown = false, id = 1) {
   return {
     id,
     status,

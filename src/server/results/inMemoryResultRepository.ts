@@ -68,6 +68,7 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
       providerReachable: this.lastRunSummary ? !this.lastRunSummary.warnings.some((warning) => /failed/i.test(warning)) : undefined,
       pendingWarningsCount: this.lastRunSummary?.warnings.length,
       latestConfirmedResultCount: [...this.updates.values()].filter((update) => update.isFinal && update.publicStatus === 'CONFIRMED_FINAL').length,
+      lastRunWarnings: this.lastRunSummary?.warningDetails.slice(-10),
       lastRunSummary: this.lastRunSummary ? {
         startedAt: this.lastRunSummary.startedAt,
         finishedAt: this.lastRunSummary.finishedAt,
@@ -87,7 +88,12 @@ export class InMemoryResultRepository implements ResultsAgentRepository {
 
   async saveRunSummary(summary: ResultAgentRunSummary): Promise<void> {
     this.lastRunAt = summary.finishedAt;
-    this.lastRunSummary = { ...summary, warnings: [...summary.warnings], leaderboardRebuilds: [...summary.leaderboardRebuilds] };
+    this.lastRunSummary = {
+      ...summary,
+      warnings: [...summary.warnings],
+      warningDetails: summary.warningDetails.map((warning) => ({ ...warning })),
+      leaderboardRebuilds: [...summary.leaderboardRebuilds]
+    };
   }
 }
 

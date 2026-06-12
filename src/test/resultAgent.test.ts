@@ -193,6 +193,18 @@ describe('result agent update cycle', () => {
       leaderboardRebuilt: true,
       playersProcessed: 24,
       warnings: ['Dry run completed without persisting result, run summary, or leaderboard changes.'],
+      warningDetails: [{
+        internalMatchId: 4,
+        providerFixtureId: '4',
+        homeTeam: 'Argentina',
+        awayTeam: 'Korea Republic',
+        kickoffAt: '2026-06-15T16:00:00.000Z',
+        providerStatus: 'FINISHED',
+        normalizedStatus: 'FINISHED',
+        providerScore: '2-1',
+        reason: 'Final result for match 4 is pending confirmation before public scoring.',
+        action: 'pending-confirmation'
+      }],
       leaderboardRebuilds: [],
       lastRunAt: now.toISOString(),
       nextSuggestedRunAt: now.toISOString(),
@@ -210,6 +222,18 @@ describe('result agent update cycle', () => {
       latestConfirmedResultCount: 1,
       pendingWarningsCount: 1,
       providerReachable: true,
+      lastRunWarnings: [{
+        internalMatchId: 4,
+        providerFixtureId: '4',
+        homeTeam: 'Argentina',
+        awayTeam: 'Korea Republic',
+        kickoffAt: '2026-06-15T16:00:00.000Z',
+        providerStatus: 'FINISHED',
+        normalizedStatus: 'FINISHED',
+        providerScore: '2-1',
+        reason: 'Final result for match 4 is pending confirmation before public scoring.',
+        action: 'pending-confirmation'
+      }],
       lastRunSummary: expect.objectContaining({
         checkedMatches: 1,
         updatedMatches: 1,

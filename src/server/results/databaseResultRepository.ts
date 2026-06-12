@@ -4,7 +4,7 @@ import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
 import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import type { LeaderboardMetadata, LeaderboardRepository } from './leaderboardRepository.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
-import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
+import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultAgentWarningDetail, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export class DatabaseResultRepository implements ResultsAgentRepository, LeaderboardRepository {
   constructor(private readonly db: QueryableDatabase) {}
@@ -184,7 +184,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
     const plans = planMatchUpdates(await this.listTrackedMatches(), now);
     const metadata = await this.getLeaderboardMetadata();
     const latestRun = await this.db.one(`
-      SELECT started_at, finished_at, checked_matches, updated_matches, finalized_matches, leaderboard_rebuilt, warnings_json
+      SELECT started_at, finished_at, checked_matches, updated_matches, finalized_matches, leaderboard_rebuilt, warnings_json, warning_details_json
       FROM result_agent_runs
       ORDER BY finished_at DESC
       LIMIT 1
@@ -195,6 +195,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
       WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
     `))?.count ?? 0);
     const warnings = parseWarnings(latestRun?.warnings_json);
+    const warningDetails = parseWarningDetails(latestRun?.warning_details_json);
     return {
       lastRunAt: nullableString(latestRun?.finished_at),
       nextSuggestedRunAt: findNextSuggestedRunAt(plans),
@@ -205,6 +206,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
       providerReachable: latestRun ? !warnings.some((warning) => /failed/i.test(warning)) : undefined,
       pendingWarningsCount: warnings.length,
       latestConfirmedResultCount,
+      lastRunWarnings: warningDetails.slice(-10),
       lastRunSummary: latestRun ? {
         startedAt: nullableString(latestRun.started_at) ?? nullableString(latestRun.finished_at) ?? '',
         finishedAt: nullableString(latestRun.finished_at) ?? '',
@@ -235,6 +237,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
         leaderboard_rebuilt INTEGER NOT NULL,
         players_processed INTEGER NOT NULL,
         warnings_json TEXT NOT NULL,
+        warning_details_json TEXT NOT NULL DEFAULT '[]',
         provider TEXT NOT NULL,
         mode TEXT NOT NULL
       );
@@ -242,8 +245,8 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
     await this.db.run(
       `INSERT INTO result_agent_runs (
         id, started_at, finished_at, checked_matches, updated_matches, finalized_matches,
-        leaderboard_rebuilt, players_processed, warnings_json, provider, mode
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        leaderboard_rebuilt, players_processed, warnings_json, warning_details_json, provider, mode
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         `result-agent-run-${randomUUID()}`,
         summary.startedAt,
@@ -254,6 +257,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
         summary.leaderboardRebuilt ? 1 : 0,
         summary.playersProcessed,
         JSON.stringify(summary.warnings),
+        JSON.stringify(summary.warningDetails),
         summary.provider,
         summary.mode
       ]
@@ -397,6 +401,29 @@ function parseWarnings(value: unknown): string[] {
   } catch {
     return [];
   }
+}
+
+function parseWarningDetails(value: unknown): ResultAgentWarningDetail[] {
+  if (typeof value !== 'string' || !value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.filter(isWarningDetail) : [];
+  } catch {
+    return [];
+  }
+}
+
+function isWarningDetail(value: unknown): value is ResultAgentWarningDetail {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  return typeof row.internalMatchId === 'number' &&
+    typeof row.homeTeam === 'string' &&
+    typeof row.awayTeam === 'string' &&
+    typeof row.kickoffAt === 'string' &&
+    typeof row.providerStatus === 'string' &&
+    typeof row.normalizedStatus === 'string' &&
+    typeof row.reason === 'string' &&
+    typeof row.action === 'string';
 }
 
 function parseProviderResults(value: unknown): ProviderResultObservation[] | undefined {

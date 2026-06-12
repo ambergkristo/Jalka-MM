@@ -21,6 +21,7 @@ export interface ProviderStatusNormalization {
 export function normalizeProviderStatusDetail(status: string): ProviderStatusNormalization {
   const raw = status.trim();
   const normalized = raw.toUpperCase().replace(/[-\s]/g, '_');
+  if (['TRUE', '1', 'YES', 'Y'].includes(normalized)) return { status: 'FINISHED', isFinal: true };
   if (['SCHEDULED', 'TIMED', 'NOT_STARTED', 'NS'].includes(normalized)) return { status: 'SCHEDULED', isFinal: false };
   if (['LIVE', 'IN_PLAY', 'FIRST_HALF', 'SECOND_HALF', '1H', '2H'].includes(normalized)) return { status: 'LIVE', isFinal: false, period: 'REGULAR' };
   if (['HT', 'HALF_TIME', 'HALFTIME', 'PAUSED'].includes(normalized)) return { status: 'HT', isFinal: false, period: 'REGULAR' };

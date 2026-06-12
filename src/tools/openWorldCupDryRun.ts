@@ -57,6 +57,18 @@ async function run(): Promise<void> {
     wouldConfirm: summary.wouldConfirm,
     wouldNeedsReview: summary.wouldNeedsReview,
     dbWrites: 0,
+    matchDiagnostics: summary.warningDetails.map((detail) => ({
+      internalMatchId: detail.internalMatchId,
+      providerFixtureId: detail.providerFixtureId,
+      homeTeam: detail.homeTeam,
+      awayTeam: detail.awayTeam,
+      kickoffAt: detail.kickoffAt,
+      providerStatus: detail.providerStatus,
+      normalizedStatus: detail.normalizedStatus,
+      providerScore: detail.providerScore,
+      reason: detail.reason,
+      action: detail.action
+    })),
     candidateMapSummary: candidateFile ? candidateFile.confidenceSummary : undefined,
     knownGap: normalizeKnownGap(candidateFile),
     notes: summary.observationsProcessed === 0

@@ -4,7 +4,7 @@ import type { LeaderboardRepository } from './leaderboardRepository.js';
 import type { ResultProvider } from './resultProvider.js';
 import { isResultProviderChain } from './providerChainResultProvider.js';
 import { decideResultConsensus, toProviderResultObservation } from './resultConsensus.js';
-import type { ResultAgentRunSummary, ResultAgentStatus, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
+import type { ResultAgentRunSummary, ResultAgentStatus, ResultAgentWarningDetail, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export async function getResultAgentStatus(input: {
   repository: ResultsAgentRepository;
@@ -39,6 +39,7 @@ export async function runResultUpdateCycle(input: {
   let scheduledObservations = 0;
   const leaderboardRebuilds = [];
   const warnings: string[] = [];
+  const warningDetails: ResultAgentWarningDetail[] = [];
   const confirmationDelayMs = (input.confirmationDelayMinutes ?? 10) * 60_000;
 
   for (const plan of duePlans) {
@@ -61,6 +62,8 @@ export async function runResultUpdateCycle(input: {
       confirmationDelayMs
     });
     warnings.push(...consensus.warnings);
+    const warningDetail = toWarningDetail({ match, update: selectedUpdate, consensusWarnings: consensus.warnings });
+    if (warningDetail) warningDetails.push(warningDetail);
     const publicStatus = consensus.update.publicStatus ?? (consensus.update.isFinal ? 'CONFIRMED_FINAL' : 'SCHEDULED');
     if (consensus.confirmed) wouldConfirm += 1;
     if (consensus.needsReview) wouldNeedsReview += 1;
@@ -110,6 +113,7 @@ export async function runResultUpdateCycle(input: {
     leaderboardRebuilt: leaderboardRebuilds.length > 0,
     playersProcessed: leaderboardRebuilds.at(-1)?.playersProcessed ?? 0,
     warnings: [...new Set([...(input.dryRun ? ['Dry run completed without persisting result, run summary, or leaderboard changes.'] : []), ...warnings, ...leaderboardRebuilds.flatMap((rebuild) => rebuild.warnings)])],
+    warningDetails: warningDetails.slice(-10),
     leaderboardRebuilds,
     lastRunAt: finishedAt,
     nextSuggestedRunAt: findNextSuggestedRunAt(refreshedPlans),
@@ -124,6 +128,70 @@ export async function runResultUpdateCycle(input: {
 async function fetchProviderUpdates(provider: ResultProvider, match: TrackedMatch, now: Date): Promise<ResultUpdate[]> {
   if (isResultProviderChain(provider)) return provider.fetchMatchUpdates(match, now);
   return [await provider.fetchMatchUpdate(match, now)];
+}
+
+function toWarningDetail(input: {
+  match: TrackedMatch;
+  update: ResultUpdate;
+  consensusWarnings: string[];
+}): ResultAgentWarningDetail | undefined {
+  const providerStatus = input.update.rawProviderStatus ?? input.update.status;
+  const providerScore = formatScore(input.update.homeScore, input.update.awayScore);
+
+  if (input.update.warning) {
+    return {
+      internalMatchId: input.match.id,
+      providerFixtureId: input.update.providerMatchId ?? input.match.providerMatchId,
+      homeTeam: input.match.homeTeam,
+      awayTeam: input.match.awayTeam,
+      kickoffAt: input.match.kickoffUtc,
+      providerStatus,
+      normalizedStatus: input.update.status,
+      providerScore,
+      reason: input.update.warning,
+      action: input.update.isFinal ? 'pending-confirmation' : 'skipped'
+    };
+  }
+
+  const consensusWarning = input.consensusWarnings[0];
+  if (consensusWarning) {
+    return {
+      internalMatchId: input.match.id,
+      providerFixtureId: input.update.providerMatchId ?? input.match.providerMatchId,
+      homeTeam: input.match.homeTeam,
+      awayTeam: input.match.awayTeam,
+      kickoffAt: input.match.kickoffUtc,
+      providerStatus,
+      normalizedStatus: input.update.status,
+      providerScore,
+      reason: consensusWarning,
+      action: input.update.publicStatus === 'NEEDS_REVIEW' ? 'needs-review' : 'pending-confirmation'
+    };
+  }
+
+  if (!input.update.isFinal) {
+    return {
+      internalMatchId: input.match.id,
+      providerFixtureId: input.update.providerMatchId ?? input.match.providerMatchId,
+      homeTeam: input.match.homeTeam,
+      awayTeam: input.match.awayTeam,
+      kickoffAt: input.match.kickoffUtc,
+      providerStatus,
+      normalizedStatus: input.update.status,
+      providerScore,
+      reason: 'Provider observation was not final.',
+      action: 'skipped'
+    };
+  }
+
+  return undefined;
+}
+
+function formatScore(homeScore?: number, awayScore?: number): string | undefined {
+  if (typeof homeScore !== 'number' || typeof awayScore !== 'number') return undefined;
+  if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) return undefined;
+  if (homeScore < 0 || awayScore < 0) return undefined;
+  return `${homeScore}-${awayScore}`;
 }
 
 function selectConsensusUpdate(updates: ResultUpdate[]): ResultUpdate {

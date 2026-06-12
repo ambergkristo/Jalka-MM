@@ -106,6 +106,7 @@ export interface ResultAgentStatus {
   providerReachable?: boolean;
   pendingWarningsCount?: number;
   latestConfirmedResultCount?: number;
+  lastRunWarnings?: ResultAgentWarningDetail[];
   lastRunSummary?: {
     startedAt: string;
     finishedAt: string;
@@ -115,6 +116,19 @@ export interface ResultAgentStatus {
     dryRun: boolean;
     warningsCount: number;
   };
+}
+
+export interface ResultAgentWarningDetail {
+  internalMatchId: number;
+  providerFixtureId?: string;
+  homeTeam: string;
+  awayTeam: string;
+  kickoffAt: string;
+  providerStatus: string;
+  normalizedStatus: MatchStatus;
+  providerScore?: string;
+  reason: string;
+  action: 'confirmed' | 'pending-confirmation' | 'needs-review' | 'skipped';
 }
 
 export interface ResultAgentRunSummary extends ResultAgentStatus {
@@ -138,6 +152,7 @@ export interface ResultAgentRunSummary extends ResultAgentStatus {
   leaderboardRebuilt: boolean;
   playersProcessed: number;
   warnings: string[];
+  warningDetails: ResultAgentWarningDetail[];
   leaderboardRebuilds: LeaderboardRebuildResult[];
 }
 

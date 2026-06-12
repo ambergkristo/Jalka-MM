@@ -172,12 +172,18 @@ export function normalizeOpenWorldCupGame(game: OpenWorldCupGameResponse): {
 
 function normalizeStatus(game: OpenWorldCupGameResponse): string {
   const raw = String(game.status ?? game.state ?? game.type ?? game.finished ?? 'scheduled');
-  if (game.finished === true || raw.toUpperCase() === 'TRUE') return 'FINISHED';
+  if (isTruthyFinished(game.finished, raw)) return 'FINISHED';
   if (raw.toUpperCase().includes('LIVE')) return 'LIVE';
   if (['SCHEDULED', 'TIMED', 'NOT_STARTED', 'NS'].includes(raw.toUpperCase())) return 'SCHEDULED';
   if (raw.toUpperCase().includes('FINISH')) return 'FINISHED';
   if (raw.toUpperCase().includes('PAUSE') || raw.toUpperCase().includes('HT')) return 'HT';
   return raw.toUpperCase();
+}
+
+function isTruthyFinished(finished: OpenWorldCupGameResponse['finished'], raw: string): boolean {
+  if (finished === true) return true;
+  if (typeof finished === 'string' && ['TRUE', '1', 'YES', 'Y'].includes(finished.trim().toUpperCase())) return true;
+  return raw.toUpperCase() === 'TRUE';
 }
 
 function collectGames(payload: OpenWorldCupGamesResponse): OpenWorldCupGameResponse[] {
