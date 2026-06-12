@@ -24,7 +24,7 @@ export function getPublicMatchSection(now = new Date()): MatchSection {
   }
 
   const today = matches
-    .filter((match) => sameTallinnDate(match.kickoffAt, now))
+    .filter((match) => hasValidKickoff(match.kickoffAt) && sameTallinnDate(match.kickoffAt, now))
     .sort(byKickoff)
     .map(toDashboardMatch);
 
@@ -45,7 +45,7 @@ export function getPublicMatchSection(now = new Date()): MatchSection {
 
 export function upcomingFixtures(now = new Date(), limit = 3): DashboardMatch[] {
   return matches
-    .filter((match) => Date.parse(match.kickoffAt) >= now.getTime())
+    .filter((match) => hasValidKickoff(match.kickoffAt) && Date.parse(match.kickoffAt) >= now.getTime())
     .sort(byKickoff)
     .slice(0, limit)
     .map(toDashboardMatch);
@@ -55,7 +55,7 @@ function openingMatchdayFixtures(): DashboardMatch[] {
   return matches
     .filter((match) => {
       const kickoff = Date.parse(match.kickoffAt);
-      return kickoff >= TOURNAMENT_START_UTC && kickoff < OPENING_MATCHDAY_END_UTC;
+      return Number.isFinite(kickoff) && kickoff >= TOURNAMENT_START_UTC && kickoff < OPENING_MATCHDAY_END_UTC;
     })
     .sort(byKickoff)
     .map(toDashboardMatch);
@@ -74,6 +74,7 @@ function toDashboardMatch(match: Match): DashboardMatch {
 }
 
 function sameTallinnDate(kickoffAt: string, now: Date): boolean {
+  if (!hasValidKickoff(kickoffAt)) return false;
   const formatter = new Intl.DateTimeFormat('et-EE', {
     timeZone: 'Europe/Tallinn',
     year: 'numeric',
@@ -84,6 +85,7 @@ function sameTallinnDate(kickoffAt: string, now: Date): boolean {
 }
 
 function formatKickoff(kickoffAt: string): string {
+  if (!hasValidKickoff(kickoffAt)) return 'TBC';
   const date = new Intl.DateTimeFormat('et-EE', {
     timeZone: 'Europe/Tallinn',
     day: '2-digit',
@@ -104,7 +106,7 @@ function venueCity(venue: string | undefined): string {
 }
 
 function byKickoff(a: Match, b: Match): number {
-  return Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt);
+  return kickoffTimestamp(a.kickoffAt) - kickoffTimestamp(b.kickoffAt);
 }
 
 function stageLabel(stage: Match['stage']): string {
@@ -117,4 +119,13 @@ function stageLabel(stage: Match['stage']): string {
     THIRD_PLACE: '3. koha mäng',
     FINAL: 'Finaal'
   } as Record<Match['stage'], string>)[stage] ?? stage;
+}
+
+function hasValidKickoff(kickoffAt: string): boolean {
+  return Number.isFinite(Date.parse(kickoffAt));
+}
+
+function kickoffTimestamp(kickoffAt: string): number {
+  const timestamp = Date.parse(kickoffAt);
+  return Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY;
 }

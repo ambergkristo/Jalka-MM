@@ -18,6 +18,13 @@ describe('public dashboard data', () => {
     });
   });
 
+  it('does not crash on placeholder kickoff times after tournament start', () => {
+    const section = getPublicMatchSection(new Date('2026-06-12T12:00:00.000Z'));
+
+    expect(section.title).toContain('mängud');
+    expect(section.matches.every((match) => match.kickoffTime.length > 0)).toBe(true);
+  });
+
   it('does not expose fake confirmed latest results', () => {
     expect(confirmedLatestResults).toEqual([]);
   });
