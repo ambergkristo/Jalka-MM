@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPublicTournamentState, selectPublicMatchSection, type PublicDashboardSnapshotLike } from '../client/lib/publicTournamentState.js';
 import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../client/data/publicTournamentFallback.js';
 import { predictionRepository } from '../domain/predictionRepository.js';
+import type { LeaderboardEntry } from '../domain/predictionRepository.js';
 
 function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): PublicDashboardSnapshotLike {
   return {
@@ -74,6 +75,25 @@ function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): P
   };
 }
 
+function leaderboardRow(input: Partial<LeaderboardEntry> & Pick<LeaderboardEntry, 'playerId'>): LeaderboardEntry {
+  return {
+    playerId: input.playerId,
+    rank: input.rank ?? 0,
+    points: input.points ?? 0,
+    exactScores: input.exactScores ?? 0,
+    correctResults: input.correctResults ?? 0,
+    hitRate: input.hitRate ?? 0,
+    matchesScored: input.matchesScored ?? 0,
+    matchPoints: input.matchPoints ?? input.points ?? 0,
+    groupBonusPoints: input.groupBonusPoints ?? 0,
+    playoffBonusPoints: input.playoffBonusPoints ?? 0,
+    topScorerBonusPoints: input.topScorerBonusPoints ?? 0,
+    totalPoints: input.totalPoints ?? input.points ?? 0,
+    previousRank: input.previousRank,
+    lastUpdatedAt: input.lastUpdatedAt ?? ''
+  };
+}
+
 describe('public tournament state', () => {
   it('returns zeroed public state when no confirmed results exist', () => {
     const state = buildPublicTournamentState(undefined, new Date('2026-06-06T12:00:00.000Z'));
@@ -123,13 +143,31 @@ describe('public tournament state', () => {
 
     expect(state.leaderboardRows).toHaveLength(109);
     expect(state.leaderboardRows.slice(0, 24).some((row) => row.points > 0)).toBe(true);
-    expect(state.leaderboardRows[24]).toMatchObject({
-      playerId: canonicalLeaderboard[24].playerId,
-      rank: 25,
+    expect(state.leaderboardRows.find((row) => row.playerId === canonicalLeaderboard[108].playerId)).toMatchObject({
+      playerId: canonicalLeaderboard[108].playerId,
       points: 0,
       exactScores: 0,
       correctResults: 0,
       hitRate: '0%'
     });
+  });
+
+  it('sorts the public dashboard leaderboard by current score before showing the top rows', () => {
+    const players = predictionRepository.getPlayers();
+    const snapshot = createSnapshot({
+      leaderboard: [
+        leaderboardRow({ playerId: players[0].id, rank: 1, points: 0, exactScores: 0, correctResults: 0, hitRate: 0 }),
+        leaderboardRow({ playerId: players[1].id, rank: 24, points: 12, exactScores: 2, correctResults: 4, hitRate: 0.8 }),
+        leaderboardRow({ playerId: players[2].id, rank: 2, points: 12, exactScores: 1, correctResults: 5, hitRate: 0.7 })
+      ]
+    });
+
+    const state = buildPublicTournamentState(snapshot, new Date('2026-06-12T12:00:00.000Z'));
+
+    expect(state.leaderboardRows).toHaveLength(109);
+    expect(state.leaderboardRows.slice(0, 2).map((row) => row.points)).toEqual([12, 12]);
+    expect(state.leaderboardRows[0].rank).toBe(1);
+    expect(state.leaderboardRows[1].rank).toBe(2);
+    expect(state.leaderboardRows[2].points).toBe(0);
   });
 });

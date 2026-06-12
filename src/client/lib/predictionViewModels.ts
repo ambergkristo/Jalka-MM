@@ -59,19 +59,7 @@ export interface GroupMatchPredictionView {
 const matchesById = new Map((matchesJson as Match[]).map((match) => [match.id, match]));
 
 export function getLeaderboardRows(): LeaderboardRowView[] {
-  return predictionRepository.getLeaderboard().map((entry) => {
-    const player = predictionRepository.getPlayerById(entry.playerId);
-    return {
-      rank: entry.rank,
-      playerId: entry.playerId,
-      player: player?.name ?? entry.playerId,
-      points: entry.points,
-      exactScores: entry.exactScores,
-      correctResults: entry.correctResults,
-      hitRate: formatHitRate(entry.hitRate),
-      positionChange: entry.previousRank ? entry.previousRank - entry.rank : 0
-    };
-  });
+  return buildCanonicalPublicLeaderboardEntries().map(toLeaderboardRow);
 }
 
 export function getZeroedLeaderboardRows(): LeaderboardRowView[] {
@@ -171,4 +159,18 @@ function withGroupMatchPredictions(bundle: PredictionBundle): PlayerGroupPredict
 
 function formatHitRate(hitRate: number): string {
   return `${Math.round(hitRate * 100)}%`;
+}
+
+function toLeaderboardRow(entry: { rank: number; playerId: string; points: number; exactScores: number; correctResults: number; hitRate: number; previousRank?: number }): LeaderboardRowView {
+  const player = predictionRepository.getPlayerById(entry.playerId);
+  return {
+    rank: entry.rank,
+    playerId: entry.playerId,
+    player: player?.name ?? entry.playerId,
+    points: entry.points,
+    exactScores: entry.exactScores,
+    correctResults: entry.correctResults,
+    hitRate: formatHitRate(entry.hitRate),
+    positionChange: entry.previousRank ? entry.previousRank - entry.rank : 0
+  };
 }
