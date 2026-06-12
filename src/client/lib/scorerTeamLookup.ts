@@ -16,6 +16,7 @@ const scorerTeamByNormalizedName: Record<string, string> = {
   messi: 'Argentina',
   'julian alvarez': 'Argentina',
   'lautaro martinez': 'Argentina',
+  'david villa': 'Hispaania',
   'vinicius jr': 'Brasiilia',
   'vinicius junior': 'Brasiilia',
   'vini jr': 'Brasiilia',
