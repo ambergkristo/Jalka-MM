@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { InMemoryResultRepository, createDefaultMockMatches } from '../server/results/inMemoryResultRepository.js';
 import { rebuildLeaderboardAfterFinalResult } from '../server/results/leaderboardRebuild.js';
+import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from '../server/results/leaderboardProjection.js';
 import { MockResultProvider } from '../server/results/mockResultProvider.js';
 import { ProviderChainResultProvider } from '../server/results/providerChainResultProvider.js';
 import { getResultAgentStatus, runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { toResultUpdate, type ResultProvider } from '../server/results/resultProvider.js';
+import { predictionRepository, type LeaderboardEntry } from '../domain/predictionRepository.js';
 
 describe('result agent update cycle', () => {
   it('keeps first final observation provisional and rebuilds only after delayed confirmation', async () => {
@@ -270,7 +272,89 @@ describe('leaderboard rebuild', () => {
     ]);
     expect(result.entries[0]).toMatchObject({ rank: 1, points: 6, exactScores: 1, correctResults: 1 });
   });
+
+  it('repairs stale persisted leaderboard rows by scoring all canonical players against confirmed results', async () => {
+    const staleEntries = predictionRepository.getLeaderboard().slice(0, 24).map((entry, index) => leaderboardRow({
+      playerId: entry.playerId,
+      rank: index + 1,
+      points: 0,
+      exactScores: 0,
+      correctResults: 0,
+      hitRate: 0,
+      matchesScored: 0,
+      matchPoints: 0,
+      groupBonusPoints: 0,
+      playoffBonusPoints: 0,
+      topScorerBonusPoints: 0,
+      totalPoints: 0,
+      previousRank: entry.rank
+    }));
+    const leaderboardRepository = {
+      async getLeaderboard() {
+        return staleEntries;
+      },
+      async getLeaderboardMetadata() {
+        return {
+          lastRebuildAt: '2026-06-15T18:00:00.000Z',
+          playersProcessed: staleEntries.length,
+          matchesProcessed: 1,
+          changedEntries: 0,
+          warnings: []
+        };
+      },
+      async getFinalizedResults() {
+        return [{
+          matchId: 1,
+          status: 'FINISHED',
+          homeScore: 2,
+          awayScore: 0,
+          isFinal: true,
+          lastCheckedAt: '2026-06-15T18:00:00.000Z',
+          provider: 'mock-result-provider'
+        }];
+      }
+    };
+
+    const current = await reconcileLeaderboardEntries({
+      persistedEntries: staleEntries,
+      finalizedResults: await leaderboardRepository.getFinalizedResults(),
+      now: new Date('2026-06-15T18:00:00.000Z')
+    });
+    const ruiCosta = current?.entries.find((entry) => entry.playerId === 'rui-costa');
+    const lastEntry = current?.entries.at(-1);
+
+    expect(current?.entries).toHaveLength(109);
+    expect(current?.entries.some((entry) => entry.points > 0)).toBe(true);
+    expect(ruiCosta).toMatchObject({
+      points: 6,
+      exactScores: 1,
+      correctResults: 1,
+      matchesScored: 1
+    });
+    expect(current && leaderboardNeedsRepair(staleEntries, current.entries)).toBe(true);
+    expect(current?.entries.findIndex((entry) => entry.points === 0)).toBeGreaterThan(0);
+    expect(lastEntry?.points).toBe(0);
+  });
 });
+
+function leaderboardRow(input: Partial<LeaderboardEntry> & Pick<LeaderboardEntry, 'playerId'>): LeaderboardEntry {
+  return {
+    playerId: input.playerId,
+    rank: input.rank ?? 0,
+    points: input.points ?? 0,
+    exactScores: input.exactScores ?? 0,
+    correctResults: input.correctResults ?? 0,
+    hitRate: input.hitRate ?? 0,
+    matchesScored: input.matchesScored ?? 0,
+    matchPoints: input.matchPoints ?? input.points ?? 0,
+    groupBonusPoints: input.groupBonusPoints ?? 0,
+    playoffBonusPoints: input.playoffBonusPoints ?? 0,
+    topScorerBonusPoints: input.topScorerBonusPoints ?? 0,
+    totalPoints: input.totalPoints ?? input.points ?? 0,
+    previousRank: input.previousRank,
+    lastUpdatedAt: input.lastUpdatedAt ?? ''
+  };
+}
 
 function finalProvider(name: string, homeScore: number, awayScore: number): ResultProvider {
   return {

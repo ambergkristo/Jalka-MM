@@ -8,6 +8,8 @@ import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
+import type { ResultUpdate } from './resultTypes.js';
+import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from './leaderboardProjection.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -51,24 +53,47 @@ export function confirmManualResultRuntime(confirmation: ManualResultConfirmatio
 
 export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRepository = repository) {
   const persisted = await leaderboardRepository.getLeaderboard();
-  const canonicalEntries = buildCanonicalPublicLeaderboardEntries(persisted);
-  if (persisted.length > 0) {
-    const metadata = await leaderboardRepository.getLeaderboardMetadata();
+  const metadata = await leaderboardRepository.getLeaderboardMetadata();
+  const reconciled = await reconcileLeaderboardIfPossible(leaderboardRepository, persisted);
+  const canonicalEntries = reconciled?.entries ?? buildCanonicalPublicLeaderboardEntries(persisted);
+  const warnings = reconciled?.warnings ?? metadata.warnings;
+  const recalculatedAt = reconciled?.recalculatedAt ?? metadata.lastRebuildAt;
+
+  if (reconciled && leaderboardNeedsRepair(persisted, reconciled.entries)) {
+    await leaderboardRepository.replaceLeaderboard(reconciled.entries, reconciled);
+  }
+
+  if (persisted.length > 0 || reconciled) {
     return {
       mode: 'persisted',
-      recalculatedAt: metadata.lastRebuildAt,
-      warnings: metadata.warnings,
+      recalculatedAt,
+      warnings,
       entries: canonicalEntries
     };
   }
   return {
     mode: 'pre-results',
-    recalculatedAt: undefined,
-    warnings: [],
+    recalculatedAt,
+    warnings,
     entries: canonicalEntries
   };
 }
 
 export function getZeroedPublicLeaderboard(): LeaderboardEntry[] {
   return buildCanonicalPublicLeaderboardEntries();
+}
+
+async function reconcileLeaderboardIfPossible(
+  leaderboardRepository: LeaderboardRepository,
+  persisted: LeaderboardEntry[]
+) {
+  const source = leaderboardRepository as LeaderboardRepository & { getFinalizedResults?: () => Promise<ResultUpdate[]> };
+  if (typeof source.getFinalizedResults !== 'function') return undefined;
+  const finalizedResults = await source.getFinalizedResults();
+  if (finalizedResults.length === 0) return undefined;
+  return reconcileLeaderboardEntries({
+    finalizedResults,
+    now: new Date(),
+    persistedEntries: persisted
+  });
 }
