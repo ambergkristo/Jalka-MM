@@ -7,9 +7,14 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 
 await seedTournamentData();
+try {
+  await repairTopScorersFromConfirmedResults();
+} catch (error) {
+  console.warn('Top scorer repair skipped:', error instanceof Error ? error.message : String(error));
+}
 
 const serverDir = dirname(fileURLToPath(import.meta.url));
 const clientDir = resolve(serverDir, '..', 'client');

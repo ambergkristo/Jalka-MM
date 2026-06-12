@@ -1,6 +1,13 @@
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'HT' | 'ET' | 'PEN' | 'FINISHED' | 'POSTPONED' | 'SUSPENDED';
 export type PublicResultStatus = 'SCHEDULED' | 'LIVE' | 'CONFIRMING' | 'CONFIRMED_FINAL' | 'NEEDS_REVIEW';
 
+export interface ResultScorer {
+  playerName: string;
+  teamName?: string;
+  teamCode?: string;
+  goals: number;
+}
+
 export interface TrackedMatch {
   id: number;
   providerMatchId?: string;
@@ -32,6 +39,7 @@ export interface ResultUpdate {
   rawProviderStatus?: string;
   providerUpdatedAt?: string;
   pointsRecalculatedAt?: string;
+  scorers?: ResultScorer[];
   provisionalHomeScore?: number;
   provisionalAwayScore?: number;
   provisionalStatus?: MatchStatus;
@@ -61,6 +69,7 @@ export interface ProviderResultObservation {
   confidence?: 'low' | 'medium' | 'high' | 'confirmed';
   providerUpdatedAt?: string;
   warnings?: string[];
+  scorers?: ResultScorer[];
 }
 
 export interface MatchUpdatePlan {

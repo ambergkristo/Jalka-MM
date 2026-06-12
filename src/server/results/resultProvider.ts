@@ -54,6 +54,7 @@ export function toResultUpdate(input: {
   minute?: number;
   providerUpdatedAt?: string;
   nextCheckAt?: string;
+  scorers?: ResultUpdate['scorers'];
 }): ResultUpdate {
   const normalized = normalizeProviderStatusDetail(input.providerStatus);
   return {
@@ -70,6 +71,7 @@ export function toResultUpdate(input: {
     provider: input.provider,
     rawProviderStatus: input.providerStatus,
     providerUpdatedAt: input.providerUpdatedAt,
+    scorers: input.scorers,
     warning: normalized.warning
   };
 }

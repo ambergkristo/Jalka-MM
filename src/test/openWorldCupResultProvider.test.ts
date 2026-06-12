@@ -32,6 +32,21 @@ describe('Open World Cup result provider', () => {
     expect(update).toMatchObject({ status: 'FINISHED', isFinal: true, homeScore: 2, awayScore: 0 });
   });
 
+  it('parses explicit home and away scorer names from open-worldcup payloads', async () => {
+    const game = sampleGame('group', 2, 1, 'TRUE', 1, {
+      home_scorers: '{"J. Quinones 9\'","R. Jimenez 67\'"}',
+      away_scorers: '{"L. Krejci 59\'"}'
+    });
+    const provider = providerFor(game);
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
+
+    expect(update.scorers).toEqual([
+      { playerName: 'J. Quinones', teamName: 'Mexico', teamCode: undefined, goals: 1 },
+      { playerName: 'R. Jimenez', teamName: 'Mexico', teamCode: undefined, goals: 1 },
+      { playerName: 'L. Krejci', teamName: 'South Africa', teamCode: undefined, goals: 1 }
+    ]);
+  });
+
   it('fetches mapped fixtures only for high-confidence candidate rows', async () => {
     const fetchImpl = vi.fn(async (url: string) => {
       expect(url).toContain('/get/games');
@@ -153,7 +168,14 @@ function providerFor(game: Record<string, unknown>) {
   );
 }
 
-function sampleGame(status: string, homeScore = 0, awayScore = 0, finished: unknown = false, id = 1) {
+function sampleGame(
+  status: string,
+  homeScore = 0,
+  awayScore = 0,
+  finished: unknown = false,
+  id = 1,
+  extras: Record<string, unknown> = {}
+) {
   return {
     id,
     status,
@@ -165,6 +187,7 @@ function sampleGame(status: string, homeScore = 0, awayScore = 0, finished: unkn
     home_team_label: 'Mexico',
     away_team_label: 'South Africa',
     stadium_name: 'Estadio Azteca',
-    goalscorers: []
+    goalscorers: [],
+    ...extras
   };
 }

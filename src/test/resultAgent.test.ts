@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { InMemoryResultRepository, createDefaultMockMatches } from '../server/results/inMemoryResultRepository.js';
 import { rebuildLeaderboardAfterFinalResult } from '../server/results/leaderboardRebuild.js';
 import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from '../server/results/leaderboardProjection.js';
@@ -6,6 +6,7 @@ import { MockResultProvider } from '../server/results/mockResultProvider.js';
 import { ProviderChainResultProvider } from '../server/results/providerChainResultProvider.js';
 import { getResultAgentStatus, runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { toResultUpdate, type ResultProvider } from '../server/results/resultProvider.js';
+import type { ResultUpdate } from '../server/results/resultTypes.js';
 import { predictionRepository, type LeaderboardEntry } from '../domain/predictionRepository.js';
 
 describe('result agent update cycle', () => {
@@ -154,6 +155,54 @@ describe('result agent update cycle', () => {
       leaderboardRebuilt: false
     });
     await expect(repository.getFinalizedResults()).resolves.toHaveLength(0);
+  });
+
+  it('syncs scorer facts when a confirmed result includes scorer data', async () => {
+    const now = new Date('2026-06-11T21:30:00.000Z');
+    const repository = new InMemoryResultRepository([{
+      id: 1,
+      kickoffUtc: '2026-06-11T19:00:00.000Z',
+      status: 'SCHEDULED',
+      homeTeam: 'Mexico',
+      awayTeam: 'South Africa',
+      isFinal: false
+    }]) as InMemoryResultRepository & {
+      syncConfirmedScorersForMatch: (matchId: number, scorers: NonNullable<ResultUpdate['scorers']>, timestamp: string) => Promise<void>;
+    };
+    repository.syncConfirmedScorersForMatch = vi.fn(async () => undefined);
+    const provider: ResultProvider = {
+      name: 'open-worldcup-result-provider',
+      mode: 'live' as const,
+      async fetchMatchUpdate(match, now) {
+        return toResultUpdate({
+          match,
+          provider: 'open-worldcup-result-provider',
+          providerStatus: 'FINISHED',
+          now,
+          homeScore: 2,
+          awayScore: 0,
+          minute: 90,
+          providerMatchId: '1',
+          scorers: [
+            { playerName: 'Rui Costa', teamName: 'Mexico', goals: 2 }
+          ]
+        });
+      }
+    };
+
+    const first = await runResultUpdateCycle({ repository, provider, now, confirmationDelayMinutes: 10 });
+    const summary = await runResultUpdateCycle({
+      repository,
+      provider,
+      now: new Date('2026-06-11T21:41:00.000Z'),
+      confirmationDelayMinutes: 10
+    });
+
+    expect(first.finalizedResults).toBe(0);
+    expect(summary.finalizedResults).toBe(1);
+    expect(repository.syncConfirmedScorersForMatch).toHaveBeenCalledWith(1, [
+      { playerName: 'Rui Costa', teamName: 'Mexico', goals: 2 }
+    ], new Date('2026-06-11T21:41:00.000Z').toISOString());
   });
 
   it('returns a safe operational status summary without secrets', async () => {

@@ -4,6 +4,7 @@ import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
 import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import type { LeaderboardMetadata, LeaderboardRepository } from './leaderboardRepository.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
+import { syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultAgentWarningDetail, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export class DatabaseResultRepository implements ResultsAgentRepository, LeaderboardRepository {
@@ -168,6 +169,10 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
           previous.awayScore !== update.awayScore ||
           previous.status !== update.status)
     };
+  }
+
+  async syncConfirmedScorersForMatch(matchId: number, scorers: NonNullable<ResultUpdate['scorers']>, timestamp: string): Promise<void> {
+    await syncConfirmedScorersForMatch(this.db, matchId, scorers, timestamp);
   }
 
   async getFinalizedResults(): Promise<ResultUpdate[]> {

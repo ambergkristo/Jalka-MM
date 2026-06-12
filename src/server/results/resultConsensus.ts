@@ -25,6 +25,7 @@ export function toProviderResultObservation(update: ResultUpdate): ProviderResul
     rawProviderStatus: update.rawProviderStatus,
     confidence: update.isFinal ? 'high' : 'medium',
     providerUpdatedAt: update.providerUpdatedAt,
+    scorers: update.scorers,
     warnings: update.warning ? [update.warning] : []
   };
 }
@@ -147,6 +148,7 @@ function baseUpdateFromObservation(observation: ProviderResultObservation, previ
     provider: observation.provider,
     rawProviderStatus: observation.rawProviderStatus,
     providerUpdatedAt: observation.providerUpdatedAt,
+    scorers: observation.scorers,
     confirmedHomeScore: previousResult?.confirmedHomeScore,
     confirmedAwayScore: previousResult?.confirmedAwayScore,
     confirmedAt: previousResult?.confirmedAt,

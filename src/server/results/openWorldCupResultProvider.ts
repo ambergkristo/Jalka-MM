@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ProviderSpecificConfig } from './resultProviderConfig.js';
 import { toResultUpdate, type ResultProvider } from './resultProvider.js';
-import type { ResultUpdate, TrackedMatch } from './resultTypes.js';
+import type { ResultScorer, ResultUpdate, TrackedMatch } from './resultTypes.js';
 
 type FetchLike = (url: string, init?: RequestInit) => Promise<Pick<Response, 'ok' | 'status' | 'json' | 'text'>>;
 
@@ -10,6 +10,10 @@ interface OpenWorldCupGameResponse {
   id?: number | string;
   home_score?: number | string | null;
   away_score?: number | string | null;
+  home_scorers?: unknown;
+  away_scorers?: unknown;
+  home_team_id?: number | string;
+  away_team_id?: number | string;
   finished?: boolean | string | null;
   type?: string;
   status?: string;
@@ -81,6 +85,10 @@ export class OpenWorldCupResultProvider implements ResultProvider {
       const providerStatus = normalizeStatus(game);
       const homeScore = toNumber(game.home_score);
       const awayScore = toNumber(game.away_score);
+      const scorers = [
+        ...parseScorers(game.home_scorers, match.homeTeam, game.home_team_id),
+        ...parseScorers(game.away_scorers, match.awayTeam, game.away_team_id)
+      ];
       return toResultUpdate({
         match,
         provider: this.name,
@@ -90,7 +98,8 @@ export class OpenWorldCupResultProvider implements ResultProvider {
         homeScore,
         awayScore,
         providerUpdatedAt: game.updated_at ?? game.last_updated ?? game.local_date,
-        nextCheckAt: match.nextCheckAt
+        nextCheckAt: match.nextCheckAt,
+        scorers: scorers.length > 0 ? scorers : undefined
       });
     } catch (error) {
       return warningUpdate(
@@ -212,6 +221,36 @@ function toNumber(value: unknown): number | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+function parseScorers(value: unknown, teamName: string, teamCode?: unknown): ResultScorer[] {
+  const names = extractScorerNames(value);
+  return names.flatMap((name) => {
+    const playerName = normalizeScorerName(name);
+    if (!playerName) return [];
+    return [{ playerName, teamName, teamCode: typeof teamCode === 'string' ? teamCode : undefined, goals: 1 }];
+  });
+}
+
+function extractScorerNames(value: unknown): string[] {
+  if (value === null || value === undefined) return [];
+  if (Array.isArray(value)) return value.flatMap((item) => extractScorerNames(item));
+  if (typeof value !== 'string') return [];
+  const raw = value.trim();
+  if (!raw || ['NULL', 'N/A', 'NONE', '[]', '{}'].includes(raw.toUpperCase())) return [];
+  const normalized = raw.replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  const quoted = [...normalized.matchAll(/"([^"]+)"/g)].map((match) => match[1].trim()).filter(Boolean);
+  if (quoted.length > 0) return quoted;
+  const body = normalized.replace(/^[{[]|[}\]]$/g, '').trim();
+  if (!body) return [];
+  return body.split(',').map((part) => part.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+}
+
+function normalizeScorerName(value: string): string {
+  return value
+    .replace(/\s*\(?\d+(?:\+\d+)?['’]?\)?\s*$/u, '')
+    .replace(/\s*\b(?:pen\.?|penalty|own goal|og)\b.*$/iu, '')
+    .trim();
 }
 
 function trimTrailingSlash(value: string): string {

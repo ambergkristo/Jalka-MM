@@ -81,6 +81,12 @@ export async function runResultUpdateCycle(input: {
     updatesApplied += 1;
     if (finalResultChanged && consensus.confirmed) {
       finalizedResults += 1;
+      const scorerSync = input.repository as ResultsAgentRepository & {
+        syncConfirmedScorersForMatch?: (matchId: number, scorers: ResultUpdate['scorers'], timestamp: string) => Promise<void>;
+      };
+      if (scorerSync.syncConfirmedScorersForMatch && consensus.update.scorers?.length) {
+        await scorerSync.syncConfirmedScorersForMatch(consensus.update.matchId, consensus.update.scorers, consensus.update.lastCheckedAt);
+      }
       const finalized = await input.repository.getFinalizedResults();
       const previousEntries = await input.leaderboardRepository?.getLeaderboard();
       const rebuild = await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now, previousEntries });
