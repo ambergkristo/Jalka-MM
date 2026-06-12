@@ -118,5 +118,430 @@
     "id": "karolin-valdmann",
     "name": "Karolin Valdmann",
     "location": "Hiiumaa"
+  },
+  {
+    "id": "raili-mannilaan",
+    "name": "Raili Männilaan",
+    "location": "Kiili"
+  },
+  {
+    "id": "hannes-aguraiuja",
+    "name": "Hannes Aguraiuja",
+    "location": "Saue"
+  },
+  {
+    "id": "sebastian-schmidt",
+    "name": "Sebastian Schmidt",
+    "location": "Viimsi"
+  },
+  {
+    "id": "marko-mets",
+    "name": "Marko Mets",
+    "location": "Viimsi"
+  },
+  {
+    "id": "jan-jurgenson",
+    "name": "Jan Jürgenson",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "annika-kotsar",
+    "name": "Annika Kotsar",
+    "location": "Rae"
+  },
+  {
+    "id": "raiki-reiljan",
+    "name": "Raiki Reiljan",
+    "location": "Tallinn"
+  },
+  {
+    "id": "kirke-kotsar",
+    "name": "Kirke Kotsar",
+    "location": "Rae"
+  },
+  {
+    "id": "georg-ruitlane",
+    "name": "Georg Ruitlane",
+    "location": "Rae"
+  },
+  {
+    "id": "keit-lohmus",
+    "name": "Keit Lõhmus",
+    "location": "Tartu"
+  },
+  {
+    "id": "anna-liisa-aguraiuja",
+    "name": "Anna-Liisa Aguraiuja",
+    "location": "Saue"
+  },
+  {
+    "id": "kady-becis",
+    "name": "Kady Becis",
+    "location": "Tartu"
+  },
+  {
+    "id": "martin-becis",
+    "name": "Martin Becis",
+    "location": "Tartu"
+  },
+  {
+    "id": "olivia-peerandi",
+    "name": "Olivia Peerandi",
+    "location": "Kanepi"
+  },
+  {
+    "id": "priit-lattik",
+    "name": "Priit Lattik",
+    "location": "Rae"
+  },
+  {
+    "id": "tuule-elling",
+    "name": "Tuule Elling",
+    "location": "Tallinn"
+  },
+  {
+    "id": "toomas-elling",
+    "name": "Toomas Elling",
+    "location": "Lääne-Harju"
+  },
+  {
+    "id": "marek-koppel",
+    "name": "Marek Koppel",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "raigo-tatrik",
+    "name": "Raigo Tatrik",
+    "location": "Rõuge"
+  },
+  {
+    "id": "kart-karpovski",
+    "name": "Kärt Karpovski",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "carol-vilem",
+    "name": "Carol Vilem",
+    "location": "Rae"
+  },
+  {
+    "id": "rait-juhanson",
+    "name": "Rait Juhanson",
+    "location": "Saue"
+  },
+  {
+    "id": "aiko-orgla",
+    "name": "Aiko Orgla",
+    "location": "Saue"
+  },
+  {
+    "id": "andres-vilem",
+    "name": "Andres Vilem",
+    "location": "Rae"
+  },
+  {
+    "id": "madde-jerbach",
+    "name": "Madde Jerbach",
+    "location": "Tallinn"
+  },
+  {
+    "id": "aleksander-saharov",
+    "name": "Aleksander Saharov",
+    "location": "Rae"
+  },
+  {
+    "id": "aleksandr-blistinov",
+    "name": "Aleksandr Blistinov",
+    "location": "Harku"
+  },
+  {
+    "id": "gerli-gordejev",
+    "name": "Gerli Gordejev",
+    "location": "Rapla"
+  },
+  {
+    "id": "gert-toime",
+    "name": "Gert Toime",
+    "location": "Rae"
+  },
+  {
+    "id": "sander-peerandi",
+    "name": "Sander Peerandi",
+    "location": "Kanepi"
+  },
+  {
+    "id": "rasmus-veidemann",
+    "name": "Rasmus Veidemann",
+    "location": "Tallinn"
+  },
+  {
+    "id": "andre-kuldma",
+    "name": "Andre Kuldma",
+    "location": "Saue"
+  },
+  {
+    "id": "silver-palu",
+    "name": "Silver Palu",
+    "location": "Tallinn"
+  },
+  {
+    "id": "tanel-peelo",
+    "name": "Tanel Peelo",
+    "location": "Rõuge"
+  },
+  {
+    "id": "mairon-raud",
+    "name": "Mairon Raud",
+    "location": "Tallinn"
+  },
+  {
+    "id": "mehis-raud",
+    "name": "Mehis Raud",
+    "location": "Tallinn"
+  },
+  {
+    "id": "aron-suluste",
+    "name": "Aron Suluste",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "geiu-suluste",
+    "name": "Geiu Suluste",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "nora-suluste",
+    "name": "Nora Suluste",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "kaspar-maripuu",
+    "name": "Kaspar Maripuu",
+    "location": "Rapla"
+  },
+  {
+    "id": "voldemar-pold",
+    "name": "Voldemar Põld",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "meelis-melts",
+    "name": "Meelis Melts",
+    "location": "Tallinn"
+  },
+  {
+    "id": "sulev-soomere",
+    "name": "Sulev Soomere",
+    "location": "Rae"
+  },
+  {
+    "id": "aivar-tammeveski",
+    "name": "Aivar Tammeveski",
+    "location": "Hiiumaa"
+  },
+  {
+    "id": "jurgen-perov-jung",
+    "name": "Jürgen Perov-Jung",
+    "location": "Tallinn"
+  },
+  {
+    "id": "karl-tiitson",
+    "name": "Karl Tiitson",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "meelis-nukki",
+    "name": "Meelis Nukki",
+    "location": "Haapsalu"
+  },
+  {
+    "id": "mihkel-maehans",
+    "name": "Mihkel Mäehans",
+    "location": "Rae"
+  },
+  {
+    "id": "kristi-koll",
+    "name": "Kristi Kõll",
+    "location": "Rae"
+  },
+  {
+    "id": "marek-raud",
+    "name": "Marek Raud",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "rico-seppen",
+    "name": "Rico Seppen",
+    "location": "Rae"
+  },
+  {
+    "id": "jurgen-jogeva",
+    "name": "Jürgen Jõgeva",
+    "location": "Tallinn"
+  },
+  {
+    "id": "rene-aljas",
+    "name": "Rene Aljas",
+    "location": "Tallinn"
+  },
+  {
+    "id": "kristofer-kruusimae",
+    "name": "Kristofer Kruusimäe",
+    "location": "Rae"
+  },
+  {
+    "id": "raiko-ilves",
+    "name": "Raiko Ilves",
+    "location": "Rae"
+  },
+  {
+    "id": "liisbet-vaiksaar",
+    "name": "Liisbet Vaiksaar",
+    "location": "Tallinn"
+  },
+  {
+    "id": "toivo-saukkonen",
+    "name": "Toivo Saukkonen",
+    "location": "Paide"
+  },
+  {
+    "id": "elari-valmas",
+    "name": "Elari Valmas",
+    "location": "Kiili"
+  },
+  {
+    "id": "raido-kaimer",
+    "name": "Raido Kaimer",
+    "location": "Tallinn"
+  },
+  {
+    "id": "kauri-kiiman",
+    "name": "Kauri Kiiman",
+    "location": "Saku"
+  },
+  {
+    "id": "jasper-pukk",
+    "name": "Jasper Pukk",
+    "location": "Tallinn"
+  },
+  {
+    "id": "aivo-sadam",
+    "name": "Aivo Sadam",
+    "location": "Tallinn"
+  },
+  {
+    "id": "rainis-kruup",
+    "name": "Rainis Kruup",
+    "location": "Rakvere"
+  },
+  {
+    "id": "rait-rohumagi",
+    "name": "Rait Rohumägi",
+    "location": "Kambja"
+  },
+  {
+    "id": "rain-alari-kulm",
+    "name": "Rain-Alari Külm",
+    "location": "Tallinn"
+  },
+  {
+    "id": "riivo-rivimets",
+    "name": "Riivo Rivimets",
+    "location": "Rae"
+  },
+  {
+    "id": "niklas-lazarev",
+    "name": "Niklas Lazarev",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "lauri-lazarev",
+    "name": "Lauri Lazarev",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "kaido-jogi",
+    "name": "Kaido Jõgi",
+    "location": "Rae"
+  },
+  {
+    "id": "jarno-saar",
+    "name": "Jarno Saar",
+    "location": "Rae"
+  },
+  {
+    "id": "janne-salumaa",
+    "name": "Janne Salumaa",
+    "location": "Saaremaa"
+  },
+  {
+    "id": "reigo-karula",
+    "name": "Reigo Karula",
+    "location": "Tallinn"
+  },
+  {
+    "id": "valmar-koidu",
+    "name": "Valmar Koidu",
+    "location": "Tallinn"
+  },
+  {
+    "id": "andreas-sadam",
+    "name": "Andreas Sadam",
+    "location": "Tallinn"
+  },
+  {
+    "id": "joosep-altmets",
+    "name": "Joosep Altmets",
+    "location": "Tallinn"
+  },
+  {
+    "id": "liisi-suitsberg",
+    "name": "Liisi Suitsberg",
+    "location": "Tallinn"
+  },
+  {
+    "id": "sten-egert-tammeveski",
+    "name": "Sten Egert Tammeveski",
+    "location": "Hiiumaa"
+  },
+  {
+    "id": "sven-tammeveski",
+    "name": "Sven Tammeveski",
+    "location": "Hiiumaa"
+  },
+  {
+    "id": "rui-costa",
+    "name": "Rui Costa",
+    "location": "Tallinn"
+  },
+  {
+    "id": "aigar-kolk",
+    "name": "Aigar Kolk",
+    "location": "Rae"
+  },
+  {
+    "id": "marek-reiman",
+    "name": "Marek Reiman",
+    "location": "Kiili"
+  },
+  {
+    "id": "rauno-martin",
+    "name": "Rauno Martin",
+    "location": "Hiiumaa"
+  },
+  {
+    "id": "veiko-kurim",
+    "name": "Veiko Kurim",
+    "location": "Paide"
+  },
+  {
+    "id": "innar-kovask",
+    "name": "Innar Kõvask",
+    "location": "Saku"
+  },
+  {
+    "id": "pille-vahtra",
+    "name": "Pille Vahtra",
+    "location": "Kiili"
   }
 ]

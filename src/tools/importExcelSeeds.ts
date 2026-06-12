@@ -9,7 +9,7 @@ import type { WorkSheet } from 'xlsx';
 const require = createRequire(import.meta.url);
 const xlsx = require('xlsx') as typeof import('xlsx');
 
-const workbookPath = 'imports/data.xlsx';
+const workbookPath = process.env.EXCEL_IMPORT_WORKBOOK ?? process.argv[2] ?? 'imports/data.xlsx';
 const generatedSeedFiles = [
   'src/data/players.json',
   'src/data/predictions/matchPredictions.json',

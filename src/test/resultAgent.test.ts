@@ -37,7 +37,7 @@ describe('result agent update cycle', () => {
     expect(second.confirmationPending).toBe(0);
     expect(second.leaderboardRebuilds).toHaveLength(1);
     expect(second.leaderboardRebuilds[0]).toMatchObject({
-      playersProcessed: 24,
+      playersProcessed: 109,
       matchesProcessed: 1,
       entries: expect.any(Array),
       warnings: [
@@ -191,7 +191,7 @@ describe('result agent update cycle', () => {
       confirmationPending: 0,
       needsReview: 0,
       leaderboardRebuilt: true,
-      playersProcessed: 24,
+      playersProcessed: 109,
       warnings: ['Dry run completed without persisting result, run summary, or leaderboard changes.'],
       warningDetails: [{
         internalMatchId: 4,
@@ -261,7 +261,7 @@ describe('leaderboard rebuild', () => {
       ]
     });
     expect(result.recalculatedAt).toBe('2026-06-15T18:00:00.000Z');
-    expect(result.playersProcessed).toBe(24);
+    expect(result.playersProcessed).toBe(109);
     expect(result.matchesProcessed).toBe(1);
     expect(result.warnings).toEqual([
       'Group bonus points were skipped because actual group standings are not available.',

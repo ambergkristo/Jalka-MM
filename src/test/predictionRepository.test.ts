@@ -30,9 +30,9 @@ describe('prediction seed validation', () => {
   it('accepts the committed prediction seed files', () => {
     const loadResult = loadDefaultPredictionSeedData();
     expect(loadResult.errors).toEqual([]);
-    expect(loadResult.data.players).toHaveLength(24);
-    expect(loadResult.data.matchPredictions).toHaveLength(1728);
-    expect(loadResult.data.leaderboard).toHaveLength(24);
+    expect(loadResult.data.players).toHaveLength(109);
+    expect(loadResult.data.matchPredictions).toHaveLength(7848);
+    expect(loadResult.data.leaderboard).toHaveLength(109);
     expect(loadResult.data.players.map((player) => player.id)).toContain('kristo-amberg');
   });
 
@@ -77,7 +77,7 @@ describe('prediction seed validation', () => {
 describe('prediction repository', () => {
   it('returns leaderboard and player prediction bundles from seed data', () => {
     const repository = new JsonPredictionRepository(loadDefaultPredictionSeedData());
-    expect(repository.getLeaderboard()).toHaveLength(24);
+    expect(repository.getLeaderboard()).toHaveLength(109);
     const bundle = repository.getPlayerPredictionBundle('kristo-amberg');
     expect(bundle?.player.name).toBe('Kristo Amberg');
     expect(bundle?.matchPredictions).toHaveLength(72);

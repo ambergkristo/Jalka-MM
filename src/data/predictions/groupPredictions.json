@@ -1846,5 +1846,6550 @@
         "third": "Horvaatia"
       }
     ]
+  },
+  {
+    "playerId": "raili-mannilaan",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Uus-Meremaa",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Cabo Verde"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Ghana",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "hannes-aguraiuja",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Austraalia",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "sebastian-schmidt",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Katar"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": "Austria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "marko-mets",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "jan-jurgenson",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Katar",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "annika-kotsar",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Rootsi",
+        "second": "Holland",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Uus-Meremaa",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": "Austria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "raiki-reiljan",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "kirke-kotsar",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Paraguai",
+        "second": "Türgi",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": "Uruguay"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "georg-ruitlane",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": "Austria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "keit-lohmus",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "anna-liisa-aguraiuja",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Jaapan",
+        "second": "Holland",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Kolumbia",
+        "second": "Portugal",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Panama"
+      }
+    ]
+  },
+  {
+    "playerId": "kady-becis",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": ""
+      },
+      {
+        "group": "D",
+        "first": "Paraguai",
+        "second": "USA",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Uus-Meremaa",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "martin-becis",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Maroko",
+        "second": "Brasiilia",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Uus-Meremaa",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "olivia-peerandi",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Paraguai",
+        "second": "Türgi",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Egiptus",
+        "second": "Belgia",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Ghana",
+        "third": "Horvaatia"
+      }
+    ]
+  },
+  {
+    "playerId": "priit-lattik",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Katar",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Paraguai",
+        "second": "Türgi",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Iraak"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "tuule-elling",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "toomas-elling",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "marek-koppel",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": "Uruguay"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "raigo-tatrik",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "kart-karpovski",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": "Uruguay"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "carol-vilem",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Katar"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "rait-juhanson",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Kolumbia",
+        "second": "Portugal",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "aiko-orgla",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna Aafrika Vabariik",
+        "second": "Lõuna-Korea",
+        "third": "Mehhiko"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Šveits"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Rootsi",
+        "second": "Holland",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "andres-vilem",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "madde-jerbach",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Maroko",
+        "second": "Brasiilia",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "aleksander-saharov",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Katar"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Paraguai",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "aleksandr-blistinov",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Lõuna-Korea",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Norra",
+        "second": "Prantsusmaa",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "gerli-gordejev",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "gert-toime",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna Aafrika Vabariik",
+        "second": "Tšehhi",
+        "third": "Mehhiko"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Haiti",
+        "third": ""
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Rootsi",
+        "second": "Holland",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Uus-Meremaa",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "sander-peerandi",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "rasmus-veidemann",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "andre-kuldma",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "silver-palu",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Rootsi",
+        "second": "Holland",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Senegal",
+        "second": "Prantsusmaa",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Alžeeria",
+        "second": "Argentiina",
+        "third": "Austria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "tanel-peelo",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Jaapan",
+        "second": "Holland",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Egiptus",
+        "second": "Belgia",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "mairon-raud",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Panama"
+      }
+    ]
+  },
+  {
+    "playerId": "mehis-raud",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Cabo Verde"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "aron-suluste",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Šveits"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": "Uruguay"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Iraak",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": "Austria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "geiu-suluste",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Paraguai",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Iraak"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "nora-suluste",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Tšehhi",
+        "third": "Mehhiko"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "kaspar-maripuu",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Jaapan",
+        "second": "Holland",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Norra",
+        "second": "Prantsusmaa",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "voldemar-pold",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": "Uruguay"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "meelis-melts",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Ghana",
+        "third": "Horvaatia"
+      }
+    ]
+  },
+  {
+    "playerId": "sulev-soomere",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "aivar-tammeveski",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "jurgen-perov-jung",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "karl-tiitson",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Egiptus",
+        "second": "Belgia",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "meelis-nukki",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "mihkel-maehans",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Curacao",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Cabo Verde"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "kristi-koll",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Iraak"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "marek-raud",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Paraguai",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "rico-seppen",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Katar",
+        "second": "Šveits",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Jaapan",
+        "second": "Holland",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Norra",
+        "second": "Prantsusmaa",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Ghana",
+        "third": "Horvaatia"
+      }
+    ]
+  },
+  {
+    "playerId": "jurgen-jogeva",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "rene-aljas",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Paraguai",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Jaapan",
+        "second": "Holland",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "kristofer-kruusimae",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "raiko-ilves",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "liisbet-vaiksaar",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Alžeeria",
+        "third": "Austria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "toivo-saukkonen",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Paraguai",
+        "second": "USA",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Tuneesia",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Cabo Verde"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "DR Congo",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "elari-valmas",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "raido-kaimer",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Paraguai",
+        "second": "Türgi",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "kauri-kiiman",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "jasper-pukk",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Curacao"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Jordaania"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "DR Congo",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "aivo-sadam",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Paraguai",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Ghana",
+        "third": "Horvaatia"
+      }
+    ]
+  },
+  {
+    "playerId": "rainis-kruup",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Uus-Meremaa",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "rait-rohumagi",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Katar"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": ""
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Panama"
+      }
+    ]
+  },
+  {
+    "playerId": "rain-alari-kulm",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "riivo-rivimets",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Paraguai",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "niklas-lazarev",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Tšehhi",
+        "third": "Mehhiko"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Katar",
+        "third": "Šveits"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Rootsi",
+        "second": "Jaapan",
+        "third": "Holland"
+      },
+      {
+        "group": "G",
+        "first": "Egiptus",
+        "second": "Uus-Meremaa",
+        "third": "Belgia"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "lauri-lazarev",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Lõuna-Korea",
+        "third": "Lõuna Aafrika Vabariik"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": ""
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Saudi Araabia",
+        "third": "Uruguay"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Iraak"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "kaido-jogi",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Mehhiko",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Katar"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Rootsi",
+        "second": "Jaapan",
+        "third": "Holland"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Uruguay",
+        "second": "Hispaania",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "jarno-saar",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "janne-salumaa",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "reigo-karula",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Austraalia",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Panama"
+      }
+    ]
+  },
+  {
+    "playerId": "valmar-koidu",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "andreas-sadam",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "joosep-altmets",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "liisi-suitsberg",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Tuneesia"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Norra",
+        "second": "Prantsusmaa",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Ghana",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "sten-egert-tammeveski",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Ghana"
+      }
+    ]
+  },
+  {
+    "playerId": "sven-tammeveski",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "rui-costa",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Paraguai",
+        "third": "Türgi"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Panama",
+        "third": "Horvaatia"
+      }
+    ]
+  },
+  {
+    "playerId": "aigar-kolk",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Bosnia ja Hertsegoviina",
+        "third": "Kanada"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "USA",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Norra",
+        "second": "Prantsusmaa",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "DR Congo"
+      },
+      {
+        "group": "L",
+        "first": "Horvaatia",
+        "second": "Inglismaa",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "marek-reiman",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Katar",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": "Rootsi"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Iraan"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "rauno-martin",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Lõuna-Korea",
+        "second": "Mehhiko",
+        "third": "Tšehhi"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "Türgi",
+        "second": "Austraalia",
+        "third": "USA"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": ""
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": ""
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": "Panama"
+      }
+    ]
+  },
+  {
+    "playerId": "veiko-kurim",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Lõuna-Korea",
+        "third": ""
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": ""
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": "Jaapan"
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": ""
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Ghana",
+        "third": "Horvaatia"
+      }
+    ]
+  },
+  {
+    "playerId": "innar-kovask",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Mehhiko",
+        "second": "Tšehhi",
+        "third": "Lõuna-Korea"
+      },
+      {
+        "group": "B",
+        "first": "Kanada",
+        "second": "Šveits",
+        "third": "Bosnia ja Hertsegoviina"
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Maroko",
+        "third": "Šotimaa"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Paraguai"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Ecuador",
+        "third": "Elevandiluurannik"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Jaapan",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Iraan",
+        "third": "Egiptus"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": ""
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Senegal",
+        "third": "Norra"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": "Alžeeria"
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": ""
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
+  },
+  {
+    "playerId": "pille-vahtra",
+    "groups": [
+      {
+        "group": "A",
+        "first": "Tšehhi",
+        "second": "Lõuna-Korea",
+        "third": "Mehhiko"
+      },
+      {
+        "group": "B",
+        "first": "Šveits",
+        "second": "Kanada",
+        "third": ""
+      },
+      {
+        "group": "C",
+        "first": "Brasiilia",
+        "second": "Šotimaa",
+        "third": "Maroko"
+      },
+      {
+        "group": "D",
+        "first": "USA",
+        "second": "Türgi",
+        "third": "Austraalia"
+      },
+      {
+        "group": "E",
+        "first": "Saksamaa",
+        "second": "Elevandiluurannik",
+        "third": "Ecuador"
+      },
+      {
+        "group": "F",
+        "first": "Holland",
+        "second": "Rootsi",
+        "third": ""
+      },
+      {
+        "group": "G",
+        "first": "Belgia",
+        "second": "Egiptus",
+        "third": "Uus-Meremaa"
+      },
+      {
+        "group": "H",
+        "first": "Hispaania",
+        "second": "Uruguay",
+        "third": "Saudi Araabia"
+      },
+      {
+        "group": "I",
+        "first": "Prantsusmaa",
+        "second": "Norra",
+        "third": "Senegal"
+      },
+      {
+        "group": "J",
+        "first": "Argentiina",
+        "second": "Austria",
+        "third": ""
+      },
+      {
+        "group": "K",
+        "first": "Portugal",
+        "second": "Kolumbia",
+        "third": "Uzbekistan"
+      },
+      {
+        "group": "L",
+        "first": "Inglismaa",
+        "second": "Horvaatia",
+        "third": ""
+      }
+    ]
   }
 ]
