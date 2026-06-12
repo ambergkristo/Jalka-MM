@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildPublicTournamentState, selectPublicMatchSection, type PublicDashboardSnapshotLike } from '../client/lib/publicTournamentState.js';
 import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../client/data/publicTournamentFallback.js';
+import { predictionRepository } from '../domain/predictionRepository.js';
 
 function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): PublicDashboardSnapshotLike {
   return {
@@ -99,7 +100,8 @@ describe('public tournament state', () => {
     expect(state.playedCount).toBe(2);
     expect(state.latestResults).toHaveLength(2);
     expect(state.upcomingMatches).toHaveLength(2);
-    expect(state.leaderboardRows[0]).toMatchObject({
+    expect(state.leaderboardRows).toHaveLength(109);
+    expect(state.leaderboardRows.find((row) => row.playerId === 'kristo-amberg')).toMatchObject({
       playerId: 'kristo-amberg',
       points: 6,
       exactScores: 1,
@@ -109,5 +111,25 @@ describe('public tournament state', () => {
     expect(state.playoffBracket).toBe(initialPlayoffBracket);
     expect(state.tournamentStats).toBe(initialTournamentStats);
     expect(matchSection.matches.map((match) => match.id)).toEqual(['3', '4']);
+  });
+
+  it('fills partial leaderboard snapshots to all 109 players', () => {
+    const partialSnapshot = createSnapshot({
+      leaderboard: predictionRepository.getLeaderboard().slice(0, 24)
+    });
+
+    const state = buildPublicTournamentState(partialSnapshot, new Date('2026-06-12T12:00:00.000Z'));
+    const canonicalLeaderboard = predictionRepository.getLeaderboard();
+
+    expect(state.leaderboardRows).toHaveLength(109);
+    expect(state.leaderboardRows.slice(0, 24).some((row) => row.points > 0)).toBe(true);
+    expect(state.leaderboardRows[24]).toMatchObject({
+      playerId: canonicalLeaderboard[24].playerId,
+      rank: 25,
+      points: 0,
+      exactScores: 0,
+      correctResults: 0,
+      hitRate: '0%'
+    });
   });
 });

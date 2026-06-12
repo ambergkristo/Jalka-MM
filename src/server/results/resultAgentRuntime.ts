@@ -3,8 +3,8 @@ import { getManualResultPermission as resolveManualResultPermission, getResultAg
 import { loadResultProviderConfig } from './resultProviderConfig.js';
 import { createResultProvider } from './resultProviderFactory.js';
 import { db } from '../db.js';
-import { predictionRepository } from '../../domain/predictionRepository.js';
-import type { LeaderboardEntry, Player } from '../../domain/predictionRepository.js';
+import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
+import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
@@ -51,46 +51,24 @@ export function confirmManualResultRuntime(confirmation: ManualResultConfirmatio
 
 export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRepository = repository) {
   const persisted = await leaderboardRepository.getLeaderboard();
+  const canonicalEntries = buildCanonicalPublicLeaderboardEntries(persisted);
   if (persisted.length > 0) {
     const metadata = await leaderboardRepository.getLeaderboardMetadata();
     return {
       mode: 'persisted',
       recalculatedAt: metadata.lastRebuildAt,
       warnings: metadata.warnings,
-      entries: persisted
+      entries: canonicalEntries
     };
   }
   return {
     mode: 'pre-results',
     recalculatedAt: undefined,
     warnings: [],
-    entries: getZeroedPublicLeaderboard()
+    entries: canonicalEntries
   };
 }
 
 export function getZeroedPublicLeaderboard(): LeaderboardEntry[] {
-  const playersById = new Map(predictionRepository.getPlayers().map((player) => [player.id, player]));
-  const seeded = predictionRepository.getLeaderboard();
-  const orderedPlayers = seeded.length > 0
-    ? seeded.flatMap((entry) => playersById.get(entry.playerId) ?? [])
-    : predictionRepository.getPlayers().sort(byName);
-  return orderedPlayers.map((player, index) => ({
-    playerId: player.id,
-    rank: index + 1,
-    points: 0,
-    exactScores: 0,
-    correctResults: 0,
-    hitRate: 0,
-    matchesScored: 0,
-    matchPoints: 0,
-    groupBonusPoints: 0,
-    playoffBonusPoints: 0,
-    topScorerBonusPoints: 0,
-    totalPoints: 0,
-    lastUpdatedAt: ''
-  }));
-}
-
-function byName(a: Player, b: Player): number {
-  return a.name.localeCompare(b.name, 'et');
+  return buildCanonicalPublicLeaderboardEntries();
 }

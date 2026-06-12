@@ -1,5 +1,6 @@
 import matchesJson from '../../data/worldcup2026/matches.json';
 import type { Match } from '../../domain/types.js';
+import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { resolveScorerTeam } from './scorerTeamLookup.js';
@@ -74,22 +75,10 @@ export function getLeaderboardRows(): LeaderboardRowView[] {
 }
 
 export function getZeroedLeaderboardRows(): LeaderboardRowView[] {
-  const rows = getLeaderboardRows();
-  const sourceRows = rows.length > 0
-    ? rows
-    : predictionRepository.getPlayers().map((player, index) => ({
-      rank: index + 1,
-      playerId: player.id,
-      player: player.name,
-      points: 0,
-      exactScores: 0,
-      correctResults: 0,
-      hitRate: '0%',
-      positionChange: 0
-    }));
-  return sourceRows.map((row, index) => ({
-    ...row,
-    rank: index + 1,
+  return buildCanonicalPublicLeaderboardEntries().map((entry) => ({
+    rank: entry.rank,
+    playerId: entry.playerId,
+    player: predictionRepository.getPlayerById(entry.playerId)?.name ?? entry.playerId,
     points: 0,
     exactScores: 0,
     correctResults: 0,

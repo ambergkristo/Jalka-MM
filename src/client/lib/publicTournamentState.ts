@@ -3,6 +3,7 @@ import type { DashboardMetric, DashboardMatch, DashboardResult, GroupLeader, Gro
 import { getPublicMatchSection, type MatchSection } from '../data/publicDashboard.js';
 import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../data/publicTournamentFallback.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
+import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { getZeroedLeaderboardRows, type LeaderboardRowView } from './predictionViewModels.js';
 
@@ -108,8 +109,8 @@ export function selectPublicMatchSection(snapshot: PublicDashboardSnapshotLike |
 }
 
 export function buildLeaderboardRows(snapshot?: PublicDashboardSnapshotLike): LeaderboardRowView[] {
-  if (!snapshot?.leaderboard?.length) return getZeroedLeaderboardRows();
-  return snapshot.leaderboard.map(toLeaderboardRow);
+  const entries = buildCanonicalPublicLeaderboardEntries(snapshot?.leaderboard ?? []);
+  return entries.map(toLeaderboardRow);
 }
 
 function buildHeroMetrics(playedCount: number, upcomingMatches: DashboardMatch[]): DashboardMetric[] {
