@@ -107,3 +107,23 @@
 - `node --test dist/test-db/db-node-test.js dist/test-db/result-persistence-node-test.js dist/test-db/manual-result-correction-node-test.js dist/test-db/top-scorer-standings-node-test.js dist/test-db/matchday-simulation-node-test.js dist/test-db/public-state-health-node-test.js` passed.
 - `npm run validate:prediction-seeds` passed.
 - Local HTTP smoke confirmed `/api/public-state/diagnostics`, `/api/public-dashboard`, and `/operator` return `200` with `no-store` cache headers.
+
+# Sprint 19.6 - Automatic Top Scorer Repair
+
+- [x] Add automatic full public-state refresh after confirmed final results.
+- [x] Add startup backfill for confirmed provider scorer data.
+- [x] Keep public-read stale scorer repair automatic, with operator buttons as fallback only.
+- [x] Prevent repeated provider observations from duplicating scorer facts.
+- [x] Add targeted DB regression coverage for automatic final-result scorer sync and startup repair.
+- [x] Run build, typecheck, app tests, and scorer/result DB tests.
+
+## Review
+
+- `npm run build` passed.
+- `npx tsc -p tsconfig.server.json --noEmit` passed.
+- `npm run test` passed.
+- `node --test dist/test-db/automatic-public-state-sync-node-test.js` passed.
+- `node --test dist/test-db/top-scorer-standings-node-test.js` passed.
+- `node --test dist/test-db/public-state-health-node-test.js` passed.
+- `node --test dist/test-db/result-persistence-node-test.js` passed.
+- `node --test dist/test-db/manual-result-correction-node-test.js` passed.

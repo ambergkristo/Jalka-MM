@@ -79,20 +79,27 @@ export async function runResultUpdateCycle(input: {
       nextCheckAt: consensus.update.nextCheckAt ?? (consensus.update.isFinal ? undefined : plan.nextCheckAt)
     });
     updatesApplied += 1;
-    if (finalResultChanged && consensus.confirmed) {
-      finalizedResults += 1;
-      const scorerSync = input.repository as ResultsAgentRepository & {
-        syncConfirmedScorersForMatch?: (matchId: number, scorers: ResultUpdate['scorers'], timestamp: string) => Promise<void>;
-      };
-      if (scorerSync.syncConfirmedScorersForMatch && consensus.update.scorers?.length) {
-        await scorerSync.syncConfirmedScorersForMatch(consensus.update.matchId, consensus.update.scorers, consensus.update.lastCheckedAt);
+    if (consensus.confirmed && (finalResultChanged || (consensus.update.scorers?.length ?? 0) > 0)) {
+      if (finalResultChanged) finalizedResults += 1;
+      const refresh = input.repository.refreshDerivedTournamentState
+        ? await input.repository.refreshDerivedTournamentState(input.now.toISOString())
+        : undefined;
+      if (refresh) {
+        leaderboardRebuilds.push(refresh);
+      } else {
+        const scorerSync = input.repository as ResultsAgentRepository & {
+          syncConfirmedScorersForMatch?: (matchId: number, scorers: ResultUpdate['scorers'], timestamp: string) => Promise<void>;
+        };
+        if (scorerSync.syncConfirmedScorersForMatch && consensus.update.scorers?.length) {
+          await scorerSync.syncConfirmedScorersForMatch(consensus.update.matchId, consensus.update.scorers, consensus.update.lastCheckedAt);
+        }
+        const finalized = await input.repository.getFinalizedResults();
+        const previousEntries = await input.leaderboardRepository?.getLeaderboard();
+        const rebuild = await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now, previousEntries });
+        await input.leaderboardRepository?.replaceLeaderboard(rebuild.entries, rebuild);
+        await input.repository.markPointsRecalculated(consensus.update.matchId, rebuild.recalculatedAt);
+        leaderboardRebuilds.push(rebuild);
       }
-      const finalized = await input.repository.getFinalizedResults();
-      const previousEntries = await input.leaderboardRepository?.getLeaderboard();
-      const rebuild = await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now, previousEntries });
-      await input.leaderboardRepository?.replaceLeaderboard(rebuild.entries, rebuild);
-      await input.repository.markPointsRecalculated(consensus.update.matchId, rebuild.recalculatedAt);
-      leaderboardRebuilds.push(rebuild);
     }
   }
 

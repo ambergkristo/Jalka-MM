@@ -4,6 +4,7 @@ import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
 import { findNextSuggestedRunAt, planMatchUpdates } from './matchScheduler.js';
 import type { LeaderboardMetadata, LeaderboardRepository } from './leaderboardRepository.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
+import { rebuildPublicTournamentState } from './publicTournamentRebuild.js';
 import { syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultAgentWarningDetail, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
@@ -324,6 +325,11 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
       changedEntries: Number(row.changed_entries ?? 0),
       warnings: parseWarnings(row.warnings_json)
     };
+  }
+
+  async refreshDerivedTournamentState(timestamp: string): Promise<LeaderboardRebuildResult | undefined> {
+    const refreshed = await rebuildPublicTournamentState(this.db, new Date(timestamp));
+    return refreshed.leaderboardRebuild;
   }
 }
 

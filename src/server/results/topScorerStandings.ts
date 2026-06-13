@@ -132,7 +132,10 @@ function parseProviderScorers(value: unknown): ResultScorer[] {
   try {
     const parsed = JSON.parse(value) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.flatMap((item) => extractObservationScorers(item));
+    const observations = parsed
+      .map((item) => extractObservationScorers(item))
+      .filter((scorers) => scorers.length > 0);
+    return observations.at(-1) ?? [];
   } catch {
     return [];
   }

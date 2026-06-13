@@ -7,14 +7,15 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runPublicStateRepairAction } from './results/publicStateHealth.js';
+import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
 
 await seedTournamentData();
 try {
-  await repairTopScorersFromConfirmedResults();
+  await rebuildPublicTournamentState(db, new Date());
 } catch (error) {
-  console.warn('Top scorer repair skipped:', error instanceof Error ? error.message : String(error));
+  console.warn('Startup public-state repair skipped:', error instanceof Error ? error.message : String(error));
 }
 void queueResultAgentCatchUp(new Date());
 const resultAgentCatchUpInterval = setInterval(() => {

@@ -117,7 +117,8 @@ export async function collectPublicStateDiagnostics(input: {
     topScorerRowsCount,
     topScorerCacheRowsCount,
     topScorerGoalsCount,
-    topScorerNameAnomaliesCount
+    topScorerNameAnomaliesCount,
+    providerScorerDataDetected
   });
   const operatorStatus = deriveOperatorStatus(resultAgentStatus, staleReasons, metadata);
 
@@ -296,10 +297,10 @@ export async function queuePublicStateRepairIfStale(input: {
 }
 
 export function choosePublicStateRepairAction(diagnostics: PublicStateDiagnostics): PublicStateRepairAction | undefined {
-  if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsCount === 0) {
+  if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsCount === 0 && diagnostics.providerScorerDataDetected !== 'no') {
     return 'resync-scorers-from-confirmed-results';
   }
-  if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsGoalsCount !== diagnostics.confirmedGoalsCount && diagnostics.providerScorerDataDetected === 'yes') {
+  if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsGoalsCount !== diagnostics.confirmedGoalsCount && diagnostics.providerScorerDataDetected !== 'no') {
     return 'resync-scorers-from-confirmed-results';
   }
   const needsFullRebuild = diagnostics.staleReasons.some((reason) =>
@@ -599,6 +600,7 @@ function buildStaleReasons(input: {
   topScorerCacheRowsCount: number;
   topScorerGoalsCount: number;
   topScorerNameAnomaliesCount: number;
+  providerScorerDataDetected: 'yes' | 'no' | 'unknown';
 }): string[] {
   const reasons: string[] = [];
   if (input.confirmedResultsCount > 0 && input.latestResultsCount === 0) reasons.push('Confirmed results exist, but latest public results are empty.');
@@ -606,7 +608,7 @@ function buildStaleReasons(input: {
   if (input.leaderboardCacheRowsCount < input.canonicalLeaderboardRowsCount && input.confirmedResultsCount > 0) {
     reasons.push(`Leaderboard cache has ${input.leaderboardCacheRowsCount} rows but canonical import expects ${input.canonicalLeaderboardRowsCount}.`);
   }
-  if (input.confirmedResultsCount > 0 && input.confirmedGoalsCount > 0 && input.scorerFactsCount === 0) {
+  if (input.confirmedResultsCount > 0 && input.confirmedGoalsCount > 0 && input.scorerFactsCount === 0 && input.providerScorerDataDetected !== 'no') {
     reasons.push('Confirmed results exist, but no scorer facts are available. Provider may not supply scorer data or scorer sync failed.');
   }
   if (input.confirmedResultsCount > 0 && input.scorerFactsGoalsCount > input.confirmedGoalsCount) {

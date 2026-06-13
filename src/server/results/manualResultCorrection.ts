@@ -119,18 +119,22 @@ export async function confirmManualResult(input: {
     scorersProvided: confirmation.scorers !== undefined
   });
 
-  const existingLeaderboard = await input.leaderboardRepository.getLeaderboard();
-  const shouldRebuild = finalResultChanged || existingLeaderboard.length === 0;
   let rebuild: LeaderboardRebuildResult | undefined;
-  if (shouldRebuild) {
-    const finalized = await input.repository.getFinalizedResults();
-    rebuild = await rebuildLeaderboardAfterFinalResult({
-      finalizedResults: finalized,
-      now: confirmation.now ?? new Date(nowIso),
-      previousEntries: existingLeaderboard
-    });
-    await input.leaderboardRepository.replaceLeaderboard(rebuild.entries, rebuild);
-    await input.repository.markPointsRecalculated(confirmation.matchId, rebuild.recalculatedAt);
+  if (finalResultChanged || normalizedScorers.length > 0 || (await input.leaderboardRepository.getLeaderboard()).length === 0) {
+    rebuild = input.repository.refreshDerivedTournamentState
+      ? await input.repository.refreshDerivedTournamentState(nowIso)
+      : undefined;
+    if (!rebuild) {
+      const existingLeaderboard = await input.leaderboardRepository.getLeaderboard();
+      const finalized = await input.repository.getFinalizedResults();
+      rebuild = await rebuildLeaderboardAfterFinalResult({
+        finalizedResults: finalized,
+        now: confirmation.now ?? new Date(nowIso),
+        previousEntries: existingLeaderboard
+      });
+      await input.leaderboardRepository.replaceLeaderboard(rebuild.entries, rebuild);
+      await input.repository.markPointsRecalculated(confirmation.matchId, rebuild.recalculatedAt);
+    }
   }
 
   return {

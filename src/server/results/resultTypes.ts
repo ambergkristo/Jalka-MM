@@ -174,4 +174,5 @@ export interface ResultsAgentRepository {
   getStatus(provider: string, now: Date): Promise<ResultAgentStatus>;
   markPointsRecalculated(matchId: number, timestamp: string): Promise<void>;
   saveRunSummary(summary: ResultAgentRunSummary): Promise<void>;
+  refreshDerivedTournamentState?(timestamp: string): Promise<LeaderboardRebuildResult | undefined>;
 }
