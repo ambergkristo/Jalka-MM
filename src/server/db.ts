@@ -33,6 +33,7 @@ async function migrateSqlite(): Promise<void> {
     CREATE TABLE IF NOT EXISTS top_scorer_standings (id TEXT PRIMARY KEY, rank INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, goals INTEGER NOT NULL, assists INTEGER, minutes_played INTEGER, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS result_manual_scorers (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, team_code TEXT, goals INTEGER NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS result_manual_corrections (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, previous_home_score INTEGER, previous_away_score INTEGER, new_home_score INTEGER NOT NULL, new_away_score INTEGER NOT NULL, previous_status TEXT, new_status TEXT NOT NULL, source TEXT NOT NULL, confirmed_by TEXT NOT NULL, decided_after TEXT, penalty_winner_team_id TEXT, penalty_winner_team_code TEXT, notes TEXT, scorers_json TEXT, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS public_state_metadata (id TEXT PRIMARY KEY, last_public_dashboard_read_at TEXT, last_public_snapshot_rebuild_at TEXT, last_repair_action TEXT, last_repair_action_at TEXT, last_repair_action_status TEXT, last_repair_action_error TEXT);
   `);
 }
 
@@ -54,6 +55,7 @@ async function migratePostgres(): Promise<void> {
     CREATE TABLE IF NOT EXISTS top_scorer_standings (id TEXT PRIMARY KEY, rank INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, goals INTEGER NOT NULL, assists INTEGER, minutes_played INTEGER, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS result_manual_scorers (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, player_name TEXT NOT NULL, team_id TEXT, team_code TEXT, goals INTEGER NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS result_manual_corrections (id TEXT PRIMARY KEY, match_id INTEGER NOT NULL, previous_home_score INTEGER, previous_away_score INTEGER, new_home_score INTEGER NOT NULL, new_away_score INTEGER NOT NULL, previous_status TEXT, new_status TEXT NOT NULL, source TEXT NOT NULL, confirmed_by TEXT NOT NULL, decided_after TEXT, penalty_winner_team_id TEXT, penalty_winner_team_code TEXT, notes TEXT, scorers_json TEXT, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS public_state_metadata (id TEXT PRIMARY KEY, last_public_dashboard_read_at TEXT, last_public_snapshot_rebuild_at TEXT, last_repair_action TEXT, last_repair_action_at TEXT, last_repair_action_status TEXT, last_repair_action_error TEXT);
   `);
 }
 
@@ -78,6 +80,7 @@ export async function resetDevData(options: { allowDestructive?: boolean; confir
     DELETE FROM result_updates;
     DELETE FROM match_results;
     DELETE FROM result_agent_runs;
+    DELETE FROM public_state_metadata;
     DELETE FROM awards_predictions;
     DELETE FROM group_predictions;
     DELETE FROM player_knockout_predictions;

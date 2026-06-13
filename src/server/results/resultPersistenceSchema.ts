@@ -138,6 +138,15 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       scorers_json TEXT,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS public_state_metadata (
+      id TEXT PRIMARY KEY,
+      last_public_dashboard_read_at TEXT,
+      last_public_snapshot_rebuild_at TEXT,
+      last_repair_action TEXT,
+      last_repair_action_at TEXT,
+      last_repair_action_status TEXT,
+      last_repair_action_error TEXT
+    );
   `);
 
   await ensureColumn(db, 'match_results', 'minute', 'INTEGER');

@@ -4,6 +4,7 @@ import type { ResultUpdate } from './resultTypes.js';
 import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/publicBracket.js';
 import { getCurrentLeaderboard } from './resultAgentRuntime.js';
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
+import { touchPublicDashboardRead } from './publicStateHealth.js';
 
 export interface PublicDashboardSnapshot {
   liveMatches: PublicMatchCard[];
@@ -81,6 +82,8 @@ interface StandingRow {
 
 export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promise<PublicDashboardSnapshot> {
   await migrateResultPersistenceSchema(db);
+  const now = new Date();
+  await touchPublicDashboardRead({ db, now });
   const matches = await getPublicMatches(db);
   const liveMatches = matches.filter((match) => match.state === 'live').map(toMatchCard);
   const todayMatches = matches.filter((match) => match.state === 'today').map(toMatchCard);
@@ -168,7 +171,7 @@ export async function getPublicTournamentPayload(db: QueryableDatabase): Promise
 
 export async function refreshDerivedTournamentTables(db: QueryableDatabase, now: Date, topScorers: PublicTopScorer[] = []): Promise<void> {
   await migrateResultPersistenceSchema(db);
-  const standings = await calculateGroupStandings(db);
+  const standings = await buildGroupStandingsRows(db);
   await db.transaction(async (tx) => {
     await tx.run('DELETE FROM group_standings');
     for (const group of standings) {
@@ -208,6 +211,7 @@ export async function resetPublicTournamentRuntimeState(db: QueryableDatabase): 
     DELETE FROM result_updates;
     DELETE FROM match_results;
     DELETE FROM result_agent_runs;
+    DELETE FROM public_state_metadata;
   `);
 }
 
@@ -320,10 +324,10 @@ function toMatchCard(match: {
 }
 
 async function getPublicGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
-  return calculateGroupStandings(db);
+  return buildGroupStandingsRows(db);
 }
 
-async function calculateGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
+async function buildGroupStandingsRows(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
   const teams = await db.all('SELECT id, name, group_id FROM teams WHERE group_id IS NOT NULL ORDER BY group_id, id');
   const standings = new Map<string, StandingRow>();
   for (const team of teams) {
@@ -388,19 +392,51 @@ async function calculateGroupStandings(db: QueryableDatabase): Promise<PublicGro
 }
 
 async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScorer[]> {
-  const rows = await db.all(`
-    SELECT ts.rank, ts.player_name, ts.goals, COALESCE(ts.assists, 0) AS assists, COALESCE(t.name, ts.team_id) AS team_name
-    FROM top_scorer_standings ts
-    LEFT JOIN teams t ON t.id = ts.team_id
-    ORDER BY ts.rank, ts.player_name
+  const cachedRows = await db.all(`
+    SELECT
+      t.rank,
+      t.player_name,
+      COALESCE(team.name, team.name_et, t.team_id, '') AS team_name,
+      t.goals,
+      t.assists
+    FROM top_scorer_standings t
+    LEFT JOIN teams team ON team.id = t.team_id
+    ORDER BY t.rank ASC, t.player_name ASC
     LIMIT 20
   `);
-  return rows.map((row) => ({
-    rank: Number(row.rank),
+  if (cachedRows.length > 0) {
+    return cachedRows.map((row) => ({
+      rank: Number(row.rank),
+      player: String(row.player_name),
+      team: String(row.team_name ?? ''),
+      goals: Number(row.goals),
+      assists: Number(row.assists ?? 0)
+    }));
+  }
+
+  const fallbackRows = await db.all(`
+    SELECT
+      grouped.player_name,
+      grouped.goals,
+      grouped.team_name
+    FROM (
+      SELECT
+        facts.player_name AS player_name,
+        SUM(facts.goals) AS goals,
+        COALESCE(t.name, t.name_et, facts.team_id, '') AS team_name
+      FROM result_manual_scorers facts
+      LEFT JOIN teams t ON t.id = facts.team_id
+      GROUP BY facts.player_name, facts.team_id, COALESCE(t.name, t.name_et, facts.team_id, '')
+    ) grouped
+    ORDER BY grouped.goals DESC, grouped.player_name ASC, grouped.team_name ASC
+    LIMIT 20
+  `);
+  return fallbackRows.map((row, index) => ({
+    rank: index + 1,
     player: String(row.player_name),
     team: String(row.team_name ?? ''),
     goals: Number(row.goals),
-    assists: Number(row.assists ?? 0)
+    assists: 0
   }));
 }
 

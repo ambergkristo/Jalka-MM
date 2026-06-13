@@ -4,6 +4,7 @@ import teamsSeed from '../../data/worldcup2026/teams.json' with { type: 'json' }
 import { TeamBadge } from '../components/TeamBadge.js';
 import { Card } from '../components/Card.js';
 import { PageHeader } from '../components/PageHeader.js';
+import { StatusBadge } from '../components/StatusBadge.js';
 import type { PublicDashboardSnapshot } from '../lib/publicApi.js';
 
 type SeedMatch = (typeof matchesSeed)[number];
@@ -42,6 +43,69 @@ interface ManualConfirmResponse {
   authFailed: boolean;
 }
 
+type RepairAction = 'catch-up' | 'rebuild-public-dashboard' | 'rebuild-group-standings' | 'rebuild-leaderboard' | 'rebuild-top-scorers';
+
+interface PublicStateDiagnostics {
+  generatedAt: string;
+  serverTime: string;
+  resultAgentStatus: {
+    lastRunAt?: string;
+    nextSuggestedRunAt?: string;
+    staleMatchesCount: number;
+    provider: string;
+    mode: 'mock' | 'live';
+    lastLeaderboardRebuildAt?: string;
+    providerChain?: string[];
+    writeMode?: 'mock' | 'dry-run' | 'live';
+    providerReachable?: boolean;
+    pendingWarningsCount?: number;
+    latestConfirmedResultCount?: number;
+    lastRunWarnings?: Array<{
+      internalMatchId: number;
+      providerFixtureId?: string;
+      homeTeam: string;
+      awayTeam: string;
+      kickoffAt: string;
+      providerStatus: string;
+      normalizedStatus: string;
+      providerScore?: string;
+      reason: string;
+      action: 'confirmed' | 'pending-confirmation' | 'needs-review' | 'skipped';
+    }>;
+    lastRunSummary?: {
+      startedAt: string;
+      finishedAt: string;
+      checkedMatches: number;
+      updatedMatches: number;
+      finalizedMatches: number;
+      dryRun: boolean;
+      warningsCount: number;
+    };
+  };
+  confirmedResultsCount: number;
+  liveMatchesCount: number;
+  latestResultsCount: number;
+  groupStandingsSource: string;
+  groupStandingsRowsCount: number;
+  topScorerRowsCount: number;
+  leaderboardRowsCount: number;
+  canonicalLeaderboardRowsCount: number;
+  topScorerCacheRowsCount: number;
+  leaderboardCacheRowsCount: number;
+  lastResultSyncAt?: string;
+  lastPublicDashboardReadAt?: string;
+  lastPublicSnapshotRebuildAt?: string;
+  lastProviderCheckAt?: string;
+  lastLeaderboardRebuildAt?: string;
+  lastRepairAction?: RepairAction;
+  lastRepairActionAt?: string;
+  lastRepairActionStatus?: 'ok' | 'failed';
+  lastRepairActionError?: string;
+  staleState: boolean;
+  staleReasons: string[];
+  operatorStatus: 'OK' | 'Needs sync' | 'Running' | 'Failed';
+}
+
 const SECRET_STORAGE_KEY = 'jalka-mm-operator-secret';
 const EMPTY_SCORER_ROW: ScorerRow = { playerName: '', teamCode: '', goals: '1' };
 const teamById = new Map(teamsSeed.map((team) => [team.id, team]));
@@ -60,18 +124,38 @@ export function OperatorPage() {
   const [feedback, setFeedback] = useState<FeedbackState | undefined>();
   const [submitState, setSubmitState] = useState<'idle' | 'submitting'>('idle');
   const [snapshot, setSnapshot] = useState<PublicDashboardSnapshot | undefined>();
+  const [diagnostics, setDiagnostics] = useState<PublicStateDiagnostics | undefined>();
+  const [repairState, setRepairState] = useState<{ action?: RepairAction; status: 'idle' | 'running' | 'ok' | 'failed'; message?: string }>({ status: 'idle' });
   const [refreshIndex, setRefreshIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/public-dashboard')
-      .then((response) => response.ok ? response.json() as Promise<PublicDashboardSnapshot> : undefined)
-      .then((data) => {
-        if (!cancelled && data) setSnapshot(data);
-      })
-      .catch(() => undefined);
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const [dashboardResponse, diagnosticsResponse] = await Promise.all([
+          fetch('/api/public-dashboard', { cache: 'no-store', signal: controller.signal }),
+          fetch('/api/public-state/diagnostics', { cache: 'no-store', signal: controller.signal })
+        ]);
+        if (!cancelled && dashboardResponse.ok) {
+          setSnapshot(await dashboardResponse.json() as PublicDashboardSnapshot);
+        }
+        if (!cancelled && diagnosticsResponse.ok) {
+          setDiagnostics(await diagnosticsResponse.json() as PublicStateDiagnostics);
+        }
+      } catch {
+        return undefined;
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(() => {
+      void load();
+    }, 60_000);
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearInterval(interval);
     };
   }, [refreshIndex]);
 
@@ -80,6 +164,8 @@ export function OperatorPage() {
   const visibleMatches = useMemo(() => filterOperatorMatches(matches, matchFilter), [matches, matchFilter]);
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? matches[0];
   const selectedMatchTeamOptions = selectedMatch ? [selectedMatch.homeTeam, selectedMatch.awayTeam].filter(Boolean) as SeedTeam[] : [];
+  const statusLabel = classifyOperatorStatus(diagnostics, repairState.status);
+  const statusTone = statusToneForLabel(statusLabel);
   const submitLabel = selectedMatch?.isConfirmed ? 'Salvesta parandus' : 'Kinnita tulemus';
 
   useEffect(() => {
@@ -108,6 +194,43 @@ export function OperatorPage() {
     clearStoredSecret();
     setStoredSecret('');
     setFeedback(undefined);
+  }
+
+  async function runRepair(action: RepairAction) {
+    if (!storedSecret) {
+      setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+      return;
+    }
+    setRepairState({ action, status: 'running', message: 'Töötan...' });
+    try {
+      const response = await fetch('/api/public-state/repair', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-results-agent-secret': storedSecret
+        },
+        body: JSON.stringify({ action })
+      });
+      const body = await safeJson(response);
+      if (response.status === 401 || response.status === 403) {
+        clearStoredSecret();
+        setStoredSecret('');
+        setRepairState({ action, status: 'failed', message: 'Vale operaatori kood.' });
+        setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+        return;
+      }
+      if (!response.ok) {
+        throw new Error((body as { error?: string } | undefined)?.error ?? 'Tõrge paranduse käivitamisel.');
+      }
+      const message = (body as { message?: string } | undefined)?.message ?? 'Parandus lõpetatud.';
+      setRepairState({ action, status: 'ok', message });
+      setFeedback({ tone: 'good', message });
+      setRefreshIndex((value) => value + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Tõrge paranduse käivitamisel.';
+      setRepairState({ action, status: 'failed', message });
+      setFeedback({ tone: 'danger', message: classifyError(message) });
+    }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -205,6 +328,45 @@ export function OperatorPage() {
               <button type="button" className="button-link" onClick={logout}>Logi operaatorist välja</button>
             </div>
           </div>
+        </Card>
+
+        <Card title="Seisund" eyebrow="Diagnostika" className="operator-panel">
+          <div className="operator-health">
+            <div className="operator-health-topline">
+              <StatusBadge value={repairState.status === 'running' ? 'Running' : statusLabel} tone={statusToneForLabel(repairState.status === 'running' ? 'Running' : statusLabel)} />
+              {diagnostics?.resultAgentStatus.writeMode && <span className="operator-copy">Write mode: {diagnostics.resultAgentStatus.writeMode}</span>}
+            </div>
+            <div className="operator-health-grid">
+              <div><span>Result-agent</span><strong>{diagnostics?.resultAgentStatus.writeMode === 'live' ? 'Live' : diagnostics?.resultAgentStatus.writeMode === 'dry-run' ? 'Dry run' : 'Mock'}</strong></div>
+              <div><span>Viimane provideri kontroll</span><strong>{formatTimestamp(diagnostics?.lastProviderCheckAt ?? diagnostics?.resultAgentStatus.lastRunAt)}</strong></div>
+              <div><span>Viimane result sync</span><strong>{formatTimestamp(diagnostics?.lastResultSyncAt)}</strong></div>
+              <div><span>Viimane snapshot rebuild</span><strong>{formatTimestamp(diagnostics?.lastPublicSnapshotRebuildAt)}</strong></div>
+              <div><span>Kinnitatud tulemused</span><strong>{diagnostics?.confirmedResultsCount ?? 0}</strong></div>
+              <div><span>Live mänge</span><strong>{diagnostics?.liveMatchesCount ?? 0}</strong></div>
+              <div><span>Viimaseid tulemusi</span><strong>{diagnostics?.latestResultsCount ?? 0}</strong></div>
+              <div><span>Top scorer ridu</span><strong>{diagnostics?.topScorerRowsCount ?? 0}</strong></div>
+              <div><span>Leaderboard ridu</span><strong>{diagnostics?.leaderboardRowsCount ?? 0}</strong></div>
+            </div>
+            {diagnostics?.staleReasons?.length ? <ul className="operator-health-list">{diagnostics.staleReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
+          </div>
+        </Card>
+
+        <Card title="Parandused" eyebrow="Turvalised toimingud" className="operator-panel">
+          <div className="operator-repair-actions">
+            {REPAIR_ACTIONS.map((action) => (
+              <button
+                key={action.action}
+                type="button"
+                className="button-link"
+                onClick={() => void runRepair(action.action)}
+                disabled={repairState.status === 'running'}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+          <p className="operator-copy">Need toimingud kasutavad ainult kinnitatud tulemusi ja olemasolevaid scorer faktisid.</p>
+          {repairState.message ? <p className={`operator-feedback ${repairState.status === 'failed' ? 'danger' : repairState.status === 'running' ? 'gold' : 'good'}`}>{repairState.message}</p> : null}
         </Card>
 
         <Card title="Match filter" eyebrow="Valik" className="operator-panel">
@@ -508,6 +670,40 @@ function stageLabel(stage: SeedMatch['stage']): string {
     THIRD_PLACE: '3. koha mäng',
     FINAL: 'Finaal'
   } as Record<SeedMatch['stage'], string>)[stage] ?? stage;
+}
+
+const REPAIR_ACTIONS: Array<{ action: RepairAction; label: string }> = [
+  { action: 'catch-up', label: 'Run result-agent catch-up now' },
+  { action: 'rebuild-public-dashboard', label: 'Rebuild public dashboard state now' },
+  { action: 'rebuild-group-standings', label: 'Rebuild group standings now' },
+  { action: 'rebuild-leaderboard', label: 'Rebuild leaderboard now' },
+  { action: 'rebuild-top-scorers', label: 'Rebuild top scorer standings now' }
+];
+
+function formatTimestamp(value?: string): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('et-EE', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: 'Europe/Tallinn'
+  }).format(date);
+}
+
+function classifyOperatorStatus(
+  diagnostics: PublicStateDiagnostics | undefined,
+  repairStatus: 'idle' | 'running' | 'ok' | 'failed'
+): 'OK' | 'Needs sync' | 'Running' | 'Failed' {
+  if (repairStatus === 'running') return 'Running';
+  return diagnostics?.operatorStatus ?? 'OK';
+}
+
+function statusToneForLabel(label: 'OK' | 'Needs sync' | 'Running' | 'Failed'): 'good' | 'blue' | 'gold' | 'danger' {
+  if (label === 'OK') return 'good';
+  if (label === 'Needs sync') return 'gold';
+  if (label === 'Running') return 'blue';
+  return 'danger';
 }
 
 const FILTER_OPTIONS: Array<{ value: MatchFilter; label: string }> = [

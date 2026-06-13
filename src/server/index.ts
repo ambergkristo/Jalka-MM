@@ -8,6 +8,7 @@ import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
 import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runPublicStateRepairAction } from './results/publicStateHealth.js';
 
 await seedTournamentData();
 try {
@@ -33,21 +34,35 @@ createServer(async (request, response) => {
     if (request.method === 'GET' && (url.pathname === '/api/health' || url.pathname === '/api/health/db')) return json(response, 200, await healthCheck());
     if (request.method === 'GET' && url.pathname === '/api/leaderboard') {
       void queueResultAgentCatchUp(new Date());
+      void queuePublicStateRepairIfStale({ db, now: new Date() });
       return json(response, 200, await getCurrentLeaderboard());
     }
     if (request.method === 'GET' && url.pathname === '/api/public-dashboard') {
       void queueResultAgentCatchUp(new Date());
+      void queuePublicStateRepairIfStale({ db, now: new Date() });
       return json(response, 200, await getPublicTournamentSnapshot(db));
     }
     if (request.method === 'GET' && url.pathname === '/api/results') {
       void queueResultAgentCatchUp(new Date());
+      void queuePublicStateRepairIfStale({ db, now: new Date() });
       return json(response, 200, await getPublicResultsPayload(db));
     }
     if (request.method === 'GET' && url.pathname === '/api/tournament') {
       void queueResultAgentCatchUp(new Date());
+      void queuePublicStateRepairIfStale({ db, now: new Date() });
       return json(response, 200, await getPublicTournamentPayload(db));
     }
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
+    if (request.method === 'GET' && url.pathname === '/api/public-state/diagnostics') return json(response, 200, await collectPublicStateDiagnostics({ db }));
+    if (request.method === 'POST' && url.pathname === '/api/public-state/repair') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      const body = await readJsonBody(request) as { action?: string };
+      if (!body.action) return json(response, 400, { error: 'Repair action is required.' });
+      return json(response, 200, await runPublicStateRepairAction({ action: body.action as Parameters<typeof runPublicStateRepairAction>[0]['action'], db }));
+    }
     if (request.method === 'POST' && url.pathname === '/api/results-agent/run') {
       const permission = getResultsAgentRunPermission({
         dryRunRequested: url.searchParams.get('dryRun') === 'true',

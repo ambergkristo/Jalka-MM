@@ -89,3 +89,21 @@
 - `npm run build` passed.
 - `npx vitest run src/test/resultAgentSecurity.test.ts src/test/openWorldCupResultProvider.test.ts src/test/resultAgent.test.ts` passed.
 - `npm run open-worldcup:dry-run -- --now=2026-06-11T19:30:00Z` still worked and reported `dbWrites: 0`.
+
+# Sprint 19.4 - Production State Verification & Operator Repair Tools
+
+- [x] Add internal diagnostics/status view for production sync health.
+- [x] Add `/api/public-state/diagnostics` without secrets.
+- [x] Add safe operator repair actions for catch-up and rebuilds.
+- [x] Add stale-state repair triggers on public reads.
+- [x] Add targeted regression tests for diagnostics and idempotent rebuilds.
+- [x] Run build, typecheck, test, and required DB tests.
+
+## Review
+
+- `npm run build` passed.
+- `npx tsc -p tsconfig.server.json --noEmit` passed.
+- `npx vitest run src/test/publicDashboardData.test.ts src/test/publicDashboardPages.test.tsx src/test/operatorPage.test.tsx` passed.
+- `node --test dist/test-db/db-node-test.js dist/test-db/result-persistence-node-test.js dist/test-db/manual-result-correction-node-test.js dist/test-db/top-scorer-standings-node-test.js dist/test-db/matchday-simulation-node-test.js dist/test-db/public-state-health-node-test.js` passed.
+- `npm run validate:prediction-seeds` passed.
+- Local HTTP smoke confirmed `/api/public-state/diagnostics`, `/api/public-dashboard`, and `/operator` return `200` with `no-store` cache headers.
