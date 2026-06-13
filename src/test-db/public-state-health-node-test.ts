@@ -6,7 +6,7 @@ import { describe, it } from 'node:test';
 import { createDatabase, type QueryableDatabase } from '../server/databaseAdapter.js';
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
 import { confirmManualResult } from '../server/results/manualResultCorrection.js';
-import { queuePublicStateRepairIfStale, collectPublicStateDiagnostics, runPublicStateRepairAction, touchPublicDashboardRead } from '../server/results/publicStateHealth.js';
+import { choosePublicStateRepairAction, queuePublicStateRepairIfStale, collectPublicStateDiagnostics, runPublicStateRepairAction, touchPublicDashboardRead } from '../server/results/publicStateHealth.js';
 import { getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
 import { resetSimulationState } from '../server/results/matchdaySimulation.js';
 import type { ResultAgentStatus } from '../server/results/resultTypes.js';
@@ -42,6 +42,21 @@ describe('public state health', () => {
       assert.equal(diagnostics.lastPublicDashboardReadAt, now.toISOString());
       assert.equal(hasSecretKey(diagnostics), false);
       assert.equal(hasSecretKey(diagnostics.resultAgentStatus), false);
+    });
+  });
+
+  it('detects provider scorer data and selects scorer resync when confirmed goals exist without scorer facts', async () => {
+    await withSimulationDb(async (db) => {
+      await seedProviderConfirmedResult(db);
+
+      const before = await collectPublicStateDiagnostics({ db, resultAgentStatus: MOCK_RESULT_AGENT_STATUS });
+      assert.equal(before.providerScorerDataDetected, 'yes');
+      assert.equal(before.confirmedGoalsCount, 2);
+      assert.equal(before.scorerFactsCount, 0);
+      assert.equal(before.topScorerRowsCount, 0);
+      assert.equal(before.staleState, true);
+      assert.equal(before.staleReasons.some((reason) => reason.includes('no scorer facts are available')), true);
+      assert.equal(choosePublicStateRepairAction(before), 'resync-scorers-from-confirmed-results');
     });
   });
 
@@ -147,6 +162,43 @@ async function seedConfirmedResult(db: QueryableDatabase): Promise<void> {
       scorers: [{ playerName: 'Santiago Gimenez', teamCode: 'MEX', goals: 2 }],
       now: new Date('2026-06-13T07:00:00.000Z')
     }
+  });
+}
+
+async function seedProviderConfirmedResult(db: QueryableDatabase): Promise<void> {
+  const repository = new DatabaseResultRepository(db);
+  await repository.saveResultUpdate({
+    matchId: 1,
+    providerMatchId: '1',
+    status: 'FINISHED',
+    publicStatus: 'CONFIRMED_FINAL',
+    homeScore: 2,
+    awayScore: 0,
+    confirmedHomeScore: 2,
+    confirmedAwayScore: 0,
+    confirmedAt: '2026-06-13T07:00:00.000Z',
+    confirmationSource: 'provider',
+    confirmationConfidence: 'provider-repeat',
+    minute: 90,
+    isFinal: true,
+    lastCheckedAt: '2026-06-13T07:00:00.000Z',
+    provider: 'open-worldcup-result-provider',
+    rawProviderStatus: 'FINISHED',
+    providerResults: [{
+      provider: 'open-worldcup-result-provider',
+      matchId: 1,
+      providerFixtureId: '1',
+      status: 'FINISHED',
+      homeScore: 2,
+      awayScore: 0,
+      isFinal: true,
+      observedAt: '2026-06-13T07:00:00.000Z',
+      rawProviderStatus: 'TRUE',
+      scorers: [
+        { playerName: 'J. Quiñones', teamName: 'Mexico', goals: 1 },
+        { playerName: 'R. Jiménez', teamName: 'Mexico', goals: 1 }
+      ]
+    }]
   });
 }
 

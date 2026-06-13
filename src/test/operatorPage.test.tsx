@@ -43,6 +43,7 @@ describe('operator page', () => {
     expect(markup).toContain('Logi operaatorist välja');
     expect(markup).toContain('Match filter');
     expect(markup).toContain('Lisa väravalööja');
+    expect(markup).toContain('Re-sync scorers from confirmed provider results');
   });
 
   it('shows the operator navigation link', () => {

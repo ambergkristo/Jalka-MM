@@ -134,6 +134,7 @@ describe('public dashboard pages', () => {
     expect(results).toContain('Lõppenud mänge veel ei ole.');
     expect(leaderboard).toContain('0%');
     expect(tournament).toContain('Alagrupitabelid');
+    expect(tournament).toContain('Väravalööjate info ei ole veel saadaval.');
     expect(player).toContain('Kristo Amberg');
     expect(player).not.toContain('@');
   });

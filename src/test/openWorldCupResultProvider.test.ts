@@ -47,6 +47,16 @@ describe('Open World Cup result provider', () => {
     ]);
   });
 
+  it('does not invent scorers when the provider omits scorer fields', async () => {
+    const game = sampleGame('group', 2, 0, 'TRUE');
+    const provider = providerFor(game);
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
+
+    expect(update.homeScore).toBe(2);
+    expect(update.awayScore).toBe(0);
+    expect(update.scorers).toBeUndefined();
+  });
+
   it('fetches mapped fixtures only for high-confidence candidate rows', async () => {
     const fetchImpl = vi.fn(async (url: string) => {
       expect(url).toContain('/get/games');

@@ -2,13 +2,13 @@ import type { QueryableDatabase } from '../databaseAdapter.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { db } from '../db.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
-import { getCurrentLeaderboard, getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
+import { getCurrentLeaderboard, getResultsAgentStatus, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { rebuildTopScorerStandings } from './topScorerStandings.js';
 import type { ResultAgentStatus } from './resultTypes.js';
 
 const METADATA_ID = 'public-state';
-const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers']);
+const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers', 'resync-scorers-from-confirmed-results']);
 
 let repairInFlight: Promise<PublicStateRepairResult | undefined> | undefined;
 
@@ -17,13 +17,15 @@ export type PublicStateRepairAction =
   | 'rebuild-public-dashboard'
   | 'rebuild-group-standings'
   | 'rebuild-leaderboard'
-  | 'rebuild-top-scorers';
+  | 'rebuild-top-scorers'
+  | 'resync-scorers-from-confirmed-results';
 
 export interface PublicStateDiagnostics {
   generatedAt: string;
   serverTime: string;
   resultAgentStatus: ResultAgentStatus;
   confirmedResultsCount: number;
+  confirmedGoalsCount: number;
   liveMatchesCount: number;
   latestResultsCount: number;
   groupStandingsSource: 'computed-from-confirmed-results';
@@ -31,13 +33,16 @@ export interface PublicStateDiagnostics {
   topScorerRowsCount: number;
   leaderboardRowsCount: number;
   canonicalLeaderboardRowsCount: number;
+  scorerFactsCount: number;
   topScorerCacheRowsCount: number;
   leaderboardCacheRowsCount: number;
   lastResultSyncAt?: string;
   lastPublicDashboardReadAt?: string;
   lastPublicSnapshotRebuildAt?: string;
+  lastScorerRebuildAt?: string;
   lastProviderCheckAt?: string;
   lastLeaderboardRebuildAt?: string;
+  providerScorerDataDetected: 'yes' | 'no' | 'unknown';
   lastRepairAction?: PublicStateRepairAction;
   lastRepairActionAt?: string;
   lastRepairActionStatus?: 'ok' | 'failed';
@@ -80,21 +85,27 @@ export async function collectPublicStateDiagnostics(input: {
   const resultAgentStatus = input.resultAgentStatus ?? await getResultsAgentStatus(now);
   const metadata = await readPublicStateMetadata(database);
   const confirmedResultsCount = await countConfirmedResults(database);
+  const confirmedGoalsCount = await countConfirmedGoals(database);
   const liveMatchesCount = await countLiveMatches(database, now);
   const latestResultsCount = Math.min(confirmedResultsCount, 8);
   const groupStandingsRowsCount = await countRows(database, 'group_standings');
   const leaderboardCacheRowsCount = await countRows(database, 'leaderboard_entries');
   const topScorerCacheRowsCount = await countRows(database, 'top_scorer_standings');
-  const topScorerRowsCount = await countAggregatedScorerRows(database);
+  const scorerFactsCount = await countRows(database, 'result_manual_scorers');
+  const topScorerRowsCount = topScorerCacheRowsCount;
   const canonicalLeaderboardRowsCount = predictionRepository.getPlayers().length;
   const leaderboardRowsCount = leaderboardCacheRowsCount;
   const lastResultSyncAt = await readLastResultSyncAt(database);
+  const lastScorerRebuildAt = await readLastScorerRebuildAt(database);
+  const providerScorerDataDetected = await detectProviderScorerData(database);
   const staleReasons = buildStaleReasons({
     confirmedResultsCount,
+    confirmedGoalsCount,
     latestResultsCount,
     groupStandingsRowsCount,
     leaderboardCacheRowsCount,
     canonicalLeaderboardRowsCount,
+    scorerFactsCount,
     topScorerRowsCount,
     topScorerCacheRowsCount
   });
@@ -105,6 +116,7 @@ export async function collectPublicStateDiagnostics(input: {
     serverTime: now.toISOString(),
     resultAgentStatus,
     confirmedResultsCount,
+    confirmedGoalsCount,
     liveMatchesCount,
     latestResultsCount,
     groupStandingsSource: 'computed-from-confirmed-results',
@@ -112,13 +124,16 @@ export async function collectPublicStateDiagnostics(input: {
     topScorerRowsCount,
     leaderboardRowsCount,
     canonicalLeaderboardRowsCount,
+    scorerFactsCount,
     topScorerCacheRowsCount,
     leaderboardCacheRowsCount,
     lastResultSyncAt,
     lastPublicDashboardReadAt: metadata.last_public_dashboard_read_at,
     lastPublicSnapshotRebuildAt: metadata.last_public_snapshot_rebuild_at,
+    lastScorerRebuildAt,
     lastProviderCheckAt: resultAgentStatus.lastRunAt ?? undefined,
     lastLeaderboardRebuildAt: resultAgentStatus.lastLeaderboardRebuildAt ?? undefined,
+    providerScorerDataDetected,
     lastRepairAction: normalizeRepairAction(metadata.last_repair_action),
     lastRepairActionAt: metadata.last_repair_action_at,
     lastRepairActionStatus: normalizeRepairStatus(metadata.last_repair_action_status),
@@ -160,8 +175,13 @@ export async function runPublicStateRepairAction(input: {
 
   try {
     let resultAgentRun: Awaited<ReturnType<typeof runResultsAgentCycle>> | undefined;
+    let scorerRepair: Awaited<ReturnType<typeof repairTopScorersFromConfirmedResults>> | undefined;
     if (input.action === 'catch-up') {
       resultAgentRun = await runResultsAgentCycle(now);
+    }
+
+    if (input.action === 'resync-scorers-from-confirmed-results') {
+      scorerRepair = await repairTopScorersFromConfirmedResults(now);
     }
 
     if (input.action === 'catch-up' || input.action === 'rebuild-public-dashboard' || input.action === 'rebuild-group-standings') {
@@ -192,7 +212,7 @@ export async function runPublicStateRepairAction(input: {
     return {
       action: input.action,
       status: 'ok',
-      message: summarizeRepairMessage(input.action, resultAgentRun),
+      message: summarizeRepairMessage(input.action, resultAgentRun, scorerRepair),
       generatedAt: now.toISOString(),
       publicSnapshotRebuiltAt: now.toISOString(),
       resultAgentRun,
@@ -233,8 +253,11 @@ export async function queuePublicStateRepairIfStale(input: {
   const diagnostics = await collectPublicStateDiagnostics({ db: database, now, resultAgentStatus: input.resultAgentStatus });
   if (!diagnostics.staleState) return undefined;
 
+  const action = choosePublicStateRepairAction(diagnostics);
+  if (!action) return undefined;
+
   repairInFlight = runPublicStateRepairAction({
-    action: 'rebuild-public-dashboard',
+    action,
     db: database,
     now,
     reason: diagnostics.staleReasons.join('; ')
@@ -242,7 +265,7 @@ export async function queuePublicStateRepairIfStale(input: {
     .catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
       return {
-        action: 'rebuild-public-dashboard' as const,
+        action,
         status: 'failed' as const,
         message,
         generatedAt: now.toISOString(),
@@ -257,6 +280,16 @@ export async function queuePublicStateRepairIfStale(input: {
     });
 
   return repairInFlight;
+}
+
+export function choosePublicStateRepairAction(diagnostics: PublicStateDiagnostics): PublicStateRepairAction | undefined {
+  if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsCount === 0) {
+    return 'resync-scorers-from-confirmed-results';
+  }
+  if (diagnostics.staleState) {
+    return 'rebuild-public-dashboard';
+  }
+  return undefined;
 }
 
 async function rebuildGroupStandingsCache(db: QueryableDatabase, now: Date): Promise<void> {
@@ -412,8 +445,52 @@ async function readLastResultSyncAt(db: QueryableDatabase): Promise<string | und
   return confirmed?.confirmed_at ? String(confirmed.confirmed_at) : undefined;
 }
 
+async function readLastScorerRebuildAt(db: QueryableDatabase): Promise<string | undefined> {
+  const row = await db.one(`
+    SELECT MAX(updated_at) AS updated_at
+    FROM top_scorer_standings
+  `);
+  return row?.updated_at ? String(row.updated_at) : undefined;
+}
+
+async function countConfirmedGoals(db: QueryableDatabase): Promise<number> {
+  const row = await db.one(`
+    SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
+    FROM match_results
+    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+  `);
+  return Number(row?.total ?? 0);
+}
+
 async function countRows(db: QueryableDatabase, table: string): Promise<number> {
   return Number((await db.one(`SELECT COUNT(*) AS count FROM ${table}`))?.count ?? 0);
+}
+
+async function detectProviderScorerData(db: QueryableDatabase): Promise<'yes' | 'no' | 'unknown'> {
+  const rows = await db.all(`
+    SELECT provider_results_json
+    FROM match_results
+    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1 AND provider_results_json IS NOT NULL
+  `);
+  if (rows.length === 0) return 'unknown';
+  for (const row of rows) {
+    const observations = parseProviderResults(row.provider_results_json);
+    if (observations.some((observation) => Array.isArray(observation.scorers) && observation.scorers.length > 0)) {
+      return 'yes';
+    }
+  }
+  return 'no';
+}
+
+function parseProviderResults(value: unknown): Array<{ scorers?: unknown }> {
+  if (typeof value !== 'string' || !value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is { scorers?: unknown } => Boolean(item) && typeof item === 'object');
+  } catch {
+    return [];
+  }
 }
 
 async function readPublicStateMetadata(db: QueryableDatabase): Promise<PublicStateMetadataRow> {
@@ -458,10 +535,12 @@ async function writePublicStateMetadata(db: QueryableDatabase, patch: Partial<Pu
 
 function buildStaleReasons(input: {
   confirmedResultsCount: number;
+  confirmedGoalsCount: number;
   latestResultsCount: number;
   groupStandingsRowsCount: number;
   leaderboardCacheRowsCount: number;
   canonicalLeaderboardRowsCount: number;
+  scorerFactsCount: number;
   topScorerRowsCount: number;
   topScorerCacheRowsCount: number;
 }): string[] {
@@ -471,7 +550,10 @@ function buildStaleReasons(input: {
   if (input.leaderboardCacheRowsCount < input.canonicalLeaderboardRowsCount && input.confirmedResultsCount > 0) {
     reasons.push(`Leaderboard cache has ${input.leaderboardCacheRowsCount} rows but canonical import expects ${input.canonicalLeaderboardRowsCount}.`);
   }
-  if (input.topScorerRowsCount > 0 && input.topScorerCacheRowsCount === 0) {
+  if (input.confirmedResultsCount > 0 && input.confirmedGoalsCount > 0 && input.scorerFactsCount === 0) {
+    reasons.push('Confirmed results exist, but no scorer facts are available. Provider may not supply scorer data or scorer sync failed.');
+  }
+  if (input.scorerFactsCount > 0 && input.topScorerCacheRowsCount === 0) {
     reasons.push('Scorer facts exist, but stored top scorer standings are empty.');
   }
   return reasons;
@@ -488,7 +570,11 @@ function deriveOperatorStatus(
   return 'OK';
 }
 
-function summarizeRepairMessage(action: PublicStateRepairAction, resultAgentRun?: Awaited<ReturnType<typeof runResultsAgentCycle>>): string {
+function summarizeRepairMessage(
+  action: PublicStateRepairAction,
+  resultAgentRun?: Awaited<ReturnType<typeof runResultsAgentCycle>>,
+  scorerRepair?: Awaited<ReturnType<typeof repairTopScorersFromConfirmedResults>>
+): string {
   if (action === 'catch-up') {
     const finalized = resultAgentRun?.finalizedResults ?? 0;
     return finalized > 0 ? `Result-agent catch-up completed with ${finalized} finalized match(es).` : 'Result-agent catch-up completed without new final results.';
@@ -496,6 +582,12 @@ function summarizeRepairMessage(action: PublicStateRepairAction, resultAgentRun?
   if (action === 'rebuild-public-dashboard') return 'Public dashboard caches were rebuilt from confirmed facts.';
   if (action === 'rebuild-group-standings') return 'Group standings cache was rebuilt from confirmed results.';
   if (action === 'rebuild-leaderboard') return 'Leaderboard cache was rebuilt from confirmed results and predictions.';
+  if (action === 'resync-scorers-from-confirmed-results') {
+    if (scorerRepair?.repaired) return 'Scorers were re-synced from confirmed provider results.';
+    if (scorerRepair?.reason === 'no-confirmed-results') return 'No confirmed results were available for scorer sync.';
+    if (scorerRepair?.reason === 'no-provider-scorers-found') return 'Provider did not return scorer data for confirmed matches.';
+    return 'Scorer sync completed.';
+  }
   return 'Top scorer standings cache was rebuilt from confirmed scorer facts.';
 }
 

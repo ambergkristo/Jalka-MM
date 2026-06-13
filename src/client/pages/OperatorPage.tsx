@@ -43,7 +43,7 @@ interface ManualConfirmResponse {
   authFailed: boolean;
 }
 
-type RepairAction = 'catch-up' | 'rebuild-public-dashboard' | 'rebuild-group-standings' | 'rebuild-leaderboard' | 'rebuild-top-scorers';
+type RepairAction = 'catch-up' | 'rebuild-public-dashboard' | 'rebuild-group-standings' | 'rebuild-leaderboard' | 'rebuild-top-scorers' | 'resync-scorers-from-confirmed-results';
 
 interface PublicStateDiagnostics {
   generatedAt: string;
@@ -83,6 +83,7 @@ interface PublicStateDiagnostics {
     };
   };
   confirmedResultsCount: number;
+  confirmedGoalsCount: number;
   liveMatchesCount: number;
   latestResultsCount: number;
   groupStandingsSource: string;
@@ -90,13 +91,16 @@ interface PublicStateDiagnostics {
   topScorerRowsCount: number;
   leaderboardRowsCount: number;
   canonicalLeaderboardRowsCount: number;
+  scorerFactsCount: number;
   topScorerCacheRowsCount: number;
   leaderboardCacheRowsCount: number;
   lastResultSyncAt?: string;
   lastPublicDashboardReadAt?: string;
   lastPublicSnapshotRebuildAt?: string;
+  lastScorerRebuildAt?: string;
   lastProviderCheckAt?: string;
   lastLeaderboardRebuildAt?: string;
+  providerScorerDataDetected?: 'yes' | 'no' | 'unknown';
   lastRepairAction?: RepairAction;
   lastRepairActionAt?: string;
   lastRepairActionStatus?: 'ok' | 'failed';
@@ -342,10 +346,14 @@ export function OperatorPage() {
               <div><span>Viimane result sync</span><strong>{formatTimestamp(diagnostics?.lastResultSyncAt)}</strong></div>
               <div><span>Viimane snapshot rebuild</span><strong>{formatTimestamp(diagnostics?.lastPublicSnapshotRebuildAt)}</strong></div>
               <div><span>Kinnitatud tulemused</span><strong>{diagnostics?.confirmedResultsCount ?? 0}</strong></div>
+              <div><span>Kinnitatud väravad</span><strong>{diagnostics?.confirmedGoalsCount ?? 0}</strong></div>
               <div><span>Live mänge</span><strong>{diagnostics?.liveMatchesCount ?? 0}</strong></div>
               <div><span>Viimaseid tulemusi</span><strong>{diagnostics?.latestResultsCount ?? 0}</strong></div>
+              <div><span>Scorer facts</span><strong>{diagnostics?.scorerFactsCount ?? 0}</strong></div>
               <div><span>Top scorer ridu</span><strong>{diagnostics?.topScorerRowsCount ?? 0}</strong></div>
               <div><span>Leaderboard ridu</span><strong>{diagnostics?.leaderboardRowsCount ?? 0}</strong></div>
+              <div><span>Top scorer rebuild</span><strong>{formatTimestamp(diagnostics?.lastScorerRebuildAt)}</strong></div>
+              <div><span>Provider scorer data</span><strong>{diagnostics?.providerScorerDataDetected ?? 'unknown'}</strong></div>
             </div>
             {diagnostics?.staleReasons?.length ? <ul className="operator-health-list">{diagnostics.staleReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
           </div>
@@ -677,7 +685,8 @@ const REPAIR_ACTIONS: Array<{ action: RepairAction; label: string }> = [
   { action: 'rebuild-public-dashboard', label: 'Rebuild public dashboard state now' },
   { action: 'rebuild-group-standings', label: 'Rebuild group standings now' },
   { action: 'rebuild-leaderboard', label: 'Rebuild leaderboard now' },
-  { action: 'rebuild-top-scorers', label: 'Rebuild top scorer standings now' }
+  { action: 'rebuild-top-scorers', label: 'Rebuild top scorer standings now' },
+  { action: 'resync-scorers-from-confirmed-results', label: 'Re-sync scorers from confirmed provider results' }
 ];
 
 function formatTimestamp(value?: string): string {
