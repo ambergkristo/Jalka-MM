@@ -1,4 +1,4 @@
-import type { QueryableDatabase, QueryValue } from '../databaseAdapter.js';
+import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultUpdate } from './resultTypes.js';
 import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/publicBracket.js';
@@ -27,6 +27,8 @@ export interface PublicMatchCard {
   id: string;
   homeTeam: string;
   awayTeam: string;
+  homeScore?: number;
+  awayScore?: number;
   kickoffTime: string;
   stage: string;
   status: 'scheduled' | 'live' | 'confirming';
@@ -267,6 +269,8 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
   homeTeam: string;
   awayTeam: string;
   publicStatus: string;
+  homeScore?: number;
+  awayScore?: number;
   state: 'live' | 'today' | 'upcoming';
 }>> {
   const rows = await db.all(`
@@ -277,7 +281,11 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
       COALESCE(home.name, m.home_slot) AS home_team,
       COALESCE(away.name, m.away_slot) AS away_team,
       r.public_status,
-      r.is_final
+      r.is_final,
+      r.home_score,
+      r.away_score,
+      r.provisional_home_score,
+      r.provisional_away_score
     FROM matches m
     LEFT JOIN match_results r ON r.match_id = m.id
     LEFT JOIN teams home ON home.id = m.home_team_id
@@ -293,6 +301,9 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
     if (isFinal) return [];
     const kickoffMs = Date.parse(kickoffAt);
     const state = kickoffMs <= now.getTime() ? 'live' : sameTallinnDate(kickoffAt, now) ? 'today' : 'upcoming';
+    const score = state === 'live'
+      ? publicLiveScore(row.provisional_home_score ?? row.home_score, row.provisional_away_score ?? row.away_score)
+      : {};
     return [{
       id: Number(row.id),
       groupId: row.group_id ? String(row.group_id) : undefined,
@@ -300,6 +311,7 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
       homeTeam: String(row.home_team),
       awayTeam: String(row.away_team),
       publicStatus,
+      ...score,
       state
     }];
   });
@@ -312,17 +324,37 @@ function toMatchCard(match: {
   homeTeam: string;
   awayTeam: string;
   publicStatus: string;
+  homeScore?: number;
+  awayScore?: number;
   state: 'live' | 'today' | 'upcoming';
 }): PublicMatchCard {
   return {
     id: String(match.id),
     homeTeam: match.homeTeam,
     awayTeam: match.awayTeam,
+    ...(match.homeScore === undefined || match.awayScore === undefined ? {} : {
+      homeScore: match.homeScore,
+      awayScore: match.awayScore
+    }),
     kickoffTime: formatDateTime(match.kickoffAt),
     stage: match.groupId ? `Alagrupp ${match.groupId}` : 'Turniir',
     status: match.state === 'live' ? 'live' : publicMatchStatus(match.publicStatus),
     venue: ''
   };
+}
+
+function publicLiveScore(homeValue: unknown, awayValue: unknown): { homeScore?: number; awayScore?: number } {
+  const homeScore = publicScoreNumber(homeValue);
+  const awayScore = publicScoreNumber(awayValue);
+  if (homeScore === undefined || awayScore === undefined) return {};
+  return { homeScore, awayScore };
+}
+
+function publicScoreNumber(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+  const score = Number(value);
+  if (!Number.isInteger(score) || score < 0) return undefined;
+  return score;
 }
 
 async function getPublicGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {

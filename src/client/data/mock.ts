@@ -8,6 +8,8 @@ export interface DashboardMatch {
   id: string;
   homeTeam: string;
   awayTeam: string;
+  homeScore?: number;
+  awayScore?: number;
   kickoffTime: string;
   stage: string;
   status: 'scheduled' | 'live' | 'confirming' | 'final';

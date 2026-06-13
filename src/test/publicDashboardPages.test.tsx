@@ -139,6 +139,36 @@ describe('public dashboard pages', () => {
     expect(player).not.toContain('@');
   });
 
+  it('renders provisional live scores without treating them as latest confirmed results', () => {
+    activeState = buildPublicTournamentState({
+      ...createConfirmedSnapshot(),
+      liveMatches: [
+        {
+          id: '8',
+          homeTeam: 'Canada',
+          awayTeam: 'Bosnia and Herzegovina',
+          homeScore: 1,
+          awayScore: 0,
+          kickoffTime: '14.06.2026 20:00',
+          stage: 'Alagrupp C',
+          status: 'live',
+          venue: ''
+        }
+      ],
+      todayMatches: [],
+      latestResults: []
+    }, new Date('2026-06-14T18:30:00.000Z'));
+
+    const landing = renderToStaticMarkup(<LandingDashboard />);
+    const results = renderToStaticMarkup(<ResultsPage />);
+
+    expect(landing).toContain('OTSE');
+    expect(landing).toContain('Hetkeseis 1-0');
+    expect(results).toContain('OTSE');
+    expect(results).toContain('Hetkeseis 1-0');
+    expect(results).toContain('Lõppenud mänge veel ei ole.');
+  });
+
   it('renders confirmed canonical public state consistently across pages', () => {
     activeState = buildPublicTournamentState(createConfirmedSnapshot(), new Date('2026-06-12T12:00:00.000Z'));
 

@@ -237,6 +237,8 @@ describe('public tournament state', () => {
           id: '8',
           homeTeam: 'Canada',
           awayTeam: 'Bosnia and Herzegovina',
+          homeScore: 1,
+          awayScore: 0,
           kickoffTime: '12.06.2026 19:00',
           stage: 'Alagrupp C',
           status: 'live',
@@ -261,6 +263,12 @@ describe('public tournament state', () => {
     expect(liveSection.title).toBe('Otsemängud');
     expect(liveSection.matches).toHaveLength(2);
     expect(liveSection.matches.every((match) => match.status === 'live')).toBe(true);
+    expect(liveSection.matches[0]).toMatchObject({
+      id: '8',
+      homeScore: 1,
+      awayScore: 0
+    });
+    expect(buildPublicTournamentState(liveSnapshot).latestResults).toEqual([]);
 
     const upcomingSnapshot = createSnapshot({
       liveMatches: [],

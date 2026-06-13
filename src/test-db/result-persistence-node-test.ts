@@ -96,6 +96,60 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 
+  it('exposes live provisional scores without finalizing public results', async () => {
+    await withRepository(async ({ db, repository }) => {
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [8, 'GROUP', 'C', '2026-06-13T18:00:00.000Z', null, null, 'Canada', 'Bosnia and Herzegovina']
+      );
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [9, 'GROUP', 'C', '2026-06-20T18:00:00.000Z', null, null, 'Brazil', 'Croatia']
+      );
+      await repository.saveResultUpdate({
+        matchId: 8,
+        status: 'LIVE',
+        publicStatus: 'LIVE',
+        homeScore: 1,
+        awayScore: 0,
+        provisionalHomeScore: 1,
+        provisionalAwayScore: 0,
+        provisionalStatus: 'LIVE',
+        minute: 52,
+        isFinal: false,
+        lastCheckedAt: '2026-06-13T18:52:00.000Z',
+        nextCheckAt: '2026-06-13T18:55:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'LIVE'
+      });
+      await repository.saveResultUpdate({
+        matchId: 9,
+        status: 'SCHEDULED',
+        publicStatus: 'SCHEDULED',
+        homeScore: 0,
+        awayScore: 0,
+        isFinal: false,
+        lastCheckedAt: '2026-06-13T18:52:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'SCHEDULED'
+      });
+
+      const snapshot = await getPublicTournamentSnapshot(db);
+      const liveMatch = snapshot.liveMatches.find((match) => match.id === '8');
+      const futureMatch = snapshot.upcomingMatches.find((match) => match.id === '9');
+
+      assert.equal(liveMatch?.homeScore, 1);
+      assert.equal(liveMatch?.awayScore, 0);
+      assert.equal(liveMatch?.status, 'live');
+      assert.equal(futureMatch?.homeScore, undefined);
+      assert.equal(futureMatch?.awayScore, undefined);
+      assert.equal(snapshot.latestResults.length, 0);
+      assert.equal((await repository.getFinalizedResults()).length, 0);
+    });
+  });
+
   it('replaces leaderboard entries idempotently', async () => {
     await withRepository(async ({ repository }) => {
       const metadata = {

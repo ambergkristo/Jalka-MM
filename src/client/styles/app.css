@@ -514,6 +514,38 @@ main {
   white-space: nowrap;
 }
 
+.match-live-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  justify-items: center;
+  min-width: 82px;
+  padding: 6px 8px;
+  border: 1px solid rgba(239, 68, 68, .48);
+  border-radius: var(--radius);
+  background: rgba(239, 68, 68, .13);
+  color: #ffe0e0;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.match-live-score strong {
+  font-size: 1.05rem;
+}
+
+.match-live-score span {
+  color: rgba(255, 255, 255, .72);
+}
+
+.match-live-score small {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 850;
+}
+
 .match-card-premium p,
 .result-card p {
   margin: 0;
