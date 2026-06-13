@@ -5,6 +5,7 @@ import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/pu
 import { getCurrentLeaderboard } from './resultAgentRuntime.js';
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { touchPublicDashboardRead } from './publicStateHealth.js';
+import { backfillTopScorersFromConfirmedResults } from './topScorerStandings.js';
 
 export interface PublicDashboardSnapshot {
   liveMatches: PublicMatchCard[];
@@ -406,6 +407,44 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
   `);
   if (cachedRows.length > 0) {
     return cachedRows.map((row) => ({
+      rank: Number(row.rank),
+      player: String(row.player_name),
+      team: String(row.team_name ?? ''),
+      goals: Number(row.goals),
+      assists: Number(row.assists ?? 0)
+    }));
+  }
+
+  const scorerFactsCount = Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_scorers'))?.count ?? 0);
+  if (scorerFactsCount === 0) {
+    const confirmedResultsCount = Number((await db.one(`
+      SELECT COUNT(*) AS count
+      FROM match_results
+      WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    `))?.count ?? 0);
+    if (confirmedResultsCount > 0) {
+      try {
+        await backfillTopScorersFromConfirmedResults(db, new Date().toISOString());
+      } catch {
+        // Fall back to the empty state or any manual scorer facts already stored.
+      }
+    }
+  }
+
+  const repairedRows = await db.all(`
+    SELECT
+      t.rank,
+      t.player_name,
+      COALESCE(team.name, team.name_et, t.team_id, '') AS team_name,
+      t.goals,
+      t.assists
+    FROM top_scorer_standings t
+    LEFT JOIN teams team ON team.id = t.team_id
+    ORDER BY t.rank ASC, t.player_name ASC
+    LIMIT 20
+  `);
+  if (repairedRows.length > 0) {
+    return repairedRows.map((row) => ({
       rank: Number(row.rank),
       player: String(row.player_name),
       team: String(row.team_name ?? ''),

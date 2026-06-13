@@ -60,6 +60,34 @@ describe('public state health', () => {
     });
   });
 
+  it('re-syncs scorers from confirmed provider results and populates public standings', async () => {
+    await withSimulationDb(async (db) => {
+      await seedProviderConfirmedResult(db);
+      await db.run('DELETE FROM result_manual_scorers');
+      await db.run('DELETE FROM top_scorer_standings');
+
+      const repair = await runPublicStateRepairAction({ action: 'resync-scorers-from-confirmed-results', db, now: new Date('2026-06-13T07:35:00.000Z') });
+      assert.equal(repair.status, 'ok');
+      assert.equal(await countRows(db, 'result_manual_scorers') > 0, true);
+      assert.equal(await countRows(db, 'top_scorer_standings') > 0, true);
+      const snapshot = await getPublicTournamentSnapshot(db);
+      assert.equal(snapshot.topScorers.length > 0, true);
+    });
+  });
+
+  it('auto-backfills top scorers from confirmed provider results on public read', async () => {
+    await withSimulationDb(async (db) => {
+      await seedProviderConfirmedResult(db);
+      await db.run('DELETE FROM result_manual_scorers');
+      await db.run('DELETE FROM top_scorer_standings');
+
+      const snapshot = await getPublicTournamentSnapshot(db);
+      assert.equal(snapshot.topScorers.length > 0, true);
+      assert.equal(await countRows(db, 'result_manual_scorers') > 0, true);
+      assert.equal(await countRows(db, 'top_scorer_standings') > 0, true);
+    });
+  });
+
   it('rebuilds group standings idempotently without deleting confirmed results', async () => {
     await withSimulationDb(async (db) => {
       await seedConfirmedResult(db);

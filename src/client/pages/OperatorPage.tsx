@@ -466,8 +466,8 @@ export function OperatorPage() {
               <section className="operator-scorer-section">
                 <div className="operator-scorer-header">
                   <div>
-                    <strong>Väravalööjad</strong>
-                    <p>Lisa üks või mitu lööjat. Tühi loend on lubatud.</p>
+                    <strong>Manage scorers</strong>
+                    <p>Lisa või muuda selle kinnitatud mängu väravalööjaid. Piirangut ei ole.</p>
                   </div>
                   <button type="button" className="button-link" onClick={() => setScorers((rows) => appendScorerRow(rows))}>
                     + Lisa väravalööja

@@ -8,7 +8,7 @@ import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
-import { rebuildTopScorerStandings } from './topScorerStandings.js';
+import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { ResultUpdate } from './resultTypes.js';
 import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from './leaderboardProjection.js';
 
@@ -113,16 +113,16 @@ export async function repairTopScorersFromConfirmedResults(now = new Date()) {
     return { repaired: true, reason: 'rebuilt-from-stored-scorers', repairedMatches: 0 };
   }
 
+  const storedResultBackfill = await backfillTopScorersFromConfirmedResults(db, now.toISOString());
+  if (storedResultBackfill.repaired) return storedResultBackfill;
+
   const matches = await repository.listTrackedMatches();
   const confirmedMatchIds = new Set(confirmedResults.map((result) => result.matchId));
-  const scorerRepository = repository as DatabaseResultRepository & {
-    syncConfirmedScorersForMatch?: (matchId: number, scorers: NonNullable<ResultUpdate['scorers']>, timestamp: string) => Promise<void>;
-  };
   let repairedMatches = 0;
   for (const match of matches.filter((candidate) => confirmedMatchIds.has(candidate.id))) {
     const update = await provider.fetchMatchUpdate(match, now);
-    if (update.scorers?.length && scorerRepository.syncConfirmedScorersForMatch) {
-      await scorerRepository.syncConfirmedScorersForMatch(match.id, update.scorers, now.toISOString());
+    if (update.scorers?.length) {
+      await syncConfirmedScorersForMatch(db, match.id, update.scorers, now.toISOString());
       repairedMatches += 1;
     }
   }

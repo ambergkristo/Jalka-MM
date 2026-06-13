@@ -3,6 +3,33 @@ import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultScorer } from './resultTypes.js';
 
+export async function backfillTopScorersFromConfirmedResults(db: QueryableDatabase, nowIso: string): Promise<{ repaired: boolean; reason: string; repairedMatches: number }> {
+  await migrateResultPersistenceSchema(db);
+  const confirmedResults = await db.all(`
+    SELECT match_id, provider_results_json
+    FROM match_results
+    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1 AND provider_results_json IS NOT NULL
+    ORDER BY match_id
+  `);
+  if (confirmedResults.length === 0) {
+    return { repaired: false, reason: 'no-confirmed-results', repairedMatches: 0 };
+  }
+
+  let repairedMatches = 0;
+  for (const result of confirmedResults) {
+    const scorers = parseProviderScorers(result.provider_results_json);
+    if (scorers.length === 0) continue;
+    await syncConfirmedScorersForMatch(db, Number(result.match_id), scorers, nowIso);
+    repairedMatches += 1;
+  }
+
+  return {
+    repaired: repairedMatches > 0,
+    reason: repairedMatches > 0 ? 'backfilled-from-stored-provider-results' : 'no-provider-scorers-found',
+    repairedMatches
+  };
+}
+
 export async function syncConfirmedScorersForMatch(
   db: QueryableDatabase,
   matchId: number,
@@ -61,12 +88,12 @@ async function resolveTeam(
   if (!code && !name) return {};
   const row = await db.one(
     `SELECT id, code FROM teams
-     WHERE (? IS NOT NULL AND code = ?)
-        OR (? IS NOT NULL AND id = ?)
-        OR (? IS NOT NULL AND name = ?)
-        OR (? IS NOT NULL AND name_et = ?)
+     WHERE code = ?
+        OR id = ?
+        OR name = ?
+        OR name_et = ?
      LIMIT 1`,
-    [code ?? null, code ?? null, code ?? null, code ?? null, name ?? null, name ?? null, name ?? null, name ?? null]
+    [code ?? null, code ?? null, name ?? null, name ?? null]
   );
   if (!row) return { teamCode: code };
   const team: { teamId?: string; teamCode?: string } = {};
@@ -78,4 +105,35 @@ async function resolveTeam(
 
 function slug(value: string): string {
   return value.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function parseProviderScorers(value: unknown): ResultScorer[] {
+  if (typeof value !== 'string' || !value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((item) => extractObservationScorers(item));
+  } catch {
+    return [];
+  }
+}
+
+function extractObservationScorers(value: unknown): ResultScorer[] {
+  if (!value || typeof value !== 'object') return [];
+  const observation = value as Record<string, unknown>;
+  const scorers = observation.scorers;
+  if (!Array.isArray(scorers)) return [];
+  return scorers.flatMap((scorer) => normalizeScorer(scorer));
+}
+
+function normalizeScorer(value: unknown): ResultScorer[] {
+  if (!value || typeof value !== 'object') return [];
+  const scorer = value as Record<string, unknown>;
+  const playerName = typeof scorer.playerName === 'string' ? scorer.playerName.trim() : '';
+  const teamName = typeof scorer.teamName === 'string' ? scorer.teamName.trim() : undefined;
+  const teamCode = typeof scorer.teamCode === 'string' ? scorer.teamCode.trim() : undefined;
+  const goals = Number(scorer.goals ?? 1);
+  if (!playerName || !Number.isInteger(goals) || goals <= 0) return [];
+  if (!teamName && !teamCode) return [];
+  return [{ playerName, teamName: teamName || undefined, teamCode: teamCode || undefined, goals }];
 }

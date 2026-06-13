@@ -2,9 +2,9 @@ import type { QueryableDatabase } from '../databaseAdapter.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { db } from '../db.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
-import { getCurrentLeaderboard, getResultsAgentStatus, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './resultAgentRuntime.js';
+import { getCurrentLeaderboard, getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
-import { rebuildTopScorerStandings } from './topScorerStandings.js';
+import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import type { ResultAgentStatus } from './resultTypes.js';
 
 const METADATA_ID = 'public-state';
@@ -175,13 +175,13 @@ export async function runPublicStateRepairAction(input: {
 
   try {
     let resultAgentRun: Awaited<ReturnType<typeof runResultsAgentCycle>> | undefined;
-    let scorerRepair: Awaited<ReturnType<typeof repairTopScorersFromConfirmedResults>> | undefined;
+    let scorerRepair: Awaited<ReturnType<typeof backfillTopScorersFromConfirmedResults>> | undefined;
     if (input.action === 'catch-up') {
       resultAgentRun = await runResultsAgentCycle(now);
     }
 
     if (input.action === 'resync-scorers-from-confirmed-results') {
-      scorerRepair = await repairTopScorersFromConfirmedResults(now);
+      scorerRepair = await backfillTopScorersFromConfirmedResults(database, now.toISOString());
     }
 
     if (input.action === 'catch-up' || input.action === 'rebuild-public-dashboard' || input.action === 'rebuild-group-standings') {
@@ -573,7 +573,7 @@ function deriveOperatorStatus(
 function summarizeRepairMessage(
   action: PublicStateRepairAction,
   resultAgentRun?: Awaited<ReturnType<typeof runResultsAgentCycle>>,
-  scorerRepair?: Awaited<ReturnType<typeof repairTopScorersFromConfirmedResults>>
+  scorerRepair?: Awaited<ReturnType<typeof backfillTopScorersFromConfirmedResults>>
 ): string {
   if (action === 'catch-up') {
     const finalized = resultAgentRun?.finalizedResults ?? 0;
