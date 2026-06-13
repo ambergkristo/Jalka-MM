@@ -28,23 +28,32 @@ describe('match scheduler polling rules', () => {
     const plan = planMatchUpdate(match({ kickoffUtc: '2026-06-15T18:20:00.000Z' }), now);
     expect(plan.shouldCheckNow).toBe(true);
     expect(plan.reason).toBe('active-kickoff-window');
+    expect(plan.nextCheckAt).toBe('2026-06-15T18:20:00.000Z');
+  });
+
+  it('checks kickoff-passed scheduled matches every two minutes before the full-time catch-up window', () => {
+    const plan = planMatchUpdate(match({ kickoffUtc: '2026-06-15T17:55:00.000Z' }), now);
+    expect(plan.shouldCheckNow).toBe(true);
+    expect(plan.reason).toBe('active-kickoff-window');
+    expect(plan.nextCheckAt).toBe('2026-06-15T18:02:00.000Z');
   });
 
   it('checks stale scheduled matches after expected full-time for Render catch-up', () => {
-    const plan = planMatchUpdate(match({ kickoffUtc: '2026-06-15T15:30:00.000Z' }), now);
+    const plan = planMatchUpdate(match({ kickoffUtc: '2026-06-15T16:15:00.000Z' }), now);
     expect(plan.shouldCheckNow).toBe(true);
     expect(plan.reason).toBe('stale-scheduled-after-expected-full-time');
+    expect(plan.nextCheckAt).toBe('2026-06-15T18:01:00.000Z');
   });
 
-  it('checks live and extra-time matches every five minutes', () => {
-    expect(planMatchUpdate(match({ status: 'LIVE' }), now).nextCheckAt).toBe('2026-06-15T18:05:00.000Z');
-    expect(planMatchUpdate(match({ status: 'ET' }), now).nextCheckAt).toBe('2026-06-15T18:05:00.000Z');
+  it('checks live and extra-time matches every two minutes', () => {
+    expect(planMatchUpdate(match({ status: 'LIVE' }), now).nextCheckAt).toBe('2026-06-15T18:02:00.000Z');
+    expect(planMatchUpdate(match({ status: 'ET' }), now).nextCheckAt).toBe('2026-06-15T18:02:00.000Z');
   });
 
-  it('checks penalties every two minutes', () => {
+  it('checks penalties every minute', () => {
     const plan = planMatchUpdate(match({ status: 'PEN' }), now);
-    expect(plan.reason).toBe('penalties-two-minute-check');
-    expect(plan.nextCheckAt).toBe('2026-06-15T18:02:00.000Z');
+    expect(plan.reason).toBe('penalties-one-minute-check');
+    expect(plan.nextCheckAt).toBe('2026-06-15T18:01:00.000Z');
   });
 
   it('does not recheck locked final results', () => {

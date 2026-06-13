@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import { createDatabase, type QueryableDatabase } from '../server/databaseAdapter.js';
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
 import { MockResultProvider } from '../server/results/mockResultProvider.js';
+import { getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { getCurrentLeaderboard } from '../server/results/resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from '../server/results/resultPersistenceSchema.js';
@@ -144,11 +145,58 @@ describe('persistent result and leaderboard repositories', () => {
       assert.equal(first.leaderboardRebuilt, false);
       assert.equal(second.finalizedMatches, 1);
       assert.equal(second.leaderboardRebuilt, true);
-      assert.equal(second.playersProcessed, 24);
+      assert.equal(second.playersProcessed, 109);
       assert.equal((await repository.getFinalizedResults()).length, 1);
-      assert.equal((await repository.getLeaderboard()).length, 24);
-      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
+      assert.equal((await repository.getLeaderboard()).length, 109);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 109);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM match_results WHERE match_id = ?', [4]))?.count), 1);
+    });
+  });
+
+  it('public tournament snapshot recalculates group standings from confirmed results even if persisted standings are stale', async () => {
+    await withRepository(async ({ db, repository }) => {
+      await db.run(`INSERT INTO teams (id, name, name_et, code, flag, group_id) VALUES (?, ?, ?, ?, ?, ?)`, ['mex', 'Mexico', 'Mehhiko', 'MEX', '', 'A']);
+      await db.run(`INSERT INTO teams (id, name, name_et, code, flag, group_id) VALUES (?, ?, ?, ?, ?, ?)`, ['rsa', 'South Africa', 'Lõuna-Aafrika Vabariik', 'RSA', '', 'A']);
+      await db.run(`INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
+        1,
+        'GROUP',
+        'A',
+        '2026-06-11T19:00:00.000Z',
+        'mex',
+        'rsa',
+        'Mexico',
+        'South Africa'
+      ]);
+      await db.run(`INSERT INTO group_standings (group_id, team_id, rank, played, wins, draws, losses, goals_for, goals_against, goal_difference, points, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, ['A', 'mex', 1, 0, 0, 0, 0, 0, 0, 0, 0, '2026-06-11T18:00:00.000Z']);
+      await db.run(`INSERT INTO group_standings (group_id, team_id, rank, played, wins, draws, losses, goals_for, goals_against, goal_difference, points, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, ['A', 'rsa', 2, 0, 0, 0, 0, 0, 0, 0, 0, '2026-06-11T18:00:00.000Z']);
+
+      await repository.saveResultUpdate({
+        matchId: 1,
+        status: 'FINISHED',
+        publicStatus: 'CONFIRMED_FINAL',
+        homeScore: 2,
+        awayScore: 0,
+        confirmedHomeScore: 2,
+        confirmedAwayScore: 0,
+        confirmedAt: '2026-06-11T21:15:00.000Z',
+        confirmationSource: 'mock-result-provider',
+        confirmationConfidence: 'provider-repeat',
+        minute: 90,
+        isFinal: true,
+        lastCheckedAt: '2026-06-11T21:15:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'finished'
+      });
+
+      const snapshot = await getPublicTournamentSnapshot(db);
+      const groupA = snapshot.groupStandings.find((group) => group.group === 'A');
+
+      assert.equal(groupA?.teams[0]?.team, 'Mexico');
+      assert.equal(groupA?.teams[0]?.points, 3);
+      assert.equal(groupA?.teams[0]?.played, 1);
+      assert.equal(snapshot.latestResults.length, 1);
     });
   });
 
@@ -192,7 +240,7 @@ describe('persistent result and leaderboard repositories', () => {
     await withRepository(async ({ repository }) => {
       const response = await getCurrentLeaderboard(repository);
       assert.equal(response.mode, 'pre-results');
-      assert.equal(response.entries.length, 24);
+      assert.equal(response.entries.length, 109);
       assert.equal(response.entries.every((entry) => entry.points === 0), true);
       assert.equal(response.entries.every((entry) => entry.exactScores === 0), true);
       assert.equal(response.entries.every((entry) => entry.correctResults === 0), true);

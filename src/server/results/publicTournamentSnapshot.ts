@@ -320,13 +320,6 @@ function toMatchCard(match: {
 }
 
 async function getPublicGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
-  const persisted = await db.all(`
-    SELECT gs.*, COALESCE(t.name, gs.team_id) AS team_name
-    FROM group_standings gs
-    LEFT JOIN teams t ON t.id = gs.team_id
-    ORDER BY gs.group_id, gs.rank, gs.team_id
-  `);
-  if (persisted.length > 0) return groupRowsToPublic(persisted);
   return calculateGroupStandings(db);
 }
 
@@ -408,26 +401,6 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
     team: String(row.team_name ?? ''),
     goals: Number(row.goals),
     assists: Number(row.assists ?? 0)
-  }));
-}
-
-function groupRowsToPublic(rows: Record<string, unknown>[]): PublicGroupStanding[] {
-  const groups = [...new Set(rows.map((row) => String(row.group_id)))].sort();
-  return groups.map((group) => ({
-    group,
-    teams: rows.filter((row) => String(row.group_id) === group).map((row) => ({
-      rank: Number(row.rank),
-      team: String(row.team_name),
-      played: Number(row.played),
-      wins: Number(row.wins),
-      draws: Number(row.draws),
-      losses: Number(row.losses),
-      goalsFor: Number(row.goals_for),
-      goalsAgainst: Number(row.goals_against),
-      goalDifference: Number(row.goal_difference),
-      points: Number(row.points),
-      state: Number(row.played) === 0 ? 'at-risk' : Number(row.rank) <= 2 ? 'qualified' : Number(row.rank) === 3 ? 'third-place' : 'at-risk'
-    }))
   }));
 }
 

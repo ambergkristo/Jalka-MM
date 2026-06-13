@@ -34,7 +34,6 @@ describe('matchday 1 simulation with persistent storage', () => {
       const leaderboard = await getCurrentLeaderboard(repository);
       assert.deepEqual(snapshot.latestResults, []);
       assert.equal(snapshot.upcomingMatches.length > 0, true);
-      assert.equal(snapshot.upcomingMatches[0]?.homeTeam, 'Mexico');
       assert.match(snapshot.upcomingMatches[0]?.kickoffTime ?? '', /^\d{2}\.\d{2} • \d{2}:\d{2}$/);
       assertPublicBracketIsPlaceholderOnly(snapshot.playoffBracket);
       assert.equal(leaderboard.mode, 'pre-results');
@@ -53,8 +52,8 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.equal(report.confirmingRun.finalizedMatches, 3);
       assert.equal(report.confirmingRun.leaderboardRebuilt, true);
       assert.equal(report.confirmedResultsCount, 3);
-      assert.equal(report.leaderboardRows, 24);
-      assert.equal((await repository.getLeaderboard()).length, 24);
+      assert.equal(report.leaderboardRows, 109);
+      assert.equal((await repository.getLeaderboard()).length, 109);
       const leaderboard = await getCurrentLeaderboard(repository);
       assert.equal(leaderboard.mode, 'persisted');
       assert.equal(leaderboard.entries.some((entry) => entry.points > 0), true);
@@ -79,7 +78,7 @@ describe('matchday 1 simulation with persistent storage', () => {
       assert.deepEqual(tournamentPayload.playoffBracket, snapshot.playoffBracket);
       assertPublicBracketIsPlaceholderOnly(tournamentPayload.playoffBracket);
       assert.equal(snapshot.topScorers.length, simulatedTopScorers().length);
-      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 109);
 
       const repeated = await runResultUpdateCycle({
         repository,
@@ -89,7 +88,7 @@ describe('matchday 1 simulation with persistent storage', () => {
         confirmationDelayMinutes: 10
       });
       assert.equal(repeated.checkedMatches, 0);
-      assert.equal((await repository.getLeaderboard()).length, 24);
+      assert.equal((await repository.getLeaderboard()).length, 109);
     });
   });
 

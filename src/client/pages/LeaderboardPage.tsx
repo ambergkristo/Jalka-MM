@@ -4,7 +4,7 @@ import { PageHeader } from '../components/PageHeader.js';
 import { usePublicTournamentState } from '../lib/publicApi.js';
 
 export function LeaderboardPage() {
-  const leaderboardRows = usePublicTournamentState().leaderboardRows;
+  const leaderboardRows = usePublicTournamentState(60_000).leaderboardRows;
 
   return (
     <>

@@ -7,7 +7,7 @@ import { TrueBracket } from '../components/TrueBracket.js';
 import { usePublicTournamentState } from '../lib/publicApi.js';
 
 export function TournamentPage() {
-  const tournamentState = usePublicTournamentState();
+  const tournamentState = usePublicTournamentState(60_000);
 
   return (
     <section className="tournament-center-page">

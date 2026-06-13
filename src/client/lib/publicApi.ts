@@ -22,7 +22,7 @@ interface PublicDashboardApiResponse {
   leaderboard: PublicDashboardSnapshotLike['leaderboard'];
 }
 
-export function usePublicDashboardSnapshot(): PublicDashboardSnapshot | undefined {
+export function usePublicDashboardSnapshot(refreshIntervalMs = 60_000): PublicDashboardSnapshot | undefined {
   const [snapshot, setSnapshot] = useState<PublicDashboardSnapshot | undefined>();
 
   useEffect(() => {
@@ -42,20 +42,20 @@ export function usePublicDashboardSnapshot(): PublicDashboardSnapshot | undefine
     void loadSnapshot();
     const interval = window.setInterval(() => {
       void loadSnapshot();
-    }, 60_000);
+    }, refreshIntervalMs);
 
     return () => {
       cancelled = true;
       controller.abort();
       window.clearInterval(interval);
     };
-  }, []);
+  }, [refreshIntervalMs]);
 
   return snapshot;
 }
 
-export function usePublicTournamentState(): PublicTournamentState {
-  return buildPublicTournamentState(usePublicDashboardSnapshot());
+export function usePublicTournamentState(refreshIntervalMs = 60_000): PublicTournamentState {
+  return buildPublicTournamentState(usePublicDashboardSnapshot(refreshIntervalMs));
 }
 
 export function usePersistedLeaderboardRows(fallback: LeaderboardRowView[]): LeaderboardRowView[] {

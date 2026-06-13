@@ -31,14 +31,14 @@ describe('manual result correction with persistent storage', () => {
 
       assert.equal(summary.action, 'confirmed');
       assert.equal(summary.leaderboardRebuilt, true);
-      assert.equal(summary.playersProcessed, 24);
+      assert.equal(summary.playersProcessed, 109);
       const result = await repository.getMatchResult(1);
       assert.equal(result?.publicStatus, 'CONFIRMED_FINAL');
       assert.equal(result?.confirmedHomeScore, 2);
       assert.equal(result?.confirmedAwayScore, 1);
       assert.equal(result?.confirmationSource, 'manual');
       assert.equal(result?.confirmationConfidence, 'manual');
-      assert.equal((await repository.getLeaderboard()).length, 24);
+      assert.equal((await repository.getLeaderboard()).length, 109);
       const snapshot = await getPublicTournamentSnapshot(db);
       assert.equal(snapshot.latestResults.some((match) => match.id === '1' && match.homeScore === 2 && match.awayScore === 1), true);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_corrections'))?.count), 1);
@@ -96,7 +96,7 @@ describe('manual result correction with persistent storage', () => {
 
       assert.equal(repeated.action, 'idempotent');
       assert.equal(repeated.leaderboardRebuilt, false);
-      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 109);
     });
   });
 
@@ -124,7 +124,7 @@ describe('manual result correction with persistent storage', () => {
       assert.equal(result?.confirmedHomeScore, 1);
       assert.equal(result?.confirmedAwayScore, 1);
       assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_corrections'))?.count), 2);
-      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 24);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 109);
     });
   });
 

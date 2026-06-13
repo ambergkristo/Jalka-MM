@@ -15,6 +15,7 @@ import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from './leaderboa
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
 const provider = createResultProvider(providerConfig);
+let catchUpInFlight: Promise<void> | undefined;
 
 export function getResultsAgentStatus(now = new Date()) {
   return getResultAgentStatus({ repository, provider, now }).then((status) => ({
@@ -41,6 +42,25 @@ export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boole
     dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
     confirmationDelayMinutes: providerConfig.confirmationDelayMinutes
   });
+}
+
+export function queueResultAgentCatchUp(now = new Date()): Promise<void> | undefined {
+  if (providerConfig.writeMode !== 'live') return undefined;
+  if (catchUpInFlight) return catchUpInFlight;
+
+  catchUpInFlight = (async () => {
+    const status = await repository.getStatus(provider.name, now);
+    if (status.staleMatchesCount === 0) return;
+    await runResultsAgentCycle(now);
+  })()
+    .catch((error) => {
+      console.warn('Result agent catch-up failed:', error instanceof Error ? error.message : String(error));
+    })
+    .finally(() => {
+      catchUpInFlight = undefined;
+    });
+
+  return catchUpInFlight;
 }
 
 export function confirmManualResultRuntime(confirmation: ManualResultConfirmationInput) {

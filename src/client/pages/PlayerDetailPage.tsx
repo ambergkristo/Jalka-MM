@@ -8,7 +8,7 @@ import { applyLeaderboardRowToPlayerProfile, getPlayerProfile } from '../lib/pre
 
 export function PlayerDetailPage({ playerId }: { playerId: string }) {
   const player = getPlayerProfile(playerId);
-  const leaderboardRows = usePublicTournamentState().leaderboardRows;
+  const leaderboardRows = usePublicTournamentState(60_000).leaderboardRows;
   const publicLeaderboardRow = leaderboardRows.find((row) => row.playerId === playerId) ?? (player ? {
     rank: player.rank,
     playerId: player.playerId,

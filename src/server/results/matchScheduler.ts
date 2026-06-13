@@ -2,10 +2,10 @@ import type { MatchUpdatePlan, MatchStatus, TrackedMatch } from './resultTypes.j
 
 const MINUTE = 60_000;
 const ACTIVE_CHECK_WINDOW_MS = 30 * MINUTE;
-const LIVE_CHECK_INTERVAL_MS = 5 * MINUTE;
-const HALF_TIME_CHECK_INTERVAL_MS = 5 * MINUTE;
-const PENALTY_CHECK_INTERVAL_MS = 2 * MINUTE;
-const EXPECTED_FULL_TIME_AFTER_KICKOFF_MS = 110 * MINUTE;
+const LIVE_CHECK_INTERVAL_MS = 2 * MINUTE;
+const HALF_TIME_CHECK_INTERVAL_MS = 1 * MINUTE;
+const PENALTY_CHECK_INTERVAL_MS = 1 * MINUTE;
+const EXPECTED_FULL_TIME_AFTER_KICKOFF_MS = 105 * MINUTE;
 const PASSIVE_RESCHEDULE_MS = 60 * MINUTE;
 
 export function planMatchUpdate(match: TrackedMatch, now: Date): MatchUpdatePlan {
@@ -39,12 +39,21 @@ export function planMatchUpdate(match: TrackedMatch, now: Date): MatchUpdatePlan
     };
   }
 
+  if (match.status === 'SCHEDULED' && now >= kickoff && now < expectedFullTimeCheckAt) {
+    return {
+      matchId: match.id,
+      shouldCheckNow: true,
+      reason: 'active-kickoff-window',
+      nextCheckAt: addMilliseconds(now, LIVE_CHECK_INTERVAL_MS).toISOString()
+    };
+  }
+
   if (match.status === 'SCHEDULED' && now >= expectedFullTimeCheckAt) {
     return {
       matchId: match.id,
       shouldCheckNow: true,
       reason: 'stale-scheduled-after-expected-full-time',
-      nextCheckAt: addMinutes(now, 5).toISOString()
+      nextCheckAt: addMilliseconds(now, HALF_TIME_CHECK_INTERVAL_MS).toISOString()
     };
   }
 
@@ -74,10 +83,10 @@ export function isFinalStatus(status: MatchStatus): boolean {
 function reasonForStatus(status: MatchStatus): string {
   return ({
     SCHEDULED: 'active-kickoff-window',
-    LIVE: 'live-match-five-minute-check',
+    LIVE: 'live-match-two-minute-check',
     HT: 'half-time-check',
-    ET: 'extra-time-five-minute-check',
-    PEN: 'penalties-two-minute-check',
+    ET: 'extra-time-two-minute-check',
+    PEN: 'penalties-one-minute-check',
     FINISHED: 'final-result-locked',
     POSTPONED: 'postponed-recheck',
     SUSPENDED: 'suspended-recheck'
@@ -93,10 +102,6 @@ function nextCheckAtForStatus(status: MatchStatus, kickoff: Date, now: Date): Da
     return now < kickoff ? kickoff : expectedFullTimeCheckAt;
   }
   return addMilliseconds(now, PASSIVE_RESCHEDULE_MS);
-}
-
-function addMinutes(date: Date, minutes: number): Date {
-  return addMilliseconds(date, minutes * MINUTE);
 }
 
 function addMilliseconds(date: Date, milliseconds: number): Date {

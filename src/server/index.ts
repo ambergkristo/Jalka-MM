@@ -7,7 +7,7 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, repairTopScorersFromConfirmedResults, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 
 await seedTournamentData();
 try {
@@ -15,6 +15,11 @@ try {
 } catch (error) {
   console.warn('Top scorer repair skipped:', error instanceof Error ? error.message : String(error));
 }
+void queueResultAgentCatchUp(new Date());
+const resultAgentCatchUpInterval = setInterval(() => {
+  void queueResultAgentCatchUp(new Date());
+}, 60_000);
+resultAgentCatchUpInterval.unref?.();
 
 const serverDir = dirname(fileURLToPath(import.meta.url));
 const clientDir = resolve(serverDir, '..', 'client');
@@ -26,10 +31,22 @@ createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', `http://${request.headers.host}`);
     if (request.method === 'GET' && url.pathname === '/api/state') return json(response, 200, await getPublicState());
     if (request.method === 'GET' && (url.pathname === '/api/health' || url.pathname === '/api/health/db')) return json(response, 200, await healthCheck());
-    if (request.method === 'GET' && url.pathname === '/api/leaderboard') return json(response, 200, await getCurrentLeaderboard());
-    if (request.method === 'GET' && url.pathname === '/api/public-dashboard') return json(response, 200, await getPublicTournamentSnapshot(db));
-    if (request.method === 'GET' && url.pathname === '/api/results') return json(response, 200, await getPublicResultsPayload(db));
-    if (request.method === 'GET' && url.pathname === '/api/tournament') return json(response, 200, await getPublicTournamentPayload(db));
+    if (request.method === 'GET' && url.pathname === '/api/leaderboard') {
+      void queueResultAgentCatchUp(new Date());
+      return json(response, 200, await getCurrentLeaderboard());
+    }
+    if (request.method === 'GET' && url.pathname === '/api/public-dashboard') {
+      void queueResultAgentCatchUp(new Date());
+      return json(response, 200, await getPublicTournamentSnapshot(db));
+    }
+    if (request.method === 'GET' && url.pathname === '/api/results') {
+      void queueResultAgentCatchUp(new Date());
+      return json(response, 200, await getPublicResultsPayload(db));
+    }
+    if (request.method === 'GET' && url.pathname === '/api/tournament') {
+      void queueResultAgentCatchUp(new Date());
+      return json(response, 200, await getPublicTournamentPayload(db));
+    }
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
     if (request.method === 'POST' && url.pathname === '/api/results-agent/run') {
       const permission = getResultsAgentRunPermission({
@@ -57,6 +74,9 @@ createServer(async (request, response) => {
 function json(response: ServerResponse, status: number, payload: unknown) {
   response.writeHead(status, {
     'content-type': 'application/json',
+    'cache-control': 'no-store, max-age=0, must-revalidate',
+    pragma: 'no-cache',
+    expires: '0',
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET,POST,OPTIONS',
     'access-control-allow-headers': 'content-type,x-results-agent-secret'
@@ -92,7 +112,7 @@ function serveFrontend(request: IncomingMessage, response: ServerResponse, pathn
   const filePath = safePath.startsWith(clientDir) && existsSync(safePath) && statSync(safePath).isFile() ? safePath : clientIndex;
   response.writeHead(200, {
     'content-type': contentType(filePath),
-    'cache-control': filePath.includes(`${join('client', 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-cache'
+    'cache-control': filePath.includes(`${join('client', 'assets')}`) ? 'public, max-age=31536000, immutable' : 'no-store, max-age=0, must-revalidate'
   });
   if (request.method === 'HEAD') return response.end();
   createReadStream(filePath).pipe(response);

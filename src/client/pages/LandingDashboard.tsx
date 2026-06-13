@@ -8,7 +8,7 @@ import { navigationCards } from '../data/navigation.js';
 import { usePublicTournamentState, buildCanonicalLiveMatchSection, buildCanonicalMatchSection } from '../lib/publicApi.js';
 
 export function LandingDashboard() {
-  const tournamentState = usePublicTournamentState();
+  const tournamentState = usePublicTournamentState(30_000);
   const liveSection = buildCanonicalLiveMatchSection(tournamentState.snapshot, 3);
   const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 3);
   const latestResults = tournamentState.latestResults;

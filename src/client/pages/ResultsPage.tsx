@@ -5,7 +5,7 @@ import { ResultCard } from '../components/ResultCard.js';
 import { buildCanonicalLiveMatchSection, buildCanonicalMatchSection, usePublicTournamentState } from '../lib/publicApi.js';
 
 export function ResultsPage() {
-  const tournamentState = usePublicTournamentState();
+  const tournamentState = usePublicTournamentState(30_000);
   const liveSection = buildCanonicalLiveMatchSection(tournamentState.snapshot, 6);
   const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 6);
   const upcoming = tournamentState.upcomingMatches.slice(0, 6);
