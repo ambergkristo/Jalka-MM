@@ -79,6 +79,9 @@ export async function runResultUpdateCycle(input: {
       nextCheckAt: consensus.update.nextCheckAt ?? (consensus.update.isFinal ? undefined : plan.nextCheckAt)
     });
     updatesApplied += 1;
+    if (consensus.update.scorers?.length) {
+      await syncScorersForMatch(input.repository, consensus.update);
+    }
     if (consensus.confirmed && (finalResultChanged || (consensus.update.scorers?.length ?? 0) > 0)) {
       if (finalResultChanged) finalizedResults += 1;
       const refresh = input.repository.refreshDerivedTournamentState
@@ -87,12 +90,6 @@ export async function runResultUpdateCycle(input: {
       if (refresh) {
         leaderboardRebuilds.push(refresh);
       } else {
-        const scorerSync = input.repository as ResultsAgentRepository & {
-          syncConfirmedScorersForMatch?: (matchId: number, scorers: ResultUpdate['scorers'], timestamp: string) => Promise<void>;
-        };
-        if (scorerSync.syncConfirmedScorersForMatch && consensus.update.scorers?.length) {
-          await scorerSync.syncConfirmedScorersForMatch(consensus.update.matchId, consensus.update.scorers, consensus.update.lastCheckedAt);
-        }
         const finalized = await input.repository.getFinalizedResults();
         const previousEntries = await input.leaderboardRepository?.getLeaderboard();
         const rebuild = await rebuildLeaderboardAfterFinalResult({ finalizedResults: finalized, now: input.now, previousEntries });
@@ -141,6 +138,15 @@ export async function runResultUpdateCycle(input: {
 async function fetchProviderUpdates(provider: ResultProvider, match: TrackedMatch, now: Date): Promise<ResultUpdate[]> {
   if (isResultProviderChain(provider)) return provider.fetchMatchUpdates(match, now);
   return [await provider.fetchMatchUpdate(match, now)];
+}
+
+async function syncScorersForMatch(repository: ResultsAgentRepository, update: ResultUpdate): Promise<void> {
+  if (!update.scorers?.length) return;
+  const scorerSync = repository as ResultsAgentRepository & {
+    syncConfirmedScorersForMatch?: (matchId: number, scorers: NonNullable<ResultUpdate['scorers']>, timestamp: string) => Promise<void>;
+  };
+  if (!scorerSync.syncConfirmedScorersForMatch) return;
+  await scorerSync.syncConfirmedScorersForMatch(update.matchId, update.scorers, update.lastCheckedAt);
 }
 
 function toWarningDetail(input: {

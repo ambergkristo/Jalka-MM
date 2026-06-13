@@ -157,6 +157,53 @@ describe('result agent update cycle', () => {
     await expect(repository.getFinalizedResults()).resolves.toHaveLength(0);
   });
 
+  it('syncs live scorer facts without finalizing results or rebuilding leaderboard scores', async () => {
+    const now = new Date('2026-06-11T19:30:00.000Z');
+    const repository = new InMemoryResultRepository([{
+      id: 1,
+      kickoffUtc: '2026-06-11T19:00:00.000Z',
+      status: 'SCHEDULED',
+      homeTeam: 'Mexico',
+      awayTeam: 'South Africa',
+      isFinal: false
+    }]) as InMemoryResultRepository & {
+      syncConfirmedScorersForMatch: (matchId: number, scorers: NonNullable<ResultUpdate['scorers']>, timestamp: string) => Promise<void>;
+    };
+    repository.syncConfirmedScorersForMatch = vi.fn(async () => undefined);
+    const provider: ResultProvider = {
+      name: 'open-worldcup-result-provider',
+      mode: 'live' as const,
+      async fetchMatchUpdate(match, now) {
+        return toResultUpdate({
+          match,
+          provider: 'open-worldcup-result-provider',
+          providerStatus: 'LIVE',
+          now,
+          homeScore: 1,
+          awayScore: 0,
+          minute: 30,
+          providerMatchId: '1',
+          scorers: [
+            { playerName: 'Santiago Gimenez', teamName: 'Mexico', goals: 1 }
+          ]
+        });
+      }
+    };
+
+    const summary = await runResultUpdateCycle({ repository, provider, now });
+
+    expect(summary).toMatchObject({
+      finalizedResults: 0,
+      confirmationPending: 0,
+      needsReview: 0,
+      leaderboardRebuilt: false
+    });
+    expect(repository.syncConfirmedScorersForMatch).toHaveBeenCalledWith(1, [
+      { playerName: 'Santiago Gimenez', teamName: 'Mexico', goals: 1 }
+    ], now.toISOString());
+    await expect(repository.getFinalizedResults()).resolves.toHaveLength(0);
+  });
+
   it('syncs scorer facts when a confirmed result includes scorer data', async () => {
     const now = new Date('2026-06-11T21:30:00.000Z');
     const repository = new InMemoryResultRepository([{

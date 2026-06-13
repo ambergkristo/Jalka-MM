@@ -8,6 +8,7 @@ import { DatabaseResultRepository } from '../server/results/databaseResultReposi
 import { MockResultProvider } from '../server/results/mockResultProvider.js';
 import { getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
+import { toResultUpdate, type ResultProvider } from '../server/results/resultProvider.js';
 import { getCurrentLeaderboard } from '../server/results/resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from '../server/results/resultPersistenceSchema.js';
 
@@ -146,6 +147,53 @@ describe('persistent result and leaderboard repositories', () => {
       assert.equal(futureMatch?.homeScore, undefined);
       assert.equal(futureMatch?.awayScore, undefined);
       assert.equal(snapshot.latestResults.length, 0);
+      assert.equal((await repository.getFinalizedResults()).length, 0);
+    });
+  });
+
+  it('persists live scorer standings without rebuilding prediction leaderboard scores', async () => {
+    await withRepository(async ({ db, repository }) => {
+      await db.run(`INSERT INTO teams (id, name, name_et, code, flag, group_id) VALUES (?, ?, ?, ?, ?, ?)`, ['mex', 'Mexico', 'Mehhiko', 'MEX', '', 'A']);
+      await db.run(`INSERT INTO teams (id, name, name_et, code, flag, group_id) VALUES (?, ?, ?, ?, ?, ?)`, ['rsa', 'South Africa', 'LĆµuna-Aafrika Vabariik', 'RSA', '', 'A']);
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [10, 'GROUP', 'A', '2026-06-13T18:00:00.000Z', 'mex', 'rsa', 'Mexico', 'South Africa']
+      );
+      const now = new Date('2026-06-13T18:30:00.000Z');
+      const provider: ResultProvider = {
+        name: 'open-worldcup-result-provider',
+        mode: 'live',
+        async fetchMatchUpdate(match, now) {
+          return toResultUpdate({
+            match,
+            provider: 'open-worldcup-result-provider',
+            providerStatus: 'LIVE',
+            now,
+            homeScore: 1,
+            awayScore: 0,
+            minute: 30,
+            providerMatchId: '10',
+            scorers: [{ playerName: 'Santiago Gimenez', teamName: 'Mexico', goals: 1 }]
+          });
+        }
+      };
+
+      const summary = await runResultUpdateCycle({ repository, leaderboardRepository: repository, provider, now });
+      const scorerRow = await db.one('SELECT player_name, team_id, goals FROM result_manual_scorers WHERE match_id = ?', [10]);
+      const standingsRow = await db.one('SELECT player_name, team_id, goals FROM top_scorer_standings ORDER BY rank LIMIT 1');
+      const snapshot = await getPublicTournamentSnapshot(db);
+
+      assert.equal(summary.finalizedResults, 0);
+      assert.equal(summary.leaderboardRebuilt, false);
+      assert.equal(String(scorerRow?.player_name), 'Santiago Gimenez');
+      assert.equal(String(scorerRow?.team_id), 'mex');
+      assert.equal(Number(scorerRow?.goals), 1);
+      assert.equal(String(standingsRow?.player_name), 'Santiago Gimenez');
+      assert.equal(Number(standingsRow?.goals), 1);
+      assert.equal(snapshot.topScorers[0]?.player, 'Santiago Gimenez');
+      assert.equal(snapshot.topScorers[0]?.goals, 1);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 0);
       assert.equal((await repository.getFinalizedResults()).length, 0);
     });
   });
