@@ -642,6 +642,71 @@ main {
   padding: 10px;
 }
 
+.leaderboard-search-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 55, .20);
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, rgba(212, 175, 55, .11), rgba(255, 255, 255, .04));
+}
+
+.leaderboard-search-panel label {
+  color: var(--gold);
+  font-size: .78rem;
+  font-weight: 950;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.leaderboard-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.leaderboard-search-row input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: var(--radius);
+  background: rgba(5, 14, 28, .62);
+  color: var(--text);
+  font: inherit;
+  font-weight: 850;
+  outline: none;
+}
+
+.leaderboard-search-row input:focus {
+  border-color: rgba(212, 175, 55, .62);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, .14);
+}
+
+.leaderboard-search-row input::placeholder {
+  color: rgba(226, 232, 240, .48);
+}
+
+.leaderboard-search-row span {
+  color: var(--muted);
+  font-size: .84rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 619px) {
+  .leaderboard-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .leaderboard-search-row span {
+    white-space: normal;
+  }
+}
+
 .leaderboard-table {
   display: grid;
   gap: 8px;

@@ -1,9 +1,9 @@
 import type { LeaderboardRowView } from '../lib/predictionViewModels.js';
 import { LeaderboardRow } from './LeaderboardRow.js';
 
-export function LeaderboardTable({ rows }: { rows: LeaderboardRowView[] }) {
+export function LeaderboardTable({ rows, emptyMessage = 'Edetabeli andmeid pole veel saadaval.' }: { rows: LeaderboardRowView[]; emptyMessage?: string }) {
   if (rows.length === 0) {
-    return <p className="empty-state">Edetabeli andmeid pole veel saadaval.</p>;
+    return <p className="empty-state">{emptyMessage}</p>;
   }
 
   return (

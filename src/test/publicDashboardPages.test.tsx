@@ -132,6 +132,8 @@ describe('public dashboard pages', () => {
     expect(landing).toContain('Lõppenud mänge veel ei ole.');
     expect(results).toContain('Hetkel ei ole käimasolevaid mänge.');
     expect(results).toContain('Lõppenud mänge veel ei ole.');
+    expect(leaderboard).toContain('Leia mängija');
+    expect(leaderboard).toContain('109 mängijat');
     expect(leaderboard).toContain('0%');
     expect(tournament).toContain('Alagrupitabelid');
     expect(tournament).toContain('Väravalööjate info ei ole veel saadaval.');
