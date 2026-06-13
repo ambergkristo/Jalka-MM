@@ -34,16 +34,18 @@ describe('Open World Cup result provider', () => {
 
   it('parses explicit home and away scorer names from open-worldcup payloads', async () => {
     const game = sampleGame('group', 2, 1, 'TRUE', 1, {
-      home_scorers: '{"J. Quinones 9\'","R. Jimenez 67\'"}',
-      away_scorers: '{"L. Krejci 59\'"}'
+      home_scorers: '{"D. Bobadilla 7\'(OG)","F. Balogun 31\'","F. Balogun 45\'+5\'","G. Reyna 90\'+8\'"}',
+      away_scorers: '{"Maurício 73\'"}'
     });
     const provider = providerFor(game);
     const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
 
     expect(update.scorers).toEqual([
-      { playerName: 'J. Quinones', teamName: 'Mexico', teamCode: undefined, goals: 1 },
-      { playerName: 'R. Jimenez', teamName: 'Mexico', teamCode: undefined, goals: 1 },
-      { playerName: 'L. Krejci', teamName: 'South Africa', teamCode: undefined, goals: 1 }
+      { playerName: 'D. Bobadilla', teamName: 'Mexico', teamCode: undefined, goals: 1 },
+      { playerName: 'F. Balogun', teamName: 'Mexico', teamCode: undefined, goals: 1 },
+      { playerName: 'F. Balogun', teamName: 'Mexico', teamCode: undefined, goals: 1 },
+      { playerName: 'G. Reyna', teamName: 'Mexico', teamCode: undefined, goals: 1 },
+      { playerName: 'Maurício', teamName: 'South Africa', teamCode: undefined, goals: 1 }
     ]);
   });
 

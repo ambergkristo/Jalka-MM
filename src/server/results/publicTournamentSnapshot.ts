@@ -6,6 +6,7 @@ import { getCurrentLeaderboard } from './resultAgentRuntime.js';
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { touchPublicDashboardRead } from './publicStateHealth.js';
 import { backfillTopScorersFromConfirmedResults } from './topScorerStandings.js';
+import { normalizeScorerName } from './scorerNormalization.js';
 
 export interface PublicDashboardSnapshot {
   liveMatches: PublicMatchCard[];
@@ -406,6 +407,46 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
     LIMIT 20
   `);
   if (cachedRows.length > 0) {
+    const confirmedGoalsCount = Number((await db.one(`
+      SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
+      FROM match_results
+      WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    `))?.total ?? 0);
+    const topScorerGoalsCount = cachedRows.reduce((sum, row) => sum + Number(row.goals ?? 0), 0);
+    const hasNameAnomaly = cachedRows.some((row) => normalizeScorerName(String(row.player_name ?? '')) !== String(row.player_name ?? '').trim());
+    const scorerFactsCount = Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_scorers'))?.count ?? 0);
+    if (
+      hasNameAnomaly ||
+      (confirmedGoalsCount > 0 && topScorerGoalsCount > confirmedGoalsCount) ||
+      (confirmedGoalsCount > 0 && scorerFactsCount === 0)
+    ) {
+      try {
+        await backfillTopScorersFromConfirmedResults(db, new Date().toISOString());
+      } catch {
+        // keep the best available cache state if the repair path is unavailable
+      }
+      const repairedRows = await db.all(`
+        SELECT
+          t.rank,
+          t.player_name,
+          COALESCE(team.name, team.name_et, t.team_id, '') AS team_name,
+          t.goals,
+          t.assists
+        FROM top_scorer_standings t
+        LEFT JOIN teams team ON team.id = t.team_id
+        ORDER BY t.rank ASC, t.player_name ASC
+        LIMIT 20
+      `);
+      if (repairedRows.length > 0) {
+        return repairedRows.map((row) => ({
+          rank: Number(row.rank),
+          player: String(row.player_name),
+          team: String(row.team_name ?? ''),
+          goals: Number(row.goals),
+          assists: Number(row.assists ?? 0)
+        }));
+      }
+    }
     return cachedRows.map((row) => ({
       rank: Number(row.rank),
       player: String(row.player_name),

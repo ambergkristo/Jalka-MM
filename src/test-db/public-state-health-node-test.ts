@@ -60,6 +60,34 @@ describe('public state health', () => {
     });
   });
 
+  it('warns when scorer facts exceed confirmed goals', async () => {
+    await withSimulationDb(async (db) => {
+      const repository = new DatabaseResultRepository(db);
+      await confirmManualResult({
+        db,
+        repository,
+        leaderboardRepository: repository,
+        confirmation: {
+          matchId: 1,
+          homeScore: 2,
+          awayScore: 0,
+          source: 'manual',
+          confirmedBy: 'test-operator',
+          scorers: [
+            { playerName: 'Santiago Gimenez', teamCode: 'MEX', goals: 3 }
+          ],
+          now: new Date('2026-06-13T07:05:00.000Z')
+        }
+      });
+
+      const diagnostics = await collectPublicStateDiagnostics({ db, resultAgentStatus: MOCK_RESULT_AGENT_STATUS });
+      assert.equal(diagnostics.confirmedGoalsCount, 2);
+      assert.equal(diagnostics.scorerFactsGoalsCount, 3);
+      assert.equal(diagnostics.staleReasons.some((reason) => reason.includes('Scorer facts exceed confirmed match goal total')), true);
+      assert.equal(diagnostics.staleState, true);
+    });
+  });
+
   it('re-syncs scorers from confirmed provider results and populates public standings', async () => {
     await withSimulationDb(async (db) => {
       await seedProviderConfirmedResult(db);

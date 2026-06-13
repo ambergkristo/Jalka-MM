@@ -92,8 +92,11 @@ interface PublicStateDiagnostics {
   leaderboardRowsCount: number;
   canonicalLeaderboardRowsCount: number;
   scorerFactsCount: number;
+  scorerFactsGoalsCount: number;
   topScorerCacheRowsCount: number;
   leaderboardCacheRowsCount: number;
+  topScorerGoalsCount: number;
+  topScorerNameAnomaliesCount: number;
   lastResultSyncAt?: string;
   lastPublicDashboardReadAt?: string;
   lastPublicSnapshotRebuildAt?: string;
@@ -350,11 +353,17 @@ export function OperatorPage() {
               <div><span>Live mänge</span><strong>{diagnostics?.liveMatchesCount ?? 0}</strong></div>
               <div><span>Viimaseid tulemusi</span><strong>{diagnostics?.latestResultsCount ?? 0}</strong></div>
               <div><span>Scorer facts</span><strong>{diagnostics?.scorerFactsCount ?? 0}</strong></div>
+              <div><span>Scorer fact goals</span><strong>{diagnostics?.scorerFactsGoalsCount ?? 0}</strong></div>
               <div><span>Top scorer ridu</span><strong>{diagnostics?.topScorerRowsCount ?? 0}</strong></div>
+              <div><span>Top scorer goals</span><strong>{diagnostics?.topScorerGoalsCount ?? 0}</strong></div>
+              <div><span>Top scorer anomalies</span><strong>{diagnostics?.topScorerNameAnomaliesCount ?? 0}</strong></div>
               <div><span>Leaderboard ridu</span><strong>{diagnostics?.leaderboardRowsCount ?? 0}</strong></div>
               <div><span>Top scorer rebuild</span><strong>{formatTimestamp(diagnostics?.lastScorerRebuildAt)}</strong></div>
               <div><span>Provider scorer data</span><strong>{diagnostics?.providerScorerDataDetected ?? 'unknown'}</strong></div>
             </div>
+            {diagnostics?.confirmedGoalsCount && diagnostics.scorerFactsGoalsCount > diagnostics.confirmedGoalsCount ? (
+              <p className="operator-copy warning">Scorer facts exceed confirmed match goal total. Scorer sync may be duplicating or assigning team goals per player.</p>
+            ) : null}
             {diagnostics?.staleReasons?.length ? <ul className="operator-health-list">{diagnostics.staleReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
           </div>
         </Card>

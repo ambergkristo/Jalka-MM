@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { QueryableDatabase } from '../databaseAdapter.js';
+import { normalizeScorerName } from './scorerNormalization.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultScorer } from './resultTypes.js';
 
@@ -40,12 +41,14 @@ export async function syncConfirmedScorersForMatch(
   await db.transaction(async (tx) => {
     await tx.run('DELETE FROM result_manual_scorers WHERE match_id = ?', [matchId]);
     for (const [index, scorer] of scorers.entries()) {
+      const playerName = normalizeScorerName(scorer.playerName);
+      if (!playerName) continue;
       const team = await resolveTeam(tx, scorer);
       const id = `${matchId}-${randomUUID()}`;
       await tx.run(
         `INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, matchId, scorer.playerName, team.teamId ?? null, team.teamCode ?? scorer.teamCode ?? null, scorer.goals, nowIso]
+        [id, matchId, playerName, team.teamId ?? null, team.teamCode ?? scorer.teamCode ?? null, scorer.goals, nowIso]
       );
     }
     await rebuildTopScorerStandingsInTransaction(tx, nowIso);
@@ -61,20 +64,37 @@ export async function rebuildTopScorerStandings(db: QueryableDatabase, nowIso: s
 
 async function rebuildTopScorerStandingsInTransaction(db: QueryableDatabase, nowIso: string): Promise<void> {
   const rows = await db.all(`
-    SELECT player_name, team_id, SUM(goals) AS goals
+    SELECT player_name, team_id, team_code, goals
     FROM result_manual_scorers
-    GROUP BY player_name, team_id
-    ORDER BY goals DESC, player_name ASC, team_id ASC
+    ORDER BY match_id, created_at, player_name
   `);
-  await db.run('DELETE FROM top_scorer_standings');
-  for (const [index, row] of rows.entries()) {
-    const playerName = String(row.player_name);
-    const teamId = row.team_id === null || row.team_id === undefined || row.team_id === '' ? null : String(row.team_id);
+  const grouped = new Map<string, { playerName: string; teamId: string | null; goals: number }>();
+  for (const row of rows) {
+    const playerName = normalizeScorerName(String(row.player_name ?? ''));
+    if (!playerName) continue;
     const goals = Number(row.goals ?? 0);
+    if (!Number.isFinite(goals) || goals <= 0) continue;
+    const teamId = row.team_id === null || row.team_id === undefined || row.team_id === '' ? null : String(row.team_id);
+    const teamCode = row.team_code === null || row.team_code === undefined || row.team_code === '' ? null : String(row.team_code);
+    const key = `${playerName}|${teamId ?? teamCode ?? ''}`;
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.goals += goals;
+    } else {
+      grouped.set(key, { playerName, teamId, goals });
+    }
+  }
+  const aggregatedRows = [...grouped.values()].sort((a, b) =>
+    b.goals - a.goals ||
+    a.playerName.localeCompare(b.playerName, 'et') ||
+    String(a.teamId ?? '').localeCompare(String(b.teamId ?? ''), 'et')
+  );
+  await db.run('DELETE FROM top_scorer_standings');
+  for (const [index, row] of aggregatedRows.entries()) {
     await db.run(
       `INSERT INTO top_scorer_standings (id, rank, player_name, team_id, goals, assists, minutes_played, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [`${index + 1}-${slug(playerName)}-${teamId ?? 'unknown'}`, index + 1, playerName, teamId, goals, 0, null, nowIso]
+      [`${index + 1}-${slug(row.playerName)}-${row.teamId ?? 'unknown'}`, index + 1, row.playerName, row.teamId, row.goals, 0, null, nowIso]
     );
   }
 }
@@ -129,9 +149,12 @@ function extractObservationScorers(value: unknown): ResultScorer[] {
 function normalizeScorer(value: unknown): ResultScorer[] {
   if (!value || typeof value !== 'object') return [];
   const scorer = value as Record<string, unknown>;
-  const playerName = typeof scorer.playerName === 'string' ? scorer.playerName.trim() : '';
-  const teamName = typeof scorer.teamName === 'string' ? scorer.teamName.trim() : undefined;
-  const teamCode = typeof scorer.teamCode === 'string' ? scorer.teamCode.trim() : undefined;
+  const rawPlayerName = scorer.playerName ?? scorer.player_name ?? scorer.player ?? scorer.name;
+  const playerName = typeof rawPlayerName === 'string' ? normalizeScorerName(rawPlayerName) : '';
+  const rawTeamName = scorer.teamName ?? scorer.team_name ?? scorer.team ?? scorer.country;
+  const teamName = typeof rawTeamName === 'string' ? rawTeamName.trim() : undefined;
+  const rawTeamCode = scorer.teamCode ?? scorer.team_code ?? scorer.code;
+  const teamCode = typeof rawTeamCode === 'string' ? rawTeamCode.trim() : undefined;
   const goals = Number(scorer.goals ?? 1);
   if (!playerName || !Number.isInteger(goals) || goals <= 0) return [];
   if (!teamName && !teamCode) return [];

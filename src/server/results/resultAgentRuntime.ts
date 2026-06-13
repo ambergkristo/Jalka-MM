@@ -11,6 +11,7 @@ import { confirmManualResult, type ManualResultConfirmationInput } from './manua
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { ResultUpdate } from './resultTypes.js';
 import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from './leaderboardProjection.js';
+import { normalizeScorerName } from './scorerNormalization.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -101,20 +102,42 @@ export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRe
 }
 
 export async function repairTopScorersFromConfirmedResults(now = new Date()) {
-  const standingsCount = Number((await db.one('SELECT COUNT(*) AS count FROM top_scorer_standings'))?.count ?? 0);
-  if (standingsCount > 0) return { repaired: false, reason: 'already-populated', repairedMatches: 0 };
-
   const confirmedResults = await repository.getFinalizedResults();
   if (confirmedResults.length === 0) return { repaired: false, reason: 'no-confirmed-results', repairedMatches: 0 };
 
+  const confirmedGoalsCount = Number((await db.one(`
+    SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
+    FROM match_results
+    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+  `))?.total ?? 0);
   const scorerFactsCount = Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_scorers'))?.count ?? 0);
-  if (scorerFactsCount > 0) {
-    await rebuildTopScorerStandings(db, now.toISOString());
-    return { repaired: true, reason: 'rebuilt-from-stored-scorers', repairedMatches: 0 };
+  const scorerFactsGoalsCount = Number((await db.one(`
+    SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
+    FROM result_manual_scorers
+  `))?.total ?? 0);
+  const standingsCount = Number((await db.one('SELECT COUNT(*) AS count FROM top_scorer_standings'))?.count ?? 0);
+  const standingsRows = await db.all('SELECT player_name, goals FROM top_scorer_standings');
+  const hasNameAnomaly = standingsRows.some((row) => normalizeScorerName(String(row.player_name ?? '')) !== String(row.player_name ?? '').trim());
+  const standingsGoalsCount = standingsRows.reduce((sum, row) => sum + Number(row.goals ?? 0), 0);
+  const needsProviderBackfill =
+    scorerFactsCount === 0 ||
+    scorerFactsGoalsCount < confirmedGoalsCount ||
+    scorerFactsGoalsCount > confirmedGoalsCount ||
+    hasNameAnomaly;
+
+  if (needsProviderBackfill) {
+    const storedResultBackfill = await backfillTopScorersFromConfirmedResults(db, now.toISOString());
+    if (storedResultBackfill.repaired) return storedResultBackfill;
   }
 
-  const storedResultBackfill = await backfillTopScorersFromConfirmedResults(db, now.toISOString());
-  if (storedResultBackfill.repaired) return storedResultBackfill;
+  if (scorerFactsCount > 0) {
+    await rebuildTopScorerStandings(db, now.toISOString());
+    return {
+      repaired: true,
+      reason: standingsCount === 0 || hasNameAnomaly || standingsGoalsCount !== scorerFactsGoalsCount ? 'rebuilt-from-stored-scorers' : 'rebuilt-from-stored-scorers',
+      repairedMatches: 0
+    };
+  }
 
   const matches = await repository.listTrackedMatches();
   const confirmedMatchIds = new Set(confirmedResults.map((result) => result.matchId));

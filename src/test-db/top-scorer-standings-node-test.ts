@@ -7,7 +7,7 @@ import { createDatabase } from '../server/databaseAdapter.js';
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
 import { confirmManualResult } from '../server/results/manualResultCorrection.js';
 import { migrateResultPersistenceSchema } from '../server/results/resultPersistenceSchema.js';
-import { syncConfirmedScorersForMatch } from '../server/results/topScorerStandings.js';
+import { rebuildTopScorerStandings, syncConfirmedScorersForMatch } from '../server/results/topScorerStandings.js';
 
 describe('top scorer standings persistence', () => {
   it('aggregates scorer facts across confirmed matches', async () => {
@@ -33,6 +33,67 @@ describe('top scorer standings persistence', () => {
       assert.equal(Number(standings[0]?.goals), 3);
       assert.equal(Number(standings[1]?.rank), 2);
       assert.equal(String(standings[1]?.player_name), 'Santiago Gimenez');
+      assert.equal(Number(standings[1]?.goals), 1);
+    } finally {
+      await db.close();
+      rmSync(sqlitePath, { force: true });
+    }
+  });
+
+  it('normalizes minute-marked scorer names when rebuilding from stored facts', async () => {
+    const { db, sqlitePath } = createTempDatabase();
+    try {
+      await seedMatchTables(db);
+      await migrateResultPersistenceSchema(db);
+
+      await db.run(
+        `INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at) VALUES
+          ('1-a', 1, 'D. Bobadilla 7''(OG)', 'MEX', 'MEX', 1, '2026-06-12T07:10:20.007Z'),
+          ('1-b', 1, 'F. Balogun 31''', 'MEX', 'MEX', 1, '2026-06-12T07:10:20.007Z'),
+          ('1-c', 1, 'F. Balogun 45''+5''', 'MEX', 'MEX', 1, '2026-06-12T07:10:20.007Z'),
+          ('1-d', 1, 'G. Reyna 90''+8''', 'MEX', 'MEX', 1, '2026-06-12T07:10:20.007Z')
+        `
+      );
+
+      await rebuildTopScorerStandings(db, '2026-06-12T07:15:20.007Z');
+      const standings = await db.all('SELECT rank, player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.equal(standings.length, 3);
+      assert.equal(String(standings[0]?.player_name), 'F. Balogun');
+      assert.equal(Number(standings[0]?.goals), 2);
+      assert.equal(String(standings[1]?.player_name), 'D. Bobadilla');
+      assert.equal(Number(standings[1]?.goals), 1);
+      assert.equal(String(standings[2]?.player_name), 'G. Reyna');
+      assert.equal(Number(standings[2]?.goals), 1);
+    } finally {
+      await db.close();
+      rmSync(sqlitePath, { force: true });
+    }
+  });
+
+  it('does not duplicate scorer facts when the same match is re-synced', async () => {
+    const { db, sqlitePath } = createTempDatabase();
+    try {
+      await seedMatchTables(db);
+      await migrateResultPersistenceSchema(db);
+
+      await syncConfirmedScorersForMatch(db, 1, [
+        { playerName: 'D. Bobadilla 7\'(OG)', teamName: 'Mexico', goals: 1 },
+        { playerName: 'F. Balogun 45\'+5\'', teamName: 'Mexico', goals: 1 }
+      ], '2026-06-12T07:10:20.007Z');
+      await syncConfirmedScorersForMatch(db, 1, [
+        { playerName: 'D. Bobadilla 7\'(OG)', teamName: 'Mexico', goals: 1 },
+        { playerName: 'F. Balogun 45\'+5\'', teamName: 'Mexico', goals: 1 }
+      ], '2026-06-12T07:15:20.007Z');
+
+      const scorerFacts = await db.all('SELECT player_name, goals FROM result_manual_scorers WHERE match_id = ? ORDER BY player_name', [1]);
+      const standings = await db.all('SELECT player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.equal(scorerFacts.length, 2);
+      assert.deepEqual(scorerFacts.map((row) => String(row.player_name)), ['D. Bobadilla', 'F. Balogun']);
+      assert.deepEqual(scorerFacts.map((row) => Number(row.goals)), [1, 1]);
+      assert.equal(standings.length, 2);
+      assert.equal(String(standings[0]?.player_name), 'D. Bobadilla');
+      assert.equal(Number(standings[0]?.goals), 1);
+      assert.equal(String(standings[1]?.player_name), 'F. Balogun');
       assert.equal(Number(standings[1]?.goals), 1);
     } finally {
       await db.close();

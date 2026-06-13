@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { normalizeScorerName as normalizeScorerPlayerName } from './scorerNormalization.js';
 import type { ProviderSpecificConfig } from './resultProviderConfig.js';
 import { toResultUpdate, type ResultProvider } from './resultProvider.js';
 import type { ResultScorer, ResultUpdate, TrackedMatch } from './resultTypes.js';
@@ -226,7 +227,7 @@ function toNumber(value: unknown): number | undefined {
 function parseScorers(value: unknown, teamName: string, teamCode?: unknown): ResultScorer[] {
   const names = extractScorerNames(value);
   return names.flatMap((name) => {
-    const playerName = normalizeScorerName(name);
+    const playerName = normalizeScorerPlayerName(name);
     if (!playerName) return [];
     return [{ playerName, teamName, teamCode: typeof teamCode === 'string' ? teamCode : undefined, goals: 1 }];
   });
@@ -235,6 +236,12 @@ function parseScorers(value: unknown, teamName: string, teamCode?: unknown): Res
 function extractScorerNames(value: unknown): string[] {
   if (value === null || value === undefined) return [];
   if (Array.isArray(value)) return value.flatMap((item) => extractScorerNames(item));
+  if (typeof value === 'object') {
+    const scorer = value as Record<string, unknown>;
+    const rawPlayerName = scorer.playerName ?? scorer.player_name ?? scorer.player ?? scorer.name;
+    if (typeof rawPlayerName === 'string') return [rawPlayerName];
+    return [];
+  }
   if (typeof value !== 'string') return [];
   const raw = value.trim();
   if (!raw || ['NULL', 'N/A', 'NONE', '[]', '{}'].includes(raw.toUpperCase())) return [];

@@ -5,6 +5,7 @@ import { DatabaseResultRepository } from './databaseResultRepository.js';
 import { getCurrentLeaderboard, getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
+import { normalizeScorerName } from './scorerNormalization.js';
 import type { ResultAgentStatus } from './resultTypes.js';
 
 const METADATA_ID = 'public-state';
@@ -34,8 +35,11 @@ export interface PublicStateDiagnostics {
   leaderboardRowsCount: number;
   canonicalLeaderboardRowsCount: number;
   scorerFactsCount: number;
+  scorerFactsGoalsCount: number;
   topScorerCacheRowsCount: number;
   leaderboardCacheRowsCount: number;
+  topScorerGoalsCount: number;
+  topScorerNameAnomaliesCount: number;
   lastResultSyncAt?: string;
   lastPublicDashboardReadAt?: string;
   lastPublicSnapshotRebuildAt?: string;
@@ -92,6 +96,9 @@ export async function collectPublicStateDiagnostics(input: {
   const leaderboardCacheRowsCount = await countRows(database, 'leaderboard_entries');
   const topScorerCacheRowsCount = await countRows(database, 'top_scorer_standings');
   const scorerFactsCount = await countRows(database, 'result_manual_scorers');
+  const scorerFactsGoalsCount = await countScorerFactGoals(database);
+  const topScorerGoalsCount = await countTopScorerGoals(database);
+  const topScorerNameAnomaliesCount = await countTopScorerNameAnomalies(database);
   const topScorerRowsCount = topScorerCacheRowsCount;
   const canonicalLeaderboardRowsCount = predictionRepository.getPlayers().length;
   const leaderboardRowsCount = leaderboardCacheRowsCount;
@@ -106,8 +113,11 @@ export async function collectPublicStateDiagnostics(input: {
     leaderboardCacheRowsCount,
     canonicalLeaderboardRowsCount,
     scorerFactsCount,
+    scorerFactsGoalsCount,
     topScorerRowsCount,
-    topScorerCacheRowsCount
+    topScorerCacheRowsCount,
+    topScorerGoalsCount,
+    topScorerNameAnomaliesCount
   });
   const operatorStatus = deriveOperatorStatus(resultAgentStatus, staleReasons, metadata);
 
@@ -125,8 +135,11 @@ export async function collectPublicStateDiagnostics(input: {
     leaderboardRowsCount,
     canonicalLeaderboardRowsCount,
     scorerFactsCount,
+    scorerFactsGoalsCount,
     topScorerCacheRowsCount,
     leaderboardCacheRowsCount,
+    topScorerGoalsCount,
+    topScorerNameAnomaliesCount,
     lastResultSyncAt,
     lastPublicDashboardReadAt: metadata.last_public_dashboard_read_at,
     lastPublicSnapshotRebuildAt: metadata.last_public_snapshot_rebuild_at,
@@ -285,6 +298,25 @@ export async function queuePublicStateRepairIfStale(input: {
 export function choosePublicStateRepairAction(diagnostics: PublicStateDiagnostics): PublicStateRepairAction | undefined {
   if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsCount === 0) {
     return 'resync-scorers-from-confirmed-results';
+  }
+  if (diagnostics.confirmedGoalsCount > 0 && diagnostics.scorerFactsGoalsCount !== diagnostics.confirmedGoalsCount && diagnostics.providerScorerDataDetected === 'yes') {
+    return 'resync-scorers-from-confirmed-results';
+  }
+  const needsFullRebuild = diagnostics.staleReasons.some((reason) =>
+    /latest public results are empty|stored group standings are empty|Leaderboard cache has/i.test(reason)
+  );
+  if (needsFullRebuild) {
+    return 'rebuild-public-dashboard';
+  }
+  const scorerOnlyStale = diagnostics.scorerFactsCount > 0 &&
+    diagnostics.topScorerRowsCount === 0 &&
+    diagnostics.staleReasons.length === 1 &&
+    diagnostics.staleReasons[0]?.includes('stored top scorer standings are empty');
+  if (scorerOnlyStale) {
+    return 'rebuild-top-scorers';
+  }
+  if (diagnostics.topScorerNameAnomaliesCount > 0 || diagnostics.topScorerGoalsCount !== diagnostics.scorerFactsGoalsCount) {
+    return 'rebuild-top-scorers';
   }
   if (diagnostics.staleState) {
     return 'rebuild-public-dashboard';
@@ -462,6 +494,27 @@ async function countConfirmedGoals(db: QueryableDatabase): Promise<number> {
   return Number(row?.total ?? 0);
 }
 
+async function countScorerFactGoals(db: QueryableDatabase): Promise<number> {
+  const row = await db.one(`
+    SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
+    FROM result_manual_scorers
+  `);
+  return Number(row?.total ?? 0);
+}
+
+async function countTopScorerGoals(db: QueryableDatabase): Promise<number> {
+  const row = await db.one(`
+    SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
+    FROM top_scorer_standings
+  `);
+  return Number(row?.total ?? 0);
+}
+
+async function countTopScorerNameAnomalies(db: QueryableDatabase): Promise<number> {
+  const rows = await db.all(`SELECT player_name FROM top_scorer_standings`);
+  return rows.filter((row) => normalizeScorerName(String(row.player_name ?? '')) !== String(row.player_name ?? '').trim()).length;
+}
+
 async function countRows(db: QueryableDatabase, table: string): Promise<number> {
   return Number((await db.one(`SELECT COUNT(*) AS count FROM ${table}`))?.count ?? 0);
 }
@@ -541,8 +594,11 @@ function buildStaleReasons(input: {
   leaderboardCacheRowsCount: number;
   canonicalLeaderboardRowsCount: number;
   scorerFactsCount: number;
+  scorerFactsGoalsCount: number;
   topScorerRowsCount: number;
   topScorerCacheRowsCount: number;
+  topScorerGoalsCount: number;
+  topScorerNameAnomaliesCount: number;
 }): string[] {
   const reasons: string[] = [];
   if (input.confirmedResultsCount > 0 && input.latestResultsCount === 0) reasons.push('Confirmed results exist, but latest public results are empty.');
@@ -552,6 +608,15 @@ function buildStaleReasons(input: {
   }
   if (input.confirmedResultsCount > 0 && input.confirmedGoalsCount > 0 && input.scorerFactsCount === 0) {
     reasons.push('Confirmed results exist, but no scorer facts are available. Provider may not supply scorer data or scorer sync failed.');
+  }
+  if (input.confirmedResultsCount > 0 && input.scorerFactsGoalsCount > input.confirmedGoalsCount) {
+    reasons.push('Scorer facts exceed confirmed match goal total. Scorer sync may be duplicating or assigning team goals per player.');
+  }
+  if (input.topScorerNameAnomaliesCount > 0) {
+    reasons.push('Stored top scorer standings still contain unnormalized scorer names and need a rebuild.');
+  }
+  if (input.scorerFactsCount > 0 && input.topScorerRowsCount > 0 && input.topScorerGoalsCount !== input.scorerFactsGoalsCount) {
+    reasons.push('Stored top scorer standings are out of sync with scorer facts.');
   }
   if (input.scorerFactsCount > 0 && input.topScorerCacheRowsCount === 0) {
     reasons.push('Scorer facts exist, but stored top scorer standings are empty.');
