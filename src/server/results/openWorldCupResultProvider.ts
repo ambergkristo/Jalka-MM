@@ -16,6 +16,7 @@ interface OpenWorldCupGameResponse {
   home_team_id?: number | string;
   away_team_id?: number | string;
   finished?: boolean | string | null;
+  time_elapsed?: number | string | null;
   type?: string;
   status?: string;
   state?: string;
@@ -53,12 +54,14 @@ interface OpenWorldCupFixtureLookup {
 }
 
 const OPEN_WORLDCUP_CANDIDATE_FILE = join(process.cwd(), 'imports', 'open-worldcup-fixtures-2026.candidate.json');
+const OPEN_WORLDCUP_GAMES_CACHE_TTL_MS = 30_000;
 const DEFAULT_FIXTURE_LOOKUP = loadFixtureLookup();
 
 export class OpenWorldCupResultProvider implements ResultProvider {
   readonly name = 'open-worldcup-result-provider';
   readonly mode = 'live' as const;
   private gamesCachePromise?: Promise<OpenWorldCupGameResponse[]>;
+  private gamesCacheExpiresAt = 0;
 
   constructor(
     private readonly config: ProviderSpecificConfig,
@@ -78,7 +81,7 @@ export class OpenWorldCupResultProvider implements ResultProvider {
         );
       }
 
-      const game = await this.fetchGame(providerFixtureId);
+      const game = await this.fetchGame(providerFixtureId, now);
       if (!game) {
         return warningUpdate(match, now, this.name, `Open World Cup game ${providerFixtureId} response did not include match data.`);
       }
@@ -112,15 +115,22 @@ export class OpenWorldCupResultProvider implements ResultProvider {
     }
   }
 
-  private async fetchGame(gameId: string): Promise<OpenWorldCupGameResponse | undefined> {
+  private async fetchGame(gameId: string, now: Date): Promise<OpenWorldCupGameResponse | undefined> {
     if (!this.config.apiBaseUrl) throw new Error('OPEN_WORLDCUP_API_BASE_URL is required for open-worldcup provider.');
 
-    const games = await this.fetchGames();
+    const games = await this.fetchGames(now);
     return games.find((game) => String(game.id ?? '') === gameId);
   }
 
-  private async fetchGames(): Promise<OpenWorldCupGameResponse[]> {
-    if (!this.gamesCachePromise) this.gamesCachePromise = this.fetchGamesOnce();
+  private async fetchGames(now: Date): Promise<OpenWorldCupGameResponse[]> {
+    if (!this.gamesCachePromise || now.getTime() >= this.gamesCacheExpiresAt) {
+      this.gamesCacheExpiresAt = now.getTime() + OPEN_WORLDCUP_GAMES_CACHE_TTL_MS;
+      this.gamesCachePromise = this.fetchGamesOnce().catch((error) => {
+        this.gamesCachePromise = undefined;
+        this.gamesCacheExpiresAt = 0;
+        throw error;
+      });
+    }
     return this.gamesCachePromise;
   }
 
@@ -181,10 +191,15 @@ export function normalizeOpenWorldCupGame(game: OpenWorldCupGameResponse): {
 }
 
 function normalizeStatus(game: OpenWorldCupGameResponse): string {
-  const raw = String(game.status ?? game.state ?? game.type ?? game.finished ?? 'scheduled');
-  if (isTruthyFinished(game.finished, raw)) return 'FINISHED';
-  if (raw.toUpperCase().includes('LIVE')) return 'LIVE';
-  if (['SCHEDULED', 'TIMED', 'NOT_STARTED', 'NS'].includes(raw.toUpperCase())) return 'SCHEDULED';
+  const status = stringValue(game.status ?? game.state);
+  const elapsed = stringValue(game.time_elapsed);
+  const type = stringValue(game.type);
+  const finished = stringValue(game.finished);
+  const raw = status ?? elapsed ?? type ?? finished ?? 'scheduled';
+  if (isTruthyFinished(game.finished, raw) || isFinishedToken(status) || isFinishedToken(elapsed)) return 'FINISHED';
+  if (isHalfTimeToken(status) || isHalfTimeToken(elapsed)) return 'HT';
+  if (isLiveToken(status) || isLiveToken(elapsed)) return 'LIVE';
+  if (isScheduledToken(status) || isScheduledToken(elapsed) || isScheduledToken(raw)) return 'SCHEDULED';
   if (raw.toUpperCase().includes('FINISH')) return 'FINISHED';
   if (raw.toUpperCase().includes('PAUSE') || raw.toUpperCase().includes('HT')) return 'HT';
   return raw.toUpperCase();
@@ -194,6 +209,38 @@ function isTruthyFinished(finished: OpenWorldCupGameResponse['finished'], raw: s
   if (finished === true) return true;
   if (typeof finished === 'string' && ['TRUE', '1', 'YES', 'Y'].includes(finished.trim().toUpperCase())) return true;
   return raw.toUpperCase() === 'TRUE';
+}
+
+function isFinishedToken(value?: string): boolean {
+  if (!value) return false;
+  return ['FINISHED', 'FINISH', 'FULL_TIME', 'FT', 'TRUE'].includes(normalizeToken(value));
+}
+
+function isHalfTimeToken(value?: string): boolean {
+  if (!value) return false;
+  const token = normalizeToken(value);
+  return token === 'HT' || token === 'HALF_TIME' || token === 'HALFTIME';
+}
+
+function isLiveToken(value?: string): boolean {
+  if (!value) return false;
+  const token = normalizeToken(value);
+  if (['LIVE', 'IN_PLAY', 'FIRST_HALF', 'SECOND_HALF', '1H', '2H'].includes(token)) return true;
+  return /^\d{1,3}(?:\+\d+)?$/.test(token);
+}
+
+function isScheduledToken(value?: string): boolean {
+  if (!value) return false;
+  return ['SCHEDULED', 'TIMED', 'NOT_STARTED', 'NOTSTARTED', 'NS', 'FALSE'].includes(normalizeToken(value));
+}
+
+function normalizeToken(value: string): string {
+  return value.trim().toUpperCase().replace(/['’]/g, '').replace(/[-\s]/g, '_');
+}
+
+function stringValue(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  return String(value);
 }
 
 function collectGames(payload: OpenWorldCupGamesResponse): OpenWorldCupGameResponse[] {

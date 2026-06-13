@@ -32,6 +32,24 @@ describe('Open World Cup result provider', () => {
     expect(update).toMatchObject({ status: 'FINISHED', isFinal: true, homeScore: 2, awayScore: 0 });
   });
 
+  it('treats finished time_elapsed as final when open-worldcup type remains group', async () => {
+    const game = sampleGame('group', 1, 1, false, 1, { time_elapsed: 'finished' });
+    const provider = providerFor(game);
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
+
+    expect(normalizeOpenWorldCupGame(game)).toMatchObject({ rawStatus: 'FINISHED', homeScore: 1, awayScore: 1 });
+    expect(update).toMatchObject({ status: 'FINISHED', isFinal: true, homeScore: 1, awayScore: 1 });
+  });
+
+  it('treats numeric time_elapsed as live when open-worldcup type remains group', async () => {
+    const game = sampleGame('group', 1, 0, false, 1, { time_elapsed: "90+2'" });
+    const provider = providerFor(game);
+    const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T20:10:00.000Z'));
+
+    expect(normalizeOpenWorldCupGame(game)).toMatchObject({ rawStatus: 'LIVE', homeScore: 1, awayScore: 0 });
+    expect(update).toMatchObject({ status: 'LIVE', isFinal: false, homeScore: 1, awayScore: 0 });
+  });
+
   it('parses explicit home and away scorer names from open-worldcup payloads', async () => {
     const game = sampleGame('group', 2, 1, 'TRUE', 1, {
       home_scorers: '{"D. Bobadilla 7\'(OG)","F. Balogun 31\'","F. Balogun 45\'+5\'","G. Reyna 90\'+8\'"}',
@@ -93,6 +111,46 @@ describe('Open World Cup result provider', () => {
       homeScore: 3,
       awayScore: 2
     });
+  });
+
+  it('refreshes the provider game list cache so final results can be detected without restart', async () => {
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        async text() {
+          return '';
+        },
+        async json() {
+          return { games: [sampleGame('group', 0, 0, false, 42, { time_elapsed: '45' })] };
+        }
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        async text() {
+          return '';
+        },
+        async json() {
+          return { games: [sampleGame('group', 2, 1, false, 42, { time_elapsed: 'finished' })] };
+        }
+      });
+    const provider = new OpenWorldCupResultProvider(
+      { apiBaseUrl: 'https://worldcup26.ir' },
+      fetchImpl,
+      buildOpenWorldCupFixtureLookup({
+        fixtures: [
+          { providerFixtureId: '42', matchedInternalMatchId: 1, confidence: 'high' }
+        ]
+      })
+    );
+
+    const live = await provider.fetchMatchUpdate(match, new Date('2026-06-11T20:00:00.000Z'));
+    const final = await provider.fetchMatchUpdate(match, new Date('2026-06-11T20:00:31.000Z'));
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(live).toMatchObject({ status: 'LIVE', isFinal: false, homeScore: 0, awayScore: 0 });
+    expect(final).toMatchObject({ status: 'FINISHED', isFinal: true, homeScore: 2, awayScore: 1 });
   });
 
   it('treats live provider status as non-final', async () => {

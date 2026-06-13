@@ -45,6 +45,13 @@ describe('match scheduler polling rules', () => {
     expect(plan.nextCheckAt).toBe('2026-06-15T18:01:00.000Z');
   });
 
+  it('keeps checking every minute beyond the fifteen-minute post-match update target', () => {
+    const plan = planMatchUpdate(match({ kickoffUtc: '2026-06-15T15:40:00.000Z' }), now);
+    expect(plan.shouldCheckNow).toBe(true);
+    expect(plan.reason).toBe('stale-scheduled-after-expected-full-time');
+    expect(plan.nextCheckAt).toBe('2026-06-15T18:01:00.000Z');
+  });
+
   it('checks live and extra-time matches every two minutes', () => {
     expect(planMatchUpdate(match({ status: 'LIVE' }), now).nextCheckAt).toBe('2026-06-15T18:02:00.000Z');
     expect(planMatchUpdate(match({ status: 'ET' }), now).nextCheckAt).toBe('2026-06-15T18:02:00.000Z');
