@@ -232,6 +232,35 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 
+  it('updates leaderboard entries and prunes stale rows without duplicate inserts', async () => {
+    await withRepository(async ({ db, repository }) => {
+      const metadata = {
+        recalculatedAt: '2026-06-15T18:00:00.000Z',
+        playersProcessed: 2,
+        matchesProcessed: 1,
+        changedEntries: 2,
+        warnings: [],
+        entries: []
+      };
+      const staleEntries = [
+        leaderboardEntry('kristo-amberg', 1, 6),
+        leaderboardEntry('old-player', 2, 2)
+      ];
+      const repairedEntries = [
+        leaderboardEntry('kristo-amberg', 1, 8)
+      ];
+
+      await repository.replaceLeaderboard(staleEntries, { ...metadata, entries: staleEntries });
+      await repository.replaceLeaderboard(repairedEntries, { ...metadata, entries: repairedEntries });
+
+      const rows = await repository.getLeaderboard();
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0]?.playerId, 'kristo-amberg');
+      assert.equal(rows[0]?.points, 8);
+      assert.equal(Number((await db.one('SELECT COUNT(*) AS count FROM leaderboard_entries'))?.count), 1);
+    });
+  });
+
   it('result agent persists final results and rebuilt leaderboard without duplicate rows', async () => {
     await withRepository(async ({ db, repository }) => {
       await seedMatch(db, 4);
@@ -392,6 +421,24 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 });
+
+function leaderboardEntry(playerId: string, rank: number, points: number) {
+  return {
+    playerId,
+    rank,
+    points,
+    exactScores: points >= 6 ? 1 : 0,
+    correctResults: points > 0 ? 1 : 0,
+    hitRate: points > 0 ? 1 : 0,
+    matchesScored: 1,
+    matchPoints: points,
+    groupBonusPoints: 0,
+    playoffBonusPoints: 0,
+    topScorerBonusPoints: 0,
+    totalPoints: points,
+    lastUpdatedAt: '2026-06-15T18:00:00.000Z'
+  };
+}
 
 async function withRepository(callback: (input: { db: QueryableDatabase; repository: DatabaseResultRepository }) => Promise<void>): Promise<void> {
   const db = createDatabase({

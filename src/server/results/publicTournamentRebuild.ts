@@ -98,32 +98,61 @@ async function readLeaderboardEntries(db: QueryableDatabase): Promise<Leaderboar
 
 async function writeLeaderboardEntries(db: QueryableDatabase, entries: LeaderboardEntry[]): Promise<void> {
   await db.transaction(async (tx) => {
-    await tx.run('DELETE FROM leaderboard_entries');
     for (const entry of entries) {
-      await tx.run(
-        `INSERT INTO leaderboard_entries (
-          player_id, rank, points, exact_scores, correct_results, hit_rate, matches_scored, match_points,
-          group_bonus_points, playoff_bonus_points, top_scorer_bonus_points, total_points, previous_rank, last_updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          entry.playerId,
-          entry.rank,
-          entry.points,
-          entry.exactScores,
-          entry.correctResults,
-          entry.hitRate,
-          entry.matchesScored ?? 0,
-          entry.matchPoints ?? entry.points,
-          entry.groupBonusPoints ?? 0,
-          entry.playoffBonusPoints ?? 0,
-          entry.topScorerBonusPoints ?? 0,
-          entry.totalPoints ?? entry.points,
-          entry.previousRank ?? null,
-          entry.lastUpdatedAt
-        ]
-      );
+      await upsertLeaderboardEntry(tx, entry);
     }
+    await deleteLeaderboardRowsNotIn(tx, entries.map((entry) => entry.playerId));
   });
+}
+
+async function upsertLeaderboardEntry(db: QueryableDatabase, entry: LeaderboardEntry): Promise<void> {
+  const columns = [
+    'player_id',
+    'rank',
+    'points',
+    'exact_scores',
+    'correct_results',
+    'hit_rate',
+    'matches_scored',
+    'match_points',
+    'group_bonus_points',
+    'playoff_bonus_points',
+    'top_scorer_bonus_points',
+    'total_points',
+    'previous_rank',
+    'last_updated_at'
+  ];
+  const values = [
+    entry.playerId,
+    entry.rank,
+    entry.points,
+    entry.exactScores,
+    entry.correctResults,
+    entry.hitRate,
+    entry.matchesScored ?? 0,
+    entry.matchPoints ?? entry.points,
+    entry.groupBonusPoints ?? 0,
+    entry.playoffBonusPoints ?? 0,
+    entry.topScorerBonusPoints ?? 0,
+    entry.totalPoints ?? entry.points,
+    entry.previousRank ?? null,
+    entry.lastUpdatedAt
+  ];
+  if (db.provider === 'postgres') {
+    const updateColumns = columns.filter((column) => column !== 'player_id');
+    await db.run(`INSERT INTO leaderboard_entries (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})
+      ON CONFLICT (player_id) DO UPDATE SET ${updateColumns.map((column) => `${column} = EXCLUDED.${column}`).join(', ')}`, values);
+  } else {
+    await db.run(`INSERT OR REPLACE INTO leaderboard_entries (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`, values);
+  }
+}
+
+async function deleteLeaderboardRowsNotIn(db: QueryableDatabase, playerIds: string[]): Promise<void> {
+  if (playerIds.length === 0) {
+    await db.run('DELETE FROM leaderboard_entries');
+    return;
+  }
+  await db.run(`DELETE FROM leaderboard_entries WHERE player_id NOT IN (${playerIds.map(() => '?').join(', ')})`, playerIds);
 }
 
 async function writeLeaderboardMetadata(db: QueryableDatabase, metadata: LeaderboardRebuildResult): Promise<void> {

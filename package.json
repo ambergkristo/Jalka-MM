@@ -21,6 +21,7 @@
     "api-football:discover": "node --run build:server && node dist/tools/discoverApiFootball.js",
     "open-worldcup:discover": "node --run build:server && node dist/tools/discoverOpenWorldCup.js",
     "open-worldcup:dry-run": "node --run build:server && node dist/tools/openWorldCupDryRun.js",
+    "audit:leaderboard": "node --run build:server && node dist/tools/auditLeaderboard.js",
     "simulate:reset": "node --run build:server && node dist/tools/simulateReset.js",
     "simulate:matchday1": "node --run build:server && node dist/tools/simulateMatchday1.js",
     "simulate:matchday1:disagreement": "node --run build:server && node dist/tools/simulateMatchday1.js --scenario=disagreement",

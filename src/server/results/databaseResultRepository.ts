@@ -279,13 +279,26 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
   async replaceLeaderboard(entries: LeaderboardEntry[], metadata: LeaderboardRebuildResult): Promise<void> {
     await this.migrate();
     await this.db.transaction(async (tx) => {
-      await tx.run('DELETE FROM leaderboard_entries');
       for (const entry of entries) {
-        await tx.run(
-          `INSERT INTO leaderboard_entries (
-            player_id, rank, points, exact_scores, correct_results, hit_rate, matches_scored, match_points,
-            group_bonus_points, playoff_bonus_points, top_scorer_bonus_points, total_points, previous_rank, last_updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        await upsert(
+          tx,
+          'leaderboard_entries',
+          [
+            'player_id',
+            'rank',
+            'points',
+            'exact_scores',
+            'correct_results',
+            'hit_rate',
+            'matches_scored',
+            'match_points',
+            'group_bonus_points',
+            'playoff_bonus_points',
+            'top_scorer_bonus_points',
+            'total_points',
+            'previous_rank',
+            'last_updated_at'
+          ],
           [
             entry.playerId,
             entry.rank,
@@ -301,9 +314,11 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
             entry.totalPoints ?? entry.points,
             entry.previousRank ?? null,
             entry.lastUpdatedAt
-          ]
+          ],
+          ['player_id']
         );
       }
+      await deleteLeaderboardRowsNotIn(tx, entries.map((entry) => entry.playerId));
       await upsert(
         tx,
         'leaderboard_metadata',
@@ -331,6 +346,14 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
     const refreshed = await rebuildPublicTournamentState(this.db, new Date(timestamp));
     return refreshed.leaderboardRebuild;
   }
+}
+
+async function deleteLeaderboardRowsNotIn(db: QueryableDatabase, playerIds: string[]): Promise<void> {
+  if (playerIds.length === 0) {
+    await db.run('DELETE FROM leaderboard_entries');
+    return;
+  }
+  await db.run(`DELETE FROM leaderboard_entries WHERE player_id NOT IN (${playerIds.map(() => '?').join(', ')})`, playerIds);
 }
 
 async function upsert(db: QueryableDatabase, table: string, columns: string[], values: QueryValue[], conflictColumns: string[]): Promise<void> {
