@@ -135,6 +135,9 @@ describe('public dashboard pages', () => {
     expect(leaderboard).toContain('Leia mängija');
     expect(leaderboard).toContain('109 mängijat');
     expect(leaderboard).toContain('0%');
+    expect(landing).toContain('Mängijad');
+    expect(landing).toContain('Väravalööjad');
+    expect(landing).toContain('Maakonnad');
     expect(tournament).toContain('Alagrupitabelid');
     expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Väravalööjate info ei ole veel saadaval.');
@@ -186,6 +189,8 @@ describe('public dashboard pages', () => {
     expect(landing).toContain('Lõuna-Aafrika');
     expect(landing).toContain('Lõuna-Korea');
     expect(landing).toContain('Tšehhi');
+    expect(landing).toContain('Kylian Mbappe');
+    expect(landing).toContain('Saue');
     expect(results).toContain('Mehhiko');
     expect(results).toContain('Lõuna-Aafrika');
     expect(results).toContain('Lõuna-Korea');

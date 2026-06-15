@@ -599,6 +599,42 @@ main {
   gap: 8px;
 }
 
+.leaderboard-preview-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.leaderboard-preview-panel {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .03);
+}
+
+.leaderboard-preview-panel-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.leaderboard-preview-panel-title span {
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.leaderboard-preview-panel-title strong {
+  color: var(--gold);
+  font-size: .82rem;
+  font-weight: 950;
+}
+
 .leaderboard-preview-row {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) auto;
@@ -631,6 +667,18 @@ main {
   min-width: 0;
   overflow-wrap: anywhere;
   font-weight: 850;
+}
+
+.leaderboard-preview-row span small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.leaderboard-preview-row.compact {
+  min-height: 50px;
 }
 
 .leaderboard-preview-row strong {
@@ -2457,6 +2505,9 @@ td a {
   .leaderboard-row > span:nth-last-child(-n + 2) {
     color: var(--white);
   }
+  .leaderboard-preview-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
   .player-summary-card {
     grid-template-columns: minmax(0, 1fr) auto;
   }
@@ -2515,6 +2566,9 @@ td a {
   .match-card-grid,
   .result-card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .leaderboard-preview-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr) minmax(0, .9fr);
   }
   .knockout-progression {
     grid-template-columns: repeat(5, minmax(0, 1fr));

@@ -13,6 +13,8 @@ export function LandingDashboard() {
   const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 3);
   const latestResults = tournamentState.latestResults;
   const leaderboardPreview = tournamentState.leaderboardRows.slice(0, 5);
+  const topScorersPreview = tournamentState.topScorers.slice(0, 3);
+  const countyLeaderboardPreview = tournamentState.countyLeaderboard.slice(0, 3);
 
   return (
     <div className="landing-dashboard">
@@ -57,7 +59,7 @@ export function LandingDashboard() {
         )}
       </Card>
 
-      <LeaderboardPreview rows={leaderboardPreview} />
+      <LeaderboardPreview rows={leaderboardPreview} topScorers={topScorersPreview} countyRows={countyLeaderboardPreview} />
 
       <Card>
         <div className="section-title-row">
