@@ -136,6 +136,7 @@ describe('public dashboard pages', () => {
     expect(leaderboard).toContain('109 mängijat');
     expect(leaderboard).toContain('0%');
     expect(tournament).toContain('Alagrupitabelid');
+    expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Väravalööjate info ei ole veel saadaval.');
     expect(player).toContain('Kristo Amberg');
     expect(player).not.toContain('@');
@@ -194,5 +195,7 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Mehhiko');
     expect(tournament).toContain('Lõuna-Aafrika');
     expect(tournament).toContain('Väravalööjad');
+    expect(tournament).toContain('Maakondade edetabel');
+    expect(tournament).toContain('Punkte');
   });
 });

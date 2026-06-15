@@ -206,6 +206,28 @@ describe('public tournament state', () => {
     expect(state.heroMetrics.map((metric) => metric.value)).toContain('16 / 104');
   });
 
+  it('builds county leaderboard from the canonical public leaderboard rows', () => {
+    const snapshot = createSnapshot({
+      leaderboard: [
+        leaderboardRow({ playerId: 'kristo-amberg', points: 12, totalPoints: 12 }),
+        leaderboardRow({ playerId: 'vallo-poldma', points: 6, totalPoints: 6 }),
+        leaderboardRow({ playerId: 'henri-kotsar', points: 4, totalPoints: 4 })
+      ]
+    });
+
+    const state = buildPublicTournamentState(snapshot, new Date('2026-06-12T12:00:00.000Z'));
+
+    expect(state.countyLeaderboard.length).toBeGreaterThan(0);
+    expect(state.countyLeaderboard[0]).toMatchObject({
+      county: 'Saue',
+      totalPoints: 12
+    });
+    expect(state.countyLeaderboard.find((row) => row.county === 'Rae')).toMatchObject({
+      totalPoints: 10,
+      playerCount: 27
+    });
+  });
+
   it('fills partial leaderboard snapshots to all 109 players', () => {
     const partialSnapshot = createSnapshot({
       leaderboard: predictionRepository.getLeaderboard().slice(0, 24)

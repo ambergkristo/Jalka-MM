@@ -4,6 +4,7 @@ import { getPublicMatchSection, type MatchSection } from '../data/publicDashboar
 import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../data/publicTournamentFallback.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
+import { buildCountyLeaderboard, type CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { type LeaderboardRowView } from './predictionViewModels.js';
 
@@ -32,6 +33,7 @@ export interface PublicDashboardSnapshotLike {
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
   leaderboard: PublicLeaderboardEntry[];
+  countyLeaderboard?: CountyLeaderboardRow[];
 }
 
 export interface PublicTournamentState {
@@ -51,6 +53,7 @@ export interface PublicTournamentState {
   tournamentSummary: TournamentSummaryMetric[];
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+  countyLeaderboard: CountyLeaderboardRow[];
 }
 
 const totalMatches = (matchesJson as { id: number }[]).length;
@@ -73,6 +76,10 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
     };
   });
   const topScorers = snapshot?.topScorers ?? [];
+  const countyLeaderboard = snapshot?.countyLeaderboard ?? buildCountyLeaderboard({
+    players: predictionRepository.getPlayers(),
+    leaderboardEntries: snapshot?.leaderboard ?? []
+  });
   const playoffBracket = snapshot?.playoffBracket ?? initialPlayoffBracket;
   const tournamentSummary = snapshot?.tournamentSummary ?? [
     { label: 'Turniiri faas', value: 'Alagrupid', detail: 'A-L alagruppide teine voor', tone: 'gold' },
@@ -103,6 +110,7 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
     groupStandings,
     groupLeaders,
     topScorers,
+    countyLeaderboard,
     playoffBracket,
     tournamentSummary,
     tournamentStats,

@@ -1958,6 +1958,127 @@ td a {
   color: var(--white);
 }
 
+.county-leaderboard-table {
+  display: grid;
+  gap: 7px;
+}
+
+.county-leaderboard-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 74px 74px;
+  gap: 8px;
+  align-items: center;
+  min-height: 58px;
+  padding: 9px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+  font-size: .8rem;
+  font-weight: 850;
+}
+
+.county-leaderboard-head {
+  min-height: 28px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .68rem;
+  text-transform: uppercase;
+}
+
+.county-leaderboard-row.rank-1 {
+  border: 1px solid rgba(212, 175, 55, .40);
+  background: linear-gradient(90deg, rgba(212, 175, 55, .16), rgba(255, 255, 255, .04));
+}
+
+.county-leaderboard-row.rank-2,
+.county-leaderboard-row.rank-3 {
+  border: 1px solid rgba(56, 189, 248, .18);
+}
+
+.county-leaderboard-row > b {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, .16);
+  color: var(--gold);
+}
+
+.county-leaderboard-county {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 9px;
+}
+
+.county-crest {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 38px;
+  border-radius: 12px 12px 15px 15px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  background: linear-gradient(145deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .04));
+  color: var(--white);
+  font-size: .7rem;
+  font-weight: 950;
+  letter-spacing: .03em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+.county-crest img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.county-crest.tone-gold {
+  background: linear-gradient(145deg, rgba(212, 175, 55, .36), rgba(212, 175, 55, .08));
+  color: #fff4b7;
+}
+
+.county-crest.tone-blue {
+  background: linear-gradient(145deg, rgba(56, 189, 248, .30), rgba(56, 189, 248, .07));
+  color: #d9f6ff;
+}
+
+.county-crest.tone-green {
+  background: linear-gradient(145deg, rgba(34, 197, 94, .28), rgba(34, 197, 94, .07));
+  color: #d8ffe4;
+}
+
+.county-crest.tone-red {
+  background: linear-gradient(145deg, rgba(248, 113, 113, .28), rgba(248, 113, 113, .07));
+  color: #ffe1e1;
+}
+
+.county-leaderboard-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.county-leaderboard-copy strong {
+  min-width: 0;
+  color: var(--white);
+  overflow-wrap: anywhere;
+}
+
+.county-leaderboard-copy small {
+  min-width: 0;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.county-leaderboard-points {
+  color: var(--gold);
+  font-size: 1rem;
+  text-align: right;
+}
+
 .operator-page {
   display: grid;
   gap: 12px;

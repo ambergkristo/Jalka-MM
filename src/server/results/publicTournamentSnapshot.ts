@@ -4,6 +4,8 @@ import type { ResultUpdate } from './resultTypes.js';
 import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/publicBracket.js';
 import { getCurrentLeaderboard } from './resultAgentRuntime.js';
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
+import { buildCountyLeaderboard, type CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
+import { predictionRepository } from '../../domain/predictionRepository.js';
 import { touchPublicDashboardRead } from './publicStateHealth.js';
 import { backfillTopScorersFromConfirmedResults } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
@@ -23,6 +25,7 @@ export interface PublicDashboardSnapshot {
   tournamentStats: Array<{ label: string; value: string; detail: string }>;
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
   leaderboard: LeaderboardEntry[];
+  countyLeaderboard: CountyLeaderboardRow[];
 }
 
 export interface PublicMatchCard {
@@ -99,6 +102,10 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   const groupStandings = await getPublicGroupStandings(db);
   const topScorers = await getPublicTopScorers(db);
   const leaderboard = await getCurrentLeaderboard();
+  const countyLeaderboard = buildCountyLeaderboard({
+    players: predictionRepository.getPlayers(),
+    leaderboardEntries: leaderboard.entries
+  });
   const totalMatches = Number((await db.one('SELECT COUNT(*) AS count FROM matches'))?.count ?? 104);
   const completed = resultSummary.completedMatchesCount;
   const goals = resultSummary.totalGoals;
@@ -124,6 +131,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
     topScorers,
     playoffBracket: buildPublicPlayoffBracketTree(),
     leaderboard: leaderboard.entries,
+    countyLeaderboard,
     tournamentSummary: [
       { label: 'Turniiri faas', value: 'Alagrupid', detail: completed > 0 ? 'Turniir on alanud' : 'Avamängu ootel', tone: 'gold' },
       { label: 'Mängitud', value: `${completed} / ${totalMatches}`, detail: `${Math.max(totalMatches - completed, 0)} kohtumist on veel ees`, tone: 'blue' },
@@ -166,6 +174,7 @@ export async function getPublicTournamentPayload(db: QueryableDatabase): Promise
   tournamentSummary: PublicDashboardSnapshot['tournamentSummary'];
   tournamentStats: PublicDashboardSnapshot['tournamentStats'];
   tournamentProgressByStage: PublicDashboardSnapshot['tournamentProgressByStage'];
+  countyLeaderboard: CountyLeaderboardRow[];
 }> {
   const snapshot = await getPublicTournamentSnapshot(db);
   return {
@@ -174,7 +183,8 @@ export async function getPublicTournamentPayload(db: QueryableDatabase): Promise
     playoffBracket: snapshot.playoffBracket,
     tournamentSummary: snapshot.tournamentSummary,
     tournamentStats: snapshot.tournamentStats,
-    tournamentProgressByStage: snapshot.tournamentProgressByStage
+    tournamentProgressByStage: snapshot.tournamentProgressByStage,
+    countyLeaderboard: snapshot.countyLeaderboard
   };
 }
 

@@ -34,6 +34,8 @@ describe('prediction seed validation', () => {
     expect(loadResult.data.matchPredictions).toHaveLength(7848);
     expect(loadResult.data.leaderboard).toHaveLength(109);
     expect(loadResult.data.players.map((player) => player.id)).toContain('kristo-amberg');
+    expect(loadResult.data.players.every((player) => typeof player.location === 'string' && player.location.length > 0)).toBe(true);
+    expect(loadResult.data.players.map((player) => player.location)).toContain('Saaremaa');
   });
 
   it('does not expose email addresses in public player seeds', () => {

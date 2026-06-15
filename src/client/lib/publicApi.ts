@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
+import type { CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
 import { buildLeaderboardRows, buildPublicTournamentState, selectLiveMatchSection, selectPublicMatchSection, type PublicDashboardSnapshotLike, type PublicTournamentState } from './publicTournamentState.js';
 import type { LeaderboardRowView } from './predictionViewModels.js';
 
@@ -22,6 +23,7 @@ interface PublicDashboardApiResponse {
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
   leaderboard: PublicDashboardSnapshotLike['leaderboard'];
+  countyLeaderboard?: CountyLeaderboardRow[];
 }
 
 export function usePublicDashboardSnapshot(refreshIntervalMs = 60_000): PublicDashboardSnapshot | undefined {

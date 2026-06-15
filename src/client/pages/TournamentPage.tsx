@@ -1,4 +1,5 @@
 import { Card } from '../components/Card.js';
+import { CountyLeaderboardTable } from '../components/CountyLeaderboardTable.js';
 import { GroupStandingsGrid } from '../components/GroupStandingsGrid.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { TopScorersTable } from '../components/TopScorersTable.js';
@@ -34,6 +35,10 @@ export function TournamentPage() {
           <TournamentStatsCards stats={tournamentState.tournamentStats} />
         </Card>
       </section>
+
+      <Card title="Maakondade edetabel" eyebrow="Piirkondade punktid" className="tournament-section">
+        <CountyLeaderboardTable rows={tournamentState.countyLeaderboard} />
+      </Card>
     </section>
   );
 }
