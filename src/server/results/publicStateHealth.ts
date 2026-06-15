@@ -6,6 +6,7 @@ import { getCurrentLeaderboard, getResultsAgentStatus, runResultsAgentCycle } fr
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
+import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import type { ResultAgentStatus } from './resultTypes.js';
 
 const METADATA_ID = 'public-state';
@@ -436,7 +437,7 @@ async function countConfirmedResults(db: QueryableDatabase): Promise<number> {
   return Number((await db.one(`
     SELECT COUNT(*) AS count
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `))?.count ?? 0);
 }
 
@@ -473,7 +474,7 @@ async function readLastResultSyncAt(db: QueryableDatabase): Promise<string | und
   const confirmed = await db.one(`
     SELECT MAX(confirmed_at) AS confirmed_at
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `);
   return confirmed?.confirmed_at ? String(confirmed.confirmed_at) : undefined;
 }
@@ -490,7 +491,7 @@ async function countConfirmedGoals(db: QueryableDatabase): Promise<number> {
   const row = await db.one(`
     SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `);
   return Number(row?.total ?? 0);
 }
@@ -524,7 +525,7 @@ async function detectProviderScorerData(db: QueryableDatabase): Promise<'yes' | 
   const rows = await db.all(`
     SELECT provider_results_json
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1 AND provider_results_json IS NOT NULL
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND provider_results_json IS NOT NULL
   `);
   if (rows.length === 0) return 'unknown';
   for (const row of rows) {

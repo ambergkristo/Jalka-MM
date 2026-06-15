@@ -8,6 +8,7 @@ import { runResultUpdateCycle } from './resultAgent.js';
 import type { ResultAgentRunSummary } from './resultTypes.js';
 import { MATCHDAY1_SIMULATION_RESULTS } from './simulationFixtures.js';
 import { SimulationResultProvider } from './simulationResultProvider.js';
+import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 
 export const MATCHDAY1_PROVISIONAL_AT = new Date('2026-06-12T21:00:00.000Z');
 export const MATCHDAY1_CONFIRM_AT = new Date('2026-06-12T21:11:00.000Z');
@@ -61,7 +62,7 @@ export async function runMatchday1Simulation(db: QueryableDatabase): Promise<Mat
     confirmingRun,
     confirmedResultsCount: (await repository.getFinalizedResults()).length,
     leaderboardRows: (await repository.getLeaderboard()).length,
-    latestResultsCount: Number((await db.one("SELECT COUNT(*) AS count FROM match_results WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1"))?.count ?? 0),
+    latestResultsCount: Number((await db.one(`SELECT COUNT(*) AS count FROM match_results WHERE ${CONFIRMED_FINAL_RESULT_SQL}`))?.count ?? 0),
     topScorersCount: Number((await db.one('SELECT COUNT(*) AS count FROM top_scorer_standings'))?.count ?? 0)
   };
 }

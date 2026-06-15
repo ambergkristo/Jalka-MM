@@ -9,6 +9,7 @@ import { predictionRepository } from '../../domain/predictionRepository.js';
 import { touchPublicDashboardRead } from './publicStateHealth.js';
 import { backfillTopScorersFromConfirmedResults } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
+import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 
 export interface PublicDashboardSnapshot {
   completedMatchesCount: number;
@@ -249,7 +250,7 @@ async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicR
     JOIN matches m ON m.id = r.match_id
     LEFT JOIN teams home ON home.id = m.home_team_id
     LEFT JOIN teams away ON away.id = m.away_team_id
-    WHERE r.public_status = 'CONFIRMED_FINAL' AND r.is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
     ORDER BY COALESCE(r.confirmed_at, r.last_checked_at) DESC, m.id DESC
     LIMIT 8
   `);
@@ -277,7 +278,7 @@ async function getConfirmedResultSummary(db: QueryableDatabase): Promise<{ compl
       COUNT(*) AS completed_matches_count,
       COALESCE(SUM(COALESCE(r.confirmed_home_score, r.home_score, 0) + COALESCE(r.confirmed_away_score, r.away_score, 0)), 0) AS total_goals
     FROM match_results r
-    WHERE r.public_status = 'CONFIRMED_FINAL' AND r.is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `);
   return {
     completedMatchesCount: Number(row?.completed_matches_count ?? 0),
@@ -326,8 +327,7 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
     const kickoffAt = String(row.kickoff_at);
     if (Number.isNaN(Date.parse(kickoffAt))) return [];
     const publicStatus = String(row.public_status ?? 'SCHEDULED');
-    const isFinal = Number(row.is_final ?? 0) === 1 && publicStatus === 'CONFIRMED_FINAL';
-    if (isFinal) return [];
+    if (isConfirmedFinalResult(row)) return [];
     const kickoffMs = Date.parse(kickoffAt);
     const state = kickoffMs <= now.getTime() ? 'live' : sameTallinnDate(kickoffAt, now) ? 'today' : 'upcoming';
     const score = state === 'live'
@@ -414,7 +414,7 @@ async function buildGroupStandingsRows(db: QueryableDatabase): Promise<PublicGro
     SELECT m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
-    WHERE r.public_status = 'CONFIRMED_FINAL' AND r.is_final = 1 AND m.stage = 'GROUP'
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
   `);
 
   for (const result of results) {
@@ -471,7 +471,7 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
     const confirmedGoalsCount = Number((await db.one(`
       SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
       FROM match_results
-      WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+      WHERE ${CONFIRMED_FINAL_RESULT_SQL}
     `))?.total ?? 0);
     const topScorerGoalsCount = cachedRows.reduce((sum, row) => sum + Number(row.goals ?? 0), 0);
     const hasNameAnomaly = cachedRows.some((row) => normalizeScorerName(String(row.player_name ?? '')) !== String(row.player_name ?? '').trim());
@@ -522,7 +522,7 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
     const confirmedResultsCount = Number((await db.one(`
       SELECT COUNT(*) AS count
       FROM match_results
-      WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+      WHERE ${CONFIRMED_FINAL_RESULT_SQL}
     `))?.count ?? 0);
     if (confirmedResultsCount > 0) {
       try {

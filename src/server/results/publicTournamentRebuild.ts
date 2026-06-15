@@ -4,6 +4,7 @@ import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } fro
 import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
+import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 
 export interface PublicTournamentStateRefreshResult {
   leaderboardRebuild?: LeaderboardRebuildResult;
@@ -57,7 +58,7 @@ async function readFinalizedResults(db: QueryableDatabase, nowIso: string): Prom
   const rows = await db.all(`
     SELECT match_id, confirmed_home_score, confirmed_away_score, is_final
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
     ORDER BY match_id
   `);
   return rows.flatMap((row) => {
@@ -205,7 +206,7 @@ async function rebuildGroupStandingsCache(db: QueryableDatabase, now: Date): Pro
     SELECT m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
-    WHERE r.public_status = 'CONFIRMED_FINAL' AND r.is_final = 1 AND m.stage = 'GROUP'
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
   `);
 
   for (const result of results) {
@@ -263,7 +264,7 @@ async function markConfirmedResultsRecalculated(db: QueryableDatabase, timestamp
   await db.run(
     `UPDATE match_results
      SET points_recalculated_at = ?, updated_at = ?
-     WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1`,
+     WHERE ${CONFIRMED_FINAL_RESULT_SQL}`,
     [timestamp, timestamp]
   );
 }

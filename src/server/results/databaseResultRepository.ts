@@ -6,6 +6,7 @@ import type { LeaderboardMetadata, LeaderboardRepository } from './leaderboardRe
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { rebuildPublicTournamentState } from './publicTournamentRebuild.js';
 import { syncConfirmedScorersForMatch } from './topScorerStandings.js';
+import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultAgentWarningDetail, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export class DatabaseResultRepository implements ResultsAgentRepository, LeaderboardRepository {
@@ -177,7 +178,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
   }
 
   async getFinalizedResults(): Promise<ResultUpdate[]> {
-    return (await this.getAllMatchResults()).filter((result) => result.isFinal && result.publicStatus === 'CONFIRMED_FINAL');
+    return (await this.getAllMatchResults()).filter((result) => result.isFinal && (result.publicStatus === 'CONFIRMED_FINAL' || (result.confirmedHomeScore !== undefined && result.confirmedAwayScore !== undefined)));
   }
 
   async getProviderResultObservations(matchId: number): Promise<ProviderResultObservation[]> {
@@ -198,7 +199,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
     const latestConfirmedResultCount = Number((await this.db.one(`
       SELECT COUNT(*) AS count
       FROM match_results
-      WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+      WHERE ${CONFIRMED_FINAL_RESULT_SQL}
     `))?.count ?? 0);
     const warnings = parseWarnings(latestRun?.warnings_json);
     const warningDetails = parseWarningDetails(latestRun?.warning_details_json);

@@ -373,6 +373,41 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 
+  it('counts completed matches even when the public status string is not the exact canonical final label', async () => {
+    await withRepository(async ({ db, repository }) => {
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [16, 'GROUP', 'B', '2026-06-12T19:00:00.000Z', null, null, 'Belgium', 'Egypt']
+      );
+
+      await repository.saveResultUpdate({
+        matchId: 16,
+        status: 'FINISHED',
+        publicStatus: 'FINISHED' as never,
+        homeScore: 1,
+        awayScore: 1,
+        confirmedHomeScore: 1,
+        confirmedAwayScore: 1,
+        confirmedAt: '2026-06-12T21:05:00.000Z',
+        confirmationSource: 'mock-result-provider',
+        confirmationConfidence: 'provider-repeat',
+        minute: 90,
+        isFinal: true,
+        lastCheckedAt: '2026-06-12T21:05:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'TRUE'
+      });
+
+      const snapshot = await getPublicTournamentSnapshot(db);
+
+      assert.equal(snapshot.latestResults.length, 1);
+      assert.equal(snapshot.completedMatchesCount, 1);
+      assert.equal(snapshot.latestResults[0]?.homeTeam, 'Belgium');
+      assert.equal(snapshot.latestResults[0]?.awayTeam, 'Egypt');
+    });
+  });
+
   it('leaderboard API response prefers persisted leaderboard rows', async () => {
     await withRepository(async ({ repository }) => {
       await repository.replaceLeaderboard(

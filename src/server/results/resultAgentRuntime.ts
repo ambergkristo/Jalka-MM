@@ -12,6 +12,7 @@ import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings, sync
 import type { ResultUpdate } from './resultTypes.js';
 import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from './leaderboardProjection.js';
 import { normalizeScorerName } from './scorerNormalization.js';
+import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -108,7 +109,7 @@ export async function repairTopScorersFromConfirmedResults(now = new Date()) {
   const confirmedGoalsCount = Number((await db.one(`
     SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `))?.total ?? 0);
   const scorerFactsCount = Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_scorers'))?.count ?? 0);
   const scorerFactsGoalsCount = Number((await db.one(`

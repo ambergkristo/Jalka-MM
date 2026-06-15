@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
+import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import type { ResultScorer } from './resultTypes.js';
 
 export async function backfillTopScorersFromConfirmedResults(db: QueryableDatabase, nowIso: string): Promise<{ repaired: boolean; reason: string; repairedMatches: number }> {
@@ -9,7 +10,7 @@ export async function backfillTopScorersFromConfirmedResults(db: QueryableDataba
   const confirmedResults = await db.all(`
     SELECT match_id, provider_results_json
     FROM match_results
-    WHERE public_status = 'CONFIRMED_FINAL' AND is_final = 1 AND provider_results_json IS NOT NULL
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND provider_results_json IS NOT NULL
     ORDER BY match_id
   `);
   if (confirmedResults.length === 0) {
