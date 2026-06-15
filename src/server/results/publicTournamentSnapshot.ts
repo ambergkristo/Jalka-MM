@@ -9,6 +9,8 @@ import { backfillTopScorersFromConfirmedResults } from './topScorerStandings.js'
 import { normalizeScorerName } from './scorerNormalization.js';
 
 export interface PublicDashboardSnapshot {
+  completedMatchesCount: number;
+  totalMatchesCount: number;
   liveMatches: PublicMatchCard[];
   todayMatches: PublicMatchCard[];
   upcomingMatches: PublicMatchCard[];
@@ -93,12 +95,13 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   const todayMatches = matches.filter((match) => match.state === 'today').map(toMatchCard);
   const upcomingMatches = matches.filter((match) => match.state === 'upcoming').map(toMatchCard);
   const latestResults = await getConfirmedLatestResults(db);
+  const resultSummary = await getConfirmedResultSummary(db);
   const groupStandings = await getPublicGroupStandings(db);
   const topScorers = await getPublicTopScorers(db);
   const leaderboard = await getCurrentLeaderboard();
-  const completed = latestResults.length;
   const totalMatches = Number((await db.one('SELECT COUNT(*) AS count FROM matches'))?.count ?? 104);
-  const goals = latestResults.reduce((sum, result) => sum + result.homeScore + result.awayScore, 0);
+  const completed = resultSummary.completedMatchesCount;
+  const goals = resultSummary.totalGoals;
   const groupLeaders = groupStandings.map((group) => {
     const leader = group.teams[0];
     return {
@@ -110,6 +113,8 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   });
 
   return {
+    completedMatchesCount: completed,
+    totalMatchesCount: totalMatches,
     liveMatches,
     todayMatches,
     upcomingMatches,
@@ -254,6 +259,20 @@ async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicR
       finishedAt: formatDateTime(String(row.confirmed_at ?? row.kickoff_at))
     };
   });
+}
+
+async function getConfirmedResultSummary(db: QueryableDatabase): Promise<{ completedMatchesCount: number; totalGoals: number }> {
+  const row = await db.one(`
+    SELECT
+      COUNT(*) AS completed_matches_count,
+      COALESCE(SUM(COALESCE(r.confirmed_home_score, r.home_score, 0) + COALESCE(r.confirmed_away_score, r.away_score, 0)), 0) AS total_goals
+    FROM match_results r
+    WHERE r.public_status = 'CONFIRMED_FINAL' AND r.is_final = 1
+  `);
+  return {
+    completedMatchesCount: Number(row?.completed_matches_count ?? 0),
+    totalGoals: Number(row?.total_goals ?? 0)
+  };
 }
 
 async function getUpcomingMatches(db: QueryableDatabase): Promise<PublicMatchCard[]> {

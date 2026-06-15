@@ -192,6 +192,20 @@ describe('public tournament state', () => {
     expect(matchSection.matches.map((match) => match.id)).toEqual(['1', '2']);
   });
 
+  it('uses canonical completed match count for the played KPI instead of latest results length', () => {
+    const snapshot = createSnapshot({
+      completedMatchesCount: 16,
+      totalMatchesCount: 104,
+      latestResults: createSnapshot().latestResults.slice(0, 1)
+    });
+
+    const state = buildPublicTournamentState(snapshot, new Date('2026-06-12T12:00:00.000Z'));
+
+    expect(state.latestResults).toHaveLength(1);
+    expect(state.playedCount).toBe(16);
+    expect(state.heroMetrics.map((metric) => metric.value)).toContain('16 / 104');
+  });
+
   it('fills partial leaderboard snapshots to all 109 players', () => {
     const partialSnapshot = createSnapshot({
       leaderboard: predictionRepository.getLeaderboard().slice(0, 24)

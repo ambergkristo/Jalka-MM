@@ -8,6 +8,8 @@ export interface PublicDashboardSnapshot extends PublicDashboardSnapshotLike {
 }
 
 interface PublicDashboardApiResponse {
+  completedMatchesCount?: number;
+  totalMatchesCount?: number;
   liveMatches: DashboardMatch[];
   todayMatches: DashboardMatch[];
   upcomingMatches: DashboardMatch[];

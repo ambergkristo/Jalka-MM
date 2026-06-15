@@ -18,6 +18,8 @@ export interface PublicLeaderboardEntry {
 }
 
 export interface PublicDashboardSnapshotLike {
+  completedMatchesCount?: number;
+  totalMatchesCount?: number;
   liveMatches: DashboardMatch[];
   todayMatches: DashboardMatch[];
   upcomingMatches: DashboardMatch[];
@@ -54,7 +56,8 @@ export interface PublicTournamentState {
 const totalMatches = (matchesJson as { id: number }[]).length;
 
 export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLike, now = new Date()): PublicTournamentState {
-  const playedCount = snapshot?.latestResults.length ?? 0;
+  const playedCount = snapshot?.completedMatchesCount ?? snapshot?.latestResults.length ?? 0;
+  const canonicalTotalMatches = snapshot?.totalMatchesCount ?? totalMatches;
   const liveMatches = snapshot?.liveMatches ?? [];
   const todayMatches = snapshot?.todayMatches ?? [];
   const upcomingMatches = snapshot?.upcomingMatches ?? getPublicMatchSection(now).matches;
@@ -90,8 +93,8 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
   return {
     snapshot,
     playedCount,
-    totalMatches,
-    heroMetrics: buildHeroMetrics(playedCount, liveMatches, todayMatches, upcomingMatches, now),
+    totalMatches: canonicalTotalMatches,
+    heroMetrics: buildHeroMetrics(playedCount, canonicalTotalMatches, liveMatches, todayMatches, upcomingMatches, now),
     liveMatches,
     todayMatches,
     latestResults,
@@ -145,6 +148,7 @@ export function buildLeaderboardRows(snapshot?: PublicDashboardSnapshotLike): Le
 
 function buildHeroMetrics(
   playedCount: number,
+  totalMatchesCount: number,
   liveMatches: DashboardMatch[],
   todayMatches: DashboardMatch[],
   upcomingMatches: DashboardMatch[],
@@ -155,8 +159,8 @@ function buildHeroMetrics(
     { label: 'Turniiri algus', value: '11.06', detail: 'Esimene mäng 11. juunil 2026' },
     {
       label: 'Mängitud',
-      value: `${playedCount} / ${totalMatches}`,
-      detail: playedCount > 0 ? `${Math.max(totalMatches - playedCount, 0)} kohtumist on veel ees` : 'Kinnitatud tulemusi veel ei ole'
+      value: `${playedCount} / ${totalMatchesCount}`,
+      detail: playedCount > 0 ? `${Math.max(totalMatchesCount - playedCount, 0)} kohtumist on veel ees` : 'Kinnitatud tulemusi veel ei ole'
     },
     {
       label: 'Järgmine',

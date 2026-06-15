@@ -302,6 +302,48 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 
+  it('public tournament snapshot completed count is not capped by latest results', async () => {
+    await withRepository(async ({ db, repository }) => {
+      for (let id = 1; id <= 104; id += 1) {
+        await db.run(
+          `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [id, 'GROUP', 'A', new Date(Date.UTC(2026, 5, 11, id % 24, 0, 0)).toISOString(), null, null, `Home ${id}`, `Away ${id}`]
+        );
+      }
+
+      const rawStatuses = ['FT', 'AET', 'PEN', 'FINISHED'];
+      for (let id = 1; id <= 16; id += 1) {
+        await repository.saveResultUpdate({
+          matchId: id,
+          status: 'FINISHED',
+          publicStatus: 'CONFIRMED_FINAL',
+          homeScore: id % 3,
+          awayScore: (id + 1) % 3,
+          confirmedHomeScore: id % 3,
+          confirmedAwayScore: (id + 1) % 3,
+          confirmedAt: new Date(Date.UTC(2026, 5, 12, id % 24, 30, 0)).toISOString(),
+          confirmationSource: 'mock-result-provider',
+          confirmationConfidence: 'provider-repeat',
+          minute: id % 4 === 2 ? 120 : 90,
+          isFinal: true,
+          lastCheckedAt: new Date(Date.UTC(2026, 5, 12, id % 24, 30, 0)).toISOString(),
+          provider: 'mock-result-provider',
+          rawProviderStatus: rawStatuses[id % rawStatuses.length]
+        });
+      }
+
+      const snapshot = await getPublicTournamentSnapshot(db);
+      const playedMetric = snapshot.tournamentSummary.find((metric) => metric.label === 'Mängitud');
+
+      assert.equal(snapshot.latestResults.length, 8);
+      assert.equal(snapshot.completedMatchesCount, 16);
+      assert.equal(snapshot.totalMatchesCount, 104);
+      assert.equal(playedMetric?.value, '16 / 104');
+      assert.equal(snapshot.tournamentProgressByStage.find((stage) => stage.stage === 'Alagrupid')?.completed, 16);
+    });
+  });
+
   it('leaderboard API response prefers persisted leaderboard rows', async () => {
     await withRepository(async ({ repository }) => {
       await repository.replaceLeaderboard(
