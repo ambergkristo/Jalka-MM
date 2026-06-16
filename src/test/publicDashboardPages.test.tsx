@@ -191,6 +191,7 @@ describe('public dashboard pages', () => {
     expect(landing).toContain('Tšehhi');
     expect(landing).toContain('Kylian Mbappe');
     expect(landing).toContain('Saue');
+    expect(landing).toContain('p / mängija');
     expect(results).toContain('Mehhiko');
     expect(results).toContain('Lõuna-Aafrika');
     expect(results).toContain('Lõuna-Korea');

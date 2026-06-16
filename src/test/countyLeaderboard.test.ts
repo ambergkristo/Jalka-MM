@@ -84,12 +84,27 @@ describe('county leaderboard', () => {
   });
 
   it('resolves local county visuals and falls back for missing crests', () => {
+    expect(resolveCountyVisual('Haapsalu')).toMatchObject({
+      county: 'Haapsalu',
+      initials: 'HA',
+      isFallback: false,
+      crestUrl: '/counties/haapsalu.svg'
+    });
+    expect(resolveCountyVisual('Tartumaa')).toMatchObject({
+      county: 'Tartumaa',
+      initials: 'TM',
+      isFallback: false,
+      crestUrl: '/counties/tartumaa.svg'
+    });
     expect(resolveCountyVisual('Saaremaa')).toMatchObject({
       county: 'Saaremaa',
       initials: 'SA',
-      isFallback: true
+      isFallback: false,
+      crestUrl: expect.stringContaining('upload.wikimedia.org')
     });
-    expect(resolveCountyVisual('Testimaa', [{ county: 'Testimaa', initials: 'TE', tone: 'blue', crestUrl: '/counties/testimaa.svg' }])).toMatchObject({
+    expect(
+      resolveCountyVisual('Testimaa', [{ county: 'Testimaa', initials: 'TE', tone: 'blue', crestUrl: '/counties/testimaa.svg' }])
+    ).toMatchObject({
       county: 'Testimaa',
       crestUrl: '/counties/testimaa.svg',
       isFallback: false

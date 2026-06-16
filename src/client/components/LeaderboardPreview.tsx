@@ -19,7 +19,9 @@ export function LeaderboardPreview({
           <p className="eyebrow">Ennustusliiga</p>
           <h2>Hetke edetabelid</h2>
         </div>
-        <a className="small-action" href="/leaderboard">Vaata kogu edetabelit</a>
+        <a className="small-action" href="/leaderboard">
+          Vaata kogu edetabelit
+        </a>
       </div>
 
       <div className="leaderboard-preview-grid">
@@ -68,7 +70,9 @@ export function LeaderboardPreview({
                   <b>{county.rank}</b>
                   <span>
                     {county.county}
-                    <small>{county.playerCount} mängijat</small>
+                    <small>
+                      {county.playerCount} mängijat · {formatCountyAverage(county.averagePoints)} p / mängija
+                    </small>
                   </span>
                   <strong>{county.totalPoints}</strong>
                 </div>
@@ -91,4 +95,8 @@ function PreviewPanel({ eyebrow, title, children }: { eyebrow: string; title: st
       {children}
     </div>
   );
+}
+
+function formatCountyAverage(value: number): string {
+  return value.toLocaleString('et-EE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
