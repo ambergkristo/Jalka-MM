@@ -10,7 +10,7 @@ import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { ResultUpdate } from './resultTypes.js';
-import { leaderboardNeedsRepair, reconcileLeaderboardEntries } from './leaderboardProjection.js';
+import { reconcileLeaderboardEntries } from './leaderboardProjection.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 
@@ -78,14 +78,9 @@ export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRe
   const persisted = await leaderboardRepository.getLeaderboard();
   const metadata = await leaderboardRepository.getLeaderboardMetadata();
   const reconciled = await reconcileLeaderboardIfPossible(leaderboardRepository, persisted);
-  const shouldRepair = Boolean(reconciled && leaderboardNeedsRepair(persisted, reconciled.entries));
-  const canonicalEntries = shouldRepair ? reconciled!.entries : persisted;
+  const canonicalEntries = reconciled?.entries ?? buildCanonicalPublicLeaderboardEntries(persisted);
   const warnings = reconciled?.warnings ?? metadata.warnings;
   const recalculatedAt = reconciled?.recalculatedAt ?? metadata.lastRebuildAt;
-
-  if (shouldRepair && reconciled) {
-    await leaderboardRepository.replaceLeaderboard(reconciled.entries, reconciled);
-  }
 
   if (persisted.length > 0 || reconciled) {
     return {

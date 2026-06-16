@@ -28,18 +28,58 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
     previousEntries,
     recalculatedAt
   });
+  const movementBaselineResults = selectMovementBaselineResults(finalizedResults);
+  const previousRanks = movementBaselineResults.length > 0 && movementBaselineResults.length < finalizedResults.length
+    ? new Map(
+      rebuildLeaderboard({
+        players: predictionRepository.getPlayers(),
+        predictions: predictionRepository.getMatchPredictions(),
+        groupPredictions: predictionRepository.getGroupPredictions(),
+        knockoutPredictions: predictionRepository.getKnockoutPredictions(),
+        awardsPredictions: predictionRepository.getAwardsPredictions(),
+        results: movementBaselineResults.flatMap((result) => {
+          if (typeof result.homeScore !== 'number' || typeof result.awayScore !== 'number') return [];
+          return [{
+            matchId: result.matchId,
+            homeScore: result.homeScore,
+            awayScore: result.awayScore,
+            isFinal: result.isFinal
+          }];
+        }),
+        previousEntries,
+        recalculatedAt
+      }).entries.map((entry) => [entry.playerId, entry.rank])
+    )
+    : new Map(previousEntries.map((entry) => [entry.playerId, entry.rank]));
+  const entries = leaderboard.entries.map((entry) => ({
+    ...entry,
+    previousRank: previousRanks.get(entry.playerId)
+  }));
   const previousByPlayer = new Map(previousEntries.map((entry) => [entry.playerId, entry]));
-  const changedEntries = leaderboard.entries.filter((entry) => {
+  const changedEntries = entries.filter((entry) => {
     const previous = previousByPlayer.get(entry.playerId);
     return !previous || previous.rank !== entry.rank || previous.points !== entry.points || previous.exactScores !== entry.exactScores || previous.correctResults !== entry.correctResults;
   }).length;
 
   return {
     recalculatedAt,
-    playersProcessed: leaderboard.entries.length,
+    playersProcessed: entries.length,
     matchesProcessed: finalizedResults.length,
     changedEntries,
-    entries: leaderboard.entries,
+    entries,
     warnings: leaderboard.warnings
   };
+}
+
+function selectMovementBaselineResults(finalizedResults: ResultUpdate[]): ResultUpdate[] {
+  const timestamps = finalizedResults
+    .map((result) => result.confirmedAt ?? result.lastCheckedAt)
+    .filter((timestamp): timestamp is string => typeof timestamp === 'string' && !Number.isNaN(Date.parse(timestamp)));
+  if (timestamps.length === 0) return [];
+
+  const latestTimestamp = Math.max(...timestamps.map((timestamp) => Date.parse(timestamp)));
+  return finalizedResults.filter((result) => {
+    const timestamp = result.confirmedAt ?? result.lastCheckedAt;
+    return typeof timestamp === 'string' && Date.parse(timestamp) < latestTimestamp;
+  });
 }

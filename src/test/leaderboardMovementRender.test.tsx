@@ -29,10 +29,12 @@ function createMovementSnapshot(): PublicDashboardSnapshotLike {
     tournamentStats: initialTournamentStats,
     tournamentProgressByStage: [],
     leaderboard: [
-      { playerId: 'kristo-amberg', rank: 1, points: 24, exactScores: 4, correctResults: 6, hitRate: 0.8, previousRank: 2 },
-      { playerId: 'vallo-poldma', rank: 2, points: 20, exactScores: 3, correctResults: 5, hitRate: 0.7, previousRank: 1 },
-      { playerId: 'henri-kotsar', rank: 3, points: 16, exactScores: 2, correctResults: 4, hitRate: 0.6, previousRank: 3 },
-      { playerId: 'madde-jerbach', rank: 4, points: 14, exactScores: 2, correctResults: 3, hitRate: 0.55, previousRank: 8 }
+      { playerId: 'kristo-amberg', rank: 1, points: 24, exactScores: 4, correctResults: 6, hitRate: 0.8, previousRank: 3 },
+      { playerId: 'vallo-poldma', rank: 2, points: 24, exactScores: 4, correctResults: 6, hitRate: 0.8, previousRank: 2 },
+      { playerId: 'henri-kotsar', rank: 2, points: 24, exactScores: 4, correctResults: 6, hitRate: 0.8, previousRank: 1 },
+      { playerId: 'madde-jerbach', rank: 4, points: 16, exactScores: 2, correctResults: 4, hitRate: 0.6, previousRank: 4 },
+      { playerId: 'rauno-peerandi', rank: 5, points: 12, exactScores: 1, correctResults: 3, hitRate: 0.5, previousRank: 8 },
+      { playerId: 'aigar-kolk', rank: 8, points: 8, exactScores: 1, correctResults: 2, hitRate: 0.4, previousRank: 5 }
     ]
   };
 }
@@ -48,12 +50,11 @@ describe('leaderboard movement rendering', () => {
     vi.useRealTimers();
   });
 
-  it('renders up, down, neutral, and lower-table movement indicators', () => {
+  it('renders up, down, neutral, and tied rank movement indicators', () => {
     const markup = renderToStaticMarkup(<LeaderboardPage />);
 
-    expect(markup).toContain('▲1');
-    expect(markup).toContain('▼1');
-    expect(markup).toContain('—');
-    expect(markup).toContain('▲4');
+    expect(markup).toContain('\u25B22');
+    expect(markup).toContain('\u25BC1');
+    expect(markup).toContain('\u2014');
   });
 });

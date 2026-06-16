@@ -369,6 +369,39 @@ describe('leaderboard rebuild', () => {
     expect(result.entries[0]).toMatchObject({ rank: 1, points: 6, exactScores: 1, correctResults: 1 });
   });
 
+  it('derives previous ranks from the immediately prior scoring snapshot for all leaderboard rows', async () => {
+    const later = await rebuildLeaderboardAfterFinalResult({
+      now: new Date('2026-06-15T20:00:00.000Z'),
+      finalizedResults: [
+        {
+          matchId: 1,
+          status: 'FINISHED',
+          homeScore: 2,
+          awayScore: 0,
+          isFinal: true,
+          confirmedAt: '2026-06-15T18:00:00.000Z',
+          lastCheckedAt: '2026-06-15T18:00:00.000Z',
+          provider: 'mock-result-provider'
+        },
+        {
+          matchId: 4,
+          status: 'FINISHED',
+          homeScore: 1,
+          awayScore: 1,
+          isFinal: true,
+          confirmedAt: '2026-06-15T19:00:00.000Z',
+          lastCheckedAt: '2026-06-15T19:00:00.000Z',
+          provider: 'mock-result-provider'
+        }
+      ]
+    });
+
+    expect(later.entries).toHaveLength(109);
+    expect(later.entries.every((entry) => typeof entry.previousRank === 'number')).toBe(true);
+    expect(later.entries.some((entry) => (entry.previousRank ?? entry.rank) > entry.rank)).toBe(true);
+    expect(later.entries.some((entry) => (entry.previousRank ?? entry.rank) < entry.rank)).toBe(true);
+  });
+
   it('repairs stale persisted leaderboard rows by scoring all canonical players against confirmed results', async () => {
     const staleEntries = predictionRepository.getLeaderboard().slice(0, 24).map((entry, index) => leaderboardRow({
       playerId: entry.playerId,
