@@ -6,6 +6,7 @@ import type { BracketTree } from '../../domain/publicBracket.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import { buildCountyLeaderboard, type CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import { calculateRankMovement } from './leaderboardMovement.js';
 import { type LeaderboardRowView } from './predictionViewModels.js';
 
 export interface PublicLeaderboardEntry {
@@ -188,7 +189,7 @@ function toLeaderboardRow(entry: PublicLeaderboardEntry): LeaderboardRowView {
     exactScores: entry.exactScores,
     correctResults: entry.correctResults,
     hitRate: `${Math.round(entry.hitRate * 100)}%`,
-    positionChange: entry.previousRank ? entry.previousRank - entry.rank : 0
+    positionChange: calculateRankMovement(entry.previousRank, entry.rank)
   };
 }
 

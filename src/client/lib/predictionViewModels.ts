@@ -3,6 +3,7 @@ import type { Match } from '../../domain/types.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import { calculateRankMovement } from './leaderboardMovement.js';
 import { resolveScorerTeam } from './scorerTeamLookup.js';
 import { teamFromName } from './teamLookup.js';
 
@@ -171,6 +172,6 @@ function toLeaderboardRow(entry: { rank: number; playerId: string; points: numbe
     exactScores: entry.exactScores,
     correctResults: entry.correctResults,
     hitRate: formatHitRate(entry.hitRate),
-    positionChange: entry.previousRank ? entry.previousRank - entry.rank : 0
+    positionChange: calculateRankMovement(entry.previousRank, entry.rank)
   };
 }
