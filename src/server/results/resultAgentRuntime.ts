@@ -78,11 +78,12 @@ export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRe
   const persisted = await leaderboardRepository.getLeaderboard();
   const metadata = await leaderboardRepository.getLeaderboardMetadata();
   const reconciled = await reconcileLeaderboardIfPossible(leaderboardRepository, persisted);
-  const canonicalEntries = reconciled?.entries ?? buildCanonicalPublicLeaderboardEntries(persisted);
+  const shouldRepair = Boolean(reconciled && leaderboardNeedsRepair(persisted, reconciled.entries));
+  const canonicalEntries = shouldRepair ? reconciled!.entries : persisted;
   const warnings = reconciled?.warnings ?? metadata.warnings;
   const recalculatedAt = reconciled?.recalculatedAt ?? metadata.lastRebuildAt;
 
-  if (reconciled && leaderboardNeedsRepair(persisted, reconciled.entries)) {
+  if (shouldRepair && reconciled) {
     await leaderboardRepository.replaceLeaderboard(reconciled.entries, reconciled);
   }
 

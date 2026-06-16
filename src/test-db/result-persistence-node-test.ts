@@ -11,6 +11,7 @@ import { runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { toResultUpdate, type ResultProvider } from '../server/results/resultProvider.js';
 import { getCurrentLeaderboard } from '../server/results/resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from '../server/results/resultPersistenceSchema.js';
+import { predictionRepository } from '../domain/predictionRepository.js';
 
 describe('persistent result and leaderboard repositories', () => {
   it('creates required persistence tables', async () => {
@@ -454,6 +455,67 @@ describe('persistent result and leaderboard repositories', () => {
       assert.equal(response.entries.every((entry) => entry.correctResults === 0), true);
       assert.equal(response.entries.every((entry) => entry.hitRate === 0), true);
     });
+  });
+
+  it('keeps downward movement visible across repeated public leaderboard reads', async () => {
+    const startingRows = predictionRepository.getLeaderboard().map((entry) => ({
+      ...entry,
+      rank: 1,
+      points: 0,
+      exactScores: 0,
+      correctResults: 0,
+      hitRate: 0,
+      matchesScored: 0,
+      matchPoints: 0,
+      groupBonusPoints: 0,
+      playoffBonusPoints: 0,
+      topScorerBonusPoints: 0,
+      totalPoints: 0,
+      previousRank: 1,
+      lastUpdatedAt: '2026-06-15T18:00:00.000Z'
+    }));
+
+    let persisted = startingRows;
+    const fakeRepository = {
+      async getLeaderboard() {
+        return persisted;
+      },
+      async replaceLeaderboard(entries: typeof startingRows) {
+        persisted = entries;
+      },
+      async getLeaderboardMetadata() {
+        return {
+          lastRebuildAt: '2026-06-15T18:00:00.000Z',
+          playersProcessed: startingRows.length,
+          matchesProcessed: 1,
+          changedEntries: startingRows.length,
+          warnings: []
+        };
+      },
+      async getFinalizedResults() {
+        return [{
+          matchId: 1,
+          status: 'FINISHED',
+          homeScore: 2,
+          awayScore: 0,
+          isFinal: true,
+          lastCheckedAt: '2026-06-15T18:00:00.000Z',
+          provider: 'mock-result-provider'
+        }];
+      }
+    };
+
+    const first = await getCurrentLeaderboard(fakeRepository as never);
+    const firstDownward = first.entries.find((entry) => entry.previousRank !== undefined && entry.previousRank < entry.rank);
+
+    const second = await getCurrentLeaderboard(fakeRepository as never);
+    const secondDownward = second.entries.find((entry) => entry.previousRank !== undefined && entry.previousRank < entry.rank);
+
+    assert.equal(first.entries.length, 109);
+    assert.ok(firstDownward);
+    assert.equal(second.entries.length, 109);
+    assert.ok(secondDownward);
+    assert.ok((secondDownward?.previousRank ?? 0) < (secondDownward?.rank ?? 0));
   });
 });
 
