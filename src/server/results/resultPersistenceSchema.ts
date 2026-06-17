@@ -104,6 +104,8 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
     CREATE TABLE IF NOT EXISTS top_scorer_standings (
       id TEXT PRIMARY KEY,
       rank INTEGER NOT NULL,
+      player_id TEXT,
+      provider_player_id TEXT,
       player_name TEXT NOT NULL,
       team_id TEXT,
       goals INTEGER NOT NULL,
@@ -114,6 +116,9 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
     CREATE TABLE IF NOT EXISTS result_manual_scorers (
       id TEXT PRIMARY KEY,
       match_id INTEGER NOT NULL,
+      player_id TEXT,
+      provider_player_id TEXT,
+      raw_player_name TEXT,
       player_name TEXT NOT NULL,
       team_id TEXT,
       team_code TEXT,
@@ -183,6 +188,12 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
   await ensureColumn(db, 'leaderboard_entries', 'playoff_bonus_points', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn(db, 'leaderboard_entries', 'top_scorer_bonus_points', 'INTEGER NOT NULL DEFAULT 0');
   await ensureColumn(db, 'leaderboard_entries', 'total_points', 'INTEGER NOT NULL DEFAULT 0');
+
+  await ensureColumn(db, 'top_scorer_standings', 'player_id', 'TEXT');
+  await ensureColumn(db, 'top_scorer_standings', 'provider_player_id', 'TEXT');
+  await ensureColumn(db, 'result_manual_scorers', 'player_id', 'TEXT');
+  await ensureColumn(db, 'result_manual_scorers', 'provider_player_id', 'TEXT');
+  await ensureColumn(db, 'result_manual_scorers', 'raw_player_name', 'TEXT');
 
   await ensureColumn(db, 'result_manual_corrections', 'decided_after', 'TEXT');
   await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_id', 'TEXT');

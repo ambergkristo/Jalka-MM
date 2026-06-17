@@ -127,3 +127,22 @@
 - `node --test dist/test-db/public-state-health-node-test.js` passed.
 - `node --test dist/test-db/result-persistence-node-test.js` passed.
 - `node --test dist/test-db/manual-result-correction-node-test.js` passed.
+
+# Sprint 26 - Top Scorer Identity & Prediction Sync Fix
+
+- [x] Audit provider scorer parsing and scorer name normalization.
+- [x] Preserve raw provider names for Messi, Mbappe, Salah, and accented names while removing event markers.
+- [x] Add robust scorer identity matching with canonical ids where available and alias fallback.
+- [x] Make prediction-player cards read current goals from the same scorer dataset as public top scorers.
+- [x] Add regression coverage for hat-tricks, 2-goal scorers, accented aliases, table/card consistency, and corruption prevention.
+- [x] Run targeted tests plus build/typecheck.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Production audit confirmed raw OpenWorldCup scorer names are intact (`Lionel Messi`, `K. Mbappe`, accented names); corruption was in stored/derived scorer identity handling.
+- `npm run build` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npx vitest run src/test/scorerIdentity.test.ts src/test/openWorldCupResultProvider.test.ts src/test/predictionViewModels.test.ts src/test/publicDashboardPages.test.tsx src/test/pointsEngine.test.ts src/test/scoring.test.ts` passed.
+- `node --test dist/test-db/top-scorer-standings-node-test.js dist/test-db/public-state-health-node-test.js dist/test-db/result-persistence-node-test.js dist/test-db/manual-result-correction-node-test.js` passed.
+- Extra `npx tsc -p tsconfig.json --noEmit --pretty false` still reports existing client/test type errors outside this scorer fix; the project build path remains green.

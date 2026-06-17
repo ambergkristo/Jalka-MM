@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyLeaderboardRowToPlayerProfile, getLeaderboardRows, getPlayerProfile, getZeroedLeaderboardRows } from '../client/lib/predictionViewModels.js';
+import { applyLeaderboardRowToPlayerProfile, applyTopScorersToPlayerProfile, getLeaderboardRows, getPlayerProfile, getZeroedLeaderboardRows } from '../client/lib/predictionViewModels.js';
 import { resolveScorerTeam } from '../client/lib/scorerTeamLookup.js';
 
 describe('prediction view models', () => {
@@ -62,6 +62,19 @@ describe('prediction view models', () => {
       correctResults: 5,
       hitRate: '71%'
     });
+  });
+
+  it('uses public top scorer rows as the current goal source for player prediction cards', () => {
+    const profile = getPlayerProfile('kristo-amberg');
+    expect(profile?.topScorerPrediction.currentGoals).toBe(0);
+
+    const updated = applyTopScorersToPlayerProfile(profile!, [
+      { rank: 1, player: 'Lionel Messi', team: 'Argentina', goals: 3, assists: 0 },
+      { rank: 2, player: 'K. Mbapp\u00e9', team: 'France', goals: 2, assists: 0 }
+    ]);
+
+    expect(updated.topScorerPrediction.currentGoals).toBe(2);
+    expect(updated.topScorerPrediction.status).toBe('In chase');
   });
 
   it('includes imported match score predictions grouped by group in player profiles', () => {

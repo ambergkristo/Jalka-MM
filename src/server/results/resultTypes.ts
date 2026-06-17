@@ -3,6 +3,9 @@ export type PublicResultStatus = 'SCHEDULED' | 'LIVE' | 'CONFIRMING' | 'CONFIRME
 
 export interface ResultScorer {
   playerName: string;
+  playerId?: string;
+  providerPlayerId?: string;
+  rawPlayerName?: string;
   teamName?: string;
   teamCode?: string;
   goals: number;

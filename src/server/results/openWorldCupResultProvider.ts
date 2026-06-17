@@ -276,7 +276,13 @@ function parseScorers(value: unknown, teamName: string, teamCode?: unknown): Res
   return names.flatMap((name) => {
     const playerName = normalizeScorerPlayerName(name);
     if (!playerName) return [];
-    return [{ playerName, teamName, teamCode: typeof teamCode === 'string' ? teamCode : undefined, goals: 1 }];
+    return [{
+      playerName,
+      rawPlayerName: name,
+      teamName,
+      teamCode: typeof teamCode === 'string' || typeof teamCode === 'number' ? String(teamCode) : undefined,
+      goals: 1
+    }];
   });
 }
 

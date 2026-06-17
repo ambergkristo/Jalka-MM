@@ -58,12 +58,34 @@ describe('Open World Cup result provider', () => {
     const provider = providerFor(game);
     const update = await provider.fetchMatchUpdate(match, new Date('2026-06-11T21:30:00.000Z'));
 
-    expect(update.scorers).toEqual([
+    expect(update.scorers).toMatchObject([
       { playerName: 'D. Bobadilla', teamName: 'Mexico', teamCode: undefined, goals: 1 },
       { playerName: 'F. Balogun', teamName: 'Mexico', teamCode: undefined, goals: 1 },
       { playerName: 'F. Balogun', teamName: 'Mexico', teamCode: undefined, goals: 1 },
       { playerName: 'G. Reyna', teamName: 'Mexico', teamCode: undefined, goals: 1 },
       { playerName: 'Maurício', teamName: 'South Africa', teamCode: undefined, goals: 1 }
+    ]);
+  });
+
+  it('preserves raw provider names while canonicalizing Messi and Mbappe', async () => {
+    const argentinaFranceMatch: TrackedMatch = {
+      ...match,
+      homeTeam: 'Argentina',
+      awayTeam: 'France'
+    };
+    const game = sampleGame('group', 3, 2, 'TRUE', 1, {
+      home_scorers: '{"Lionel Messi 17\'","Lionel Messi 60\'","Lionel Messi 76\'"}',
+      away_scorers: '{"K. Mbapp\u00e9 66\'","K. Mbapp\u00e9 90+6\'"}'
+    });
+    const provider = providerFor(game);
+    const update = await provider.fetchMatchUpdate(argentinaFranceMatch, new Date('2026-06-17T06:30:00.000Z'));
+
+    expect(update.scorers).toEqual([
+      { playerName: 'Lionel Messi', rawPlayerName: "Lionel Messi 17'", teamName: 'Argentina', teamCode: undefined, goals: 1 },
+      { playerName: 'Lionel Messi', rawPlayerName: "Lionel Messi 60'", teamName: 'Argentina', teamCode: undefined, goals: 1 },
+      { playerName: 'Lionel Messi', rawPlayerName: "Lionel Messi 76'", teamName: 'Argentina', teamCode: undefined, goals: 1 },
+      { playerName: 'Kylian Mbapp\u00e9', rawPlayerName: "K. Mbapp\u00e9 66'", teamName: 'France', teamCode: undefined, goals: 1 },
+      { playerName: 'Kylian Mbapp\u00e9', rawPlayerName: "K. Mbapp\u00e9 90+6'", teamName: 'France', teamCode: undefined, goals: 1 }
     ]);
   });
 

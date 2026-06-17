@@ -7,6 +7,7 @@ import type {
   Player,
   PlayerMatchPrediction
 } from './predictionRepository.js';
+import { resolveScorerIdentity } from './scorerIdentity.js';
 
 export interface MatchResultForScoring {
   matchId: number;
@@ -193,7 +194,7 @@ export function calculateTopScorerBonus(
   }
 
   const predicted = awardsPrediction?.topScorerName;
-  const matched = Boolean(predicted && actualTopScorers.some((scorer) => sameTeam(predicted, scorer.name)));
+  const matched = Boolean(predicted && actualTopScorers.some((scorer) => sameScorer(predicted, scorer.name)));
   return {
     points: matched ? 50 : 0,
     breakdown: { predictedTopScorer: predicted, matched, points: matched ? 50 : 0 },
@@ -350,6 +351,12 @@ function goalDifference(homeScore: number, awayScore: number): number {
 
 function sameTeam(left: string, right: string): boolean {
   return normalizeName(left) === normalizeName(right);
+}
+
+function sameScorer(left: string, right: string): boolean {
+  const leftIdentity = resolveScorerIdentity({ playerName: left });
+  const rightIdentity = resolveScorerIdentity({ playerName: right });
+  return leftIdentity.lookupKey === rightIdentity.lookupKey;
 }
 
 function normalizeName(value: string): string {

@@ -4,11 +4,12 @@ import { GroupPredictionAccordion } from '../components/GroupPredictionAccordion
 import { PlayerSummaryCard } from '../components/PlayerSummaryCard.js';
 import { TopScorerCard } from '../components/TopScorerCard.js';
 import { usePublicTournamentState } from '../lib/publicApi.js';
-import { applyLeaderboardRowToPlayerProfile, getPlayerProfile } from '../lib/predictionViewModels.js';
+import { applyLeaderboardRowToPlayerProfile, applyTopScorersToPlayerProfile, getPlayerProfile } from '../lib/predictionViewModels.js';
 
 export function PlayerDetailPage({ playerId }: { playerId: string }) {
   const player = getPlayerProfile(playerId);
-  const leaderboardRows = usePublicTournamentState(60_000).leaderboardRows;
+  const tournamentState = usePublicTournamentState(60_000);
+  const leaderboardRows = tournamentState.leaderboardRows;
   const publicLeaderboardRow = leaderboardRows.find((row) => row.playerId === playerId) ?? (player ? {
     rank: player.rank,
     playerId: player.playerId,
@@ -33,7 +34,7 @@ export function PlayerDetailPage({ playerId }: { playerId: string }) {
     );
   }
 
-  const visiblePlayer = applyLeaderboardRowToPlayerProfile(player, publicLeaderboardRow);
+  const visiblePlayer = applyTopScorersToPlayerProfile(applyLeaderboardRowToPlayerProfile(player, publicLeaderboardRow), tournamentState.topScorers);
 
   return (
     <div className="player-profile-page">

@@ -7,7 +7,7 @@ import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { buildCountyLeaderboard, type CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { touchPublicDashboardRead } from './publicStateHealth.js';
-import { backfillTopScorersFromConfirmedResults } from './topScorerStandings.js';
+import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 
@@ -71,6 +71,8 @@ export interface PublicGroupStanding {
 
 export interface PublicTopScorer {
   rank: number;
+  playerId?: string;
+  providerPlayerId?: string;
   player: string;
   team: string;
   goals: number;
@@ -211,9 +213,20 @@ export async function refreshDerivedTournamentTables(db: QueryableDatabase, now:
     for (const scorer of topScorers) {
       const teamId = await teamIdForName(tx, scorer.team);
       await tx.run(
-        `INSERT INTO top_scorer_standings (id, rank, player_name, team_id, goals, assists, minutes_played, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [`${scorer.rank}-${slug(scorer.player)}`, scorer.rank, scorer.player, teamId ?? null, scorer.goals, scorer.assists, null, now.toISOString()]
+        `INSERT INTO top_scorer_standings (id, rank, player_id, provider_player_id, player_name, team_id, goals, assists, minutes_played, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          `${scorer.rank}-${scorer.playerId ?? scorer.providerPlayerId ?? slug(scorer.player)}`,
+          scorer.rank,
+          scorer.playerId ?? null,
+          scorer.providerPlayerId ?? null,
+          scorer.player,
+          teamId ?? null,
+          scorer.goals,
+          scorer.assists,
+          null,
+          now.toISOString()
+        ]
       );
     }
   });
@@ -458,6 +471,8 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
   const cachedRows = await db.all(`
     SELECT
       t.rank,
+      t.player_id,
+      t.provider_player_id,
       t.player_name,
       COALESCE(team.name, team.name_et, t.team_id, '') AS team_name,
       t.goals,
@@ -489,6 +504,8 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
       const repairedRows = await db.all(`
         SELECT
           t.rank,
+          t.player_id,
+          t.provider_player_id,
           t.player_name,
           COALESCE(team.name, team.name_et, t.team_id, '') AS team_name,
           t.goals,
@@ -501,6 +518,8 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
       if (repairedRows.length > 0) {
         return repairedRows.map((row) => ({
           rank: Number(row.rank),
+          playerId: stringOrUndefined(row.player_id),
+          providerPlayerId: stringOrUndefined(row.provider_player_id),
           player: String(row.player_name),
           team: String(row.team_name ?? ''),
           goals: Number(row.goals),
@@ -510,6 +529,8 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
     }
     return cachedRows.map((row) => ({
       rank: Number(row.rank),
+      playerId: stringOrUndefined(row.player_id),
+      providerPlayerId: stringOrUndefined(row.provider_player_id),
       player: String(row.player_name),
       team: String(row.team_name ?? ''),
       goals: Number(row.goals),
@@ -531,11 +552,19 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
         // Fall back to the empty state or any manual scorer facts already stored.
       }
     }
+  } else {
+    try {
+      await rebuildTopScorerStandings(db, new Date().toISOString());
+    } catch {
+      // Fall back to the manual scorer facts if the cache rebuild is unavailable.
+    }
   }
 
   const repairedRows = await db.all(`
     SELECT
       t.rank,
+      t.player_id,
+      t.provider_player_id,
       t.player_name,
       COALESCE(team.name, team.name_et, t.team_id, '') AS team_name,
       t.goals,
@@ -548,6 +577,8 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
   if (repairedRows.length > 0) {
     return repairedRows.map((row) => ({
       rank: Number(row.rank),
+      playerId: stringOrUndefined(row.player_id),
+      providerPlayerId: stringOrUndefined(row.provider_player_id),
       player: String(row.player_name),
       team: String(row.team_name ?? ''),
       goals: Number(row.goals),
@@ -558,22 +589,28 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
   const fallbackRows = await db.all(`
     SELECT
       grouped.player_name,
+      grouped.player_id,
+      grouped.provider_player_id,
       grouped.goals,
       grouped.team_name
     FROM (
       SELECT
+        facts.player_id AS player_id,
+        facts.provider_player_id AS provider_player_id,
         facts.player_name AS player_name,
         SUM(facts.goals) AS goals,
         COALESCE(t.name, t.name_et, facts.team_id, '') AS team_name
       FROM result_manual_scorers facts
       LEFT JOIN teams t ON t.id = facts.team_id
-      GROUP BY facts.player_name, facts.team_id, COALESCE(t.name, t.name_et, facts.team_id, '')
+      GROUP BY facts.player_id, facts.provider_player_id, facts.player_name, facts.team_id, COALESCE(t.name, t.name_et, facts.team_id, '')
     ) grouped
     ORDER BY grouped.goals DESC, grouped.player_name ASC, grouped.team_name ASC
     LIMIT 20
   `);
   return fallbackRows.map((row, index) => ({
     rank: index + 1,
+    playerId: stringOrUndefined(row.player_id),
+    providerPlayerId: stringOrUndefined(row.provider_player_id),
     player: String(row.player_name),
     team: String(row.team_name ?? ''),
     goals: Number(row.goals),
@@ -649,4 +686,9 @@ function sameTallinnDate(kickoffAt: string, now: Date): boolean {
 
 function slug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  return String(value);
 }

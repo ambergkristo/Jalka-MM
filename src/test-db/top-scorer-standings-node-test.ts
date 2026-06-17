@@ -70,6 +70,65 @@ describe('top scorer standings persistence', () => {
     }
   });
 
+  it('preserves canonical scorer identities for Messi hat-trick and Mbappe 2 goals', async () => {
+    const { db, sqlitePath } = createTempDatabase();
+    try {
+      await seedMatchTables(db);
+      await migrateResultPersistenceSchema(db);
+
+      await syncConfirmedScorersForMatch(db, 1, [
+        { playerName: "Lionel Messi 17'", teamCode: 'ARG', goals: 1 },
+        { playerName: "Lionel Messi 60'", teamCode: 'ARG', goals: 1 },
+        { playerName: "Lionel Messi 76'", teamCode: 'ARG', goals: 1 }
+      ], '2026-06-17T06:10:20.007Z');
+
+      await syncConfirmedScorersForMatch(db, 2, [
+        { playerName: "K. Mbapp\u00e9 66'", teamCode: 'FRA', goals: 1 },
+        { playerName: "Kylian Mbappe 90+6'", teamCode: 'FRA', goals: 1 }
+      ], '2026-06-17T06:12:20.007Z');
+
+      const standings = await db.all('SELECT rank, player_id, player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.equal(standings.length, 2);
+      assert.equal(String(standings[0]?.player_id), 'lionel-messi');
+      assert.equal(String(standings[0]?.player_name), 'Lionel Messi');
+      assert.equal(Number(standings[0]?.goals), 3);
+      assert.equal(String(standings[1]?.player_id), 'kylian-mbappe');
+      assert.equal(String(standings[1]?.player_name), 'Kylian Mbapp\u00e9');
+      assert.equal(Number(standings[1]?.goals), 2);
+
+      const rawFact = await db.one('SELECT raw_player_name FROM result_manual_scorers WHERE player_id = ? ORDER BY created_at LIMIT 1', ['lionel-messi']);
+      assert.equal(String(rawFact?.raw_player_name), "Lionel Messi 17'");
+    } finally {
+      await db.close();
+      rmSync(sqlitePath, { force: true });
+    }
+  });
+
+  it('repairs corrupted stored names and strips penalty markers during rebuild', async () => {
+    const { db, sqlitePath } = createTempDatabase();
+    try {
+      await seedMatchTables(db);
+      await migrateResultPersistenceSchema(db);
+
+      await db.run(
+        `INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at) VALUES
+          ('1-a', 1, 'Livnl Msi', NULL, 'ARG', 3, '2026-06-17T06:10:20.007Z'),
+          ('1-b', 1, 'Arling Halnd', NULL, 'NOR', 2, '2026-06-17T06:10:20.007Z'),
+          ('1-c', 1, 'Breel Embolo 17'' (p)', NULL, 'SUI', 1, '2026-06-17T06:10:20.007Z')
+        `
+      );
+
+      await rebuildTopScorerStandings(db, '2026-06-17T06:15:20.007Z');
+      const standings = await db.all('SELECT player_id, player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.deepEqual(standings.map((row) => String(row.player_name)), ['Lionel Messi', 'Erling Haaland', 'Breel Embolo']);
+      assert.deepEqual(standings.map((row) => Number(row.goals)), [3, 2, 1]);
+      assert.deepEqual(standings.map((row) => String(row.player_id)), ['lionel-messi', 'erling-haaland', 'breel-embolo']);
+    } finally {
+      await db.close();
+      rmSync(sqlitePath, { force: true });
+    }
+  });
+
   it('does not duplicate scorer facts when the same match is re-synced', async () => {
     const { db, sqlitePath } = createTempDatabase();
     try {

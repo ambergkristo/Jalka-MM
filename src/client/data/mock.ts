@@ -129,6 +129,8 @@ export interface BracketTree {
 
 export interface TournamentTopScorer {
   rank: number;
+  playerId?: string;
+  providerPlayerId?: string;
   player: string;
   team: string;
   goals: number;

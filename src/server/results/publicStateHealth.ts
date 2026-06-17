@@ -1,13 +1,13 @@
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { db } from '../db.js';
-import { DatabaseResultRepository } from './databaseResultRepository.js';
-import { getCurrentLeaderboard, getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
+import { getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import type { ResultAgentStatus } from './resultTypes.js';
+import { rebuildPublicTournamentState } from './publicTournamentRebuild.js';
 
 const METADATA_ID = 'public-state';
 const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers', 'resync-scorers-from-confirmed-results']);
@@ -204,8 +204,7 @@ export async function runPublicStateRepairAction(input: {
     }
 
     if (input.action === 'catch-up' || input.action === 'rebuild-public-dashboard' || input.action === 'rebuild-leaderboard') {
-      const repository = new DatabaseResultRepository(database);
-      await getCurrentLeaderboard(repository);
+      await rebuildPublicTournamentState(database, now);
     }
 
     if (input.action === 'catch-up' || input.action === 'rebuild-public-dashboard' || input.action === 'rebuild-top-scorers') {

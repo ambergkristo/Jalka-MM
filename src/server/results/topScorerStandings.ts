@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { normalizeScorerName } from './scorerNormalization.js';
+import { resolveScorerIdentity, scorerIdentityGroupKey } from '../../domain/scorerIdentity.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import type { ResultScorer } from './resultTypes.js';
@@ -41,15 +42,27 @@ export async function syncConfirmedScorersForMatch(
   await migrateResultPersistenceSchema(db);
   await db.transaction(async (tx) => {
     await tx.run('DELETE FROM result_manual_scorers WHERE match_id = ?', [matchId]);
-    for (const [index, scorer] of scorers.entries()) {
-      const playerName = normalizeScorerName(scorer.playerName);
-      if (!playerName) continue;
+    for (const scorer of scorers) {
+      const identity = resolveScorerIdentity(scorer);
+      if (!identity.playerName) continue;
       const team = await resolveTeam(tx, scorer);
       const id = `${matchId}-${randomUUID()}`;
       await tx.run(
-        `INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, matchId, playerName, team.teamId ?? null, team.teamCode ?? scorer.teamCode ?? null, scorer.goals, nowIso]
+        `INSERT INTO result_manual_scorers (
+          id, match_id, player_id, provider_player_id, raw_player_name, player_name, team_id, team_code, goals, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          matchId,
+          identity.playerId ?? null,
+          identity.providerPlayerId ?? null,
+          scorer.rawPlayerName ?? scorer.playerName,
+          identity.playerName,
+          team.teamId ?? null,
+          team.teamCode ?? scorer.teamCode ?? null,
+          scorer.goals,
+          nowIso
+        ]
       );
     }
     await rebuildTopScorerStandingsInTransaction(tx, nowIso);
@@ -65,24 +78,32 @@ export async function rebuildTopScorerStandings(db: QueryableDatabase, nowIso: s
 
 async function rebuildTopScorerStandingsInTransaction(db: QueryableDatabase, nowIso: string): Promise<void> {
   const rows = await db.all(`
-    SELECT player_name, team_id, team_code, goals
+    SELECT player_id, provider_player_id, player_name, team_id, team_code, goals
     FROM result_manual_scorers
     ORDER BY match_id, created_at, player_name
   `);
-  const grouped = new Map<string, { playerName: string; teamId: string | null; goals: number }>();
+  const grouped = new Map<string, { playerId: string | null; providerPlayerId: string | null; playerName: string; teamId: string | null; goals: number }>();
   for (const row of rows) {
-    const playerName = normalizeScorerName(String(row.player_name ?? ''));
-    if (!playerName) continue;
+    const playerId = row.player_id === null || row.player_id === undefined || row.player_id === '' ? undefined : String(row.player_id);
+    const providerPlayerId = row.provider_player_id === null || row.provider_player_id === undefined || row.provider_player_id === '' ? undefined : String(row.provider_player_id);
+    const identity = resolveScorerIdentity({ playerName: String(row.player_name ?? ''), playerId, providerPlayerId });
+    if (!identity.playerName) continue;
     const goals = Number(row.goals ?? 0);
     if (!Number.isFinite(goals) || goals <= 0) continue;
     const teamId = row.team_id === null || row.team_id === undefined || row.team_id === '' ? null : String(row.team_id);
     const teamCode = row.team_code === null || row.team_code === undefined || row.team_code === '' ? null : String(row.team_code);
-    const key = `${playerName}|${teamId ?? teamCode ?? ''}`;
+    const key = scorerIdentityGroupKey({ playerName: identity.playerName, playerId: identity.playerId, providerPlayerId: identity.providerPlayerId, teamId, teamCode });
     const existing = grouped.get(key);
     if (existing) {
       existing.goals += goals;
     } else {
-      grouped.set(key, { playerName, teamId, goals });
+      grouped.set(key, {
+        playerId: identity.playerId ?? null,
+        providerPlayerId: identity.providerPlayerId ?? null,
+        playerName: identity.playerName,
+        teamId,
+        goals
+      });
     }
   }
   const aggregatedRows = [...grouped.values()].sort((a, b) =>
@@ -93,9 +114,20 @@ async function rebuildTopScorerStandingsInTransaction(db: QueryableDatabase, now
   await db.run('DELETE FROM top_scorer_standings');
   for (const [index, row] of aggregatedRows.entries()) {
     await db.run(
-      `INSERT INTO top_scorer_standings (id, rank, player_name, team_id, goals, assists, minutes_played, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [`${index + 1}-${slug(row.playerName)}-${row.teamId ?? 'unknown'}`, index + 1, row.playerName, row.teamId, row.goals, 0, null, nowIso]
+      `INSERT INTO top_scorer_standings (id, rank, player_id, provider_player_id, player_name, team_id, goals, assists, minutes_played, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        `${index + 1}-${row.playerId ?? row.providerPlayerId ?? slug(row.playerName)}-${row.teamId ?? 'unknown'}`,
+        index + 1,
+        row.playerId,
+        row.providerPlayerId,
+        row.playerName,
+        row.teamId,
+        row.goals,
+        0,
+        null,
+        nowIso
+      ]
     );
   }
 }
@@ -159,8 +191,20 @@ function normalizeScorer(value: unknown): ResultScorer[] {
   const teamName = typeof rawTeamName === 'string' ? rawTeamName.trim() : undefined;
   const rawTeamCode = scorer.teamCode ?? scorer.team_code ?? scorer.code;
   const teamCode = typeof rawTeamCode === 'string' ? rawTeamCode.trim() : undefined;
+  const rawPlayerId = scorer.playerId ?? scorer.player_id ?? scorer.canonicalPlayerId ?? scorer.canonical_player_id;
+  const playerId = typeof rawPlayerId === 'string' || typeof rawPlayerId === 'number' ? String(rawPlayerId).trim() : undefined;
+  const rawProviderPlayerId = scorer.providerPlayerId ?? scorer.provider_player_id ?? scorer.providerId ?? scorer.provider_id;
+  const providerPlayerId = typeof rawProviderPlayerId === 'string' || typeof rawProviderPlayerId === 'number' ? String(rawProviderPlayerId).trim() : undefined;
   const goals = Number(scorer.goals ?? 1);
   if (!playerName || !Number.isInteger(goals) || goals <= 0) return [];
   if (!teamName && !teamCode) return [];
-  return [{ playerName, teamName: teamName || undefined, teamCode: teamCode || undefined, goals }];
+  return [{
+    playerName,
+    playerId: playerId || undefined,
+    providerPlayerId: providerPlayerId || undefined,
+    rawPlayerName: typeof rawPlayerName === 'string' ? rawPlayerName : undefined,
+    teamName: teamName || undefined,
+    teamCode: teamCode || undefined,
+    goals
+  }];
 }

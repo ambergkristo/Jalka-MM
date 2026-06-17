@@ -3,6 +3,8 @@ import type { Match } from '../../domain/types.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import { resolveScorerIdentity } from '../../domain/scorerIdentity.js';
+import type { TournamentTopScorer } from '../data/mock.js';
 import { calculateRankMovement } from './leaderboardMovement.js';
 import { resolveScorerTeam } from './scorerTeamLookup.js';
 import { teamFromName } from './teamLookup.js';
@@ -95,6 +97,20 @@ export function applyLeaderboardRowToPlayerProfile(profile: PlayerProfileView, r
   };
 }
 
+export function applyTopScorersToPlayerProfile(profile: PlayerProfileView, topScorers: TournamentTopScorer[]): PlayerProfileView {
+  const scorer = findMatchingTopScorer(profile.topScorerPrediction.name, topScorers);
+  if (!scorer) return profile;
+  const leadingGoals = Math.max(...topScorers.map((row) => row.goals), 0);
+  return {
+    ...profile,
+    topScorerPrediction: {
+      ...profile.topScorerPrediction,
+      currentGoals: scorer.goals,
+      status: leadingGoals > 0 && scorer.goals === leadingGoals ? 'Leading' : 'In chase'
+    }
+  };
+}
+
 export function getPredictionSeedErrors(): string[] {
   return predictionRepository.getErrors();
 }
@@ -174,4 +190,19 @@ function toLeaderboardRow(entry: { rank: number; playerId: string; points: numbe
     hitRate: formatHitRate(entry.hitRate),
     positionChange: calculateRankMovement(entry.previousRank, entry.rank)
   };
+}
+
+function findMatchingTopScorer(playerName: string, topScorers: TournamentTopScorer[]): TournamentTopScorer | undefined {
+  const predicted = resolveScorerIdentity({ playerName });
+  if (!predicted.playerName) return undefined;
+  return topScorers.find((scorer) => {
+    const actual = resolveScorerIdentity({
+      playerName: scorer.player,
+      playerId: scorer.playerId,
+      providerPlayerId: scorer.providerPlayerId
+    });
+    if (predicted.providerPlayerId && actual.providerPlayerId === predicted.providerPlayerId) return true;
+    if (predicted.playerId && actual.playerId === predicted.playerId) return true;
+    return actual.lookupKey === predicted.lookupKey;
+  });
 }

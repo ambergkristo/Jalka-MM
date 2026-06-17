@@ -182,6 +182,7 @@ describe('public dashboard pages', () => {
     const results = renderToStaticMarkup(<ResultsPage />);
     const leaderboard = renderToStaticMarkup(<LeaderboardPage />);
     const tournament = renderToStaticMarkup(<TournamentPage />);
+    const player = renderToStaticMarkup(<PlayerDetailPage playerId="kristo-amberg" />);
 
     expect(landing).toContain('2 / 104');
     expect(landing).toContain('Hetkel ei ole käimasolevaid mänge.');
@@ -203,5 +204,6 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Väravalööjad');
     expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Punkte');
+    expect(player).toContain('<b>2 v');
   });
 });

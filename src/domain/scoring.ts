@@ -10,6 +10,7 @@ import type {
   ParticipantScore,
   SlotSide
 } from './types.js';
+import { resolveScorerIdentity } from './scorerIdentity.js';
 
 const resultSign = (home: number, away: number) => Math.sign(home - away);
 const goalDifference = (home: number, away: number) => home - away;
@@ -79,7 +80,8 @@ function scoreSingle(code: string, points: number, predicted: string, actual: st
 
 export function scoreTopScorer(predicted: string, actualTopScorers: string[]): BonusScoreBreakdown[] {
   const topScorers = unique(actualTopScorers.map((name) => name.trim()).filter(Boolean));
-  if (!predicted.trim() || !topScorers.includes(predicted.trim())) return [];
+  const predictedIdentity = resolveScorerIdentity({ playerName: predicted });
+  if (!predicted.trim() || !topScorers.some((name) => resolveScorerIdentity({ playerName: name }).lookupKey === predictedIdentity.lookupKey)) return [];
   const points = 50 / topScorers.length;
   return [{ code: `top-scorer:${predicted.trim()}`, points, explanation: `${points}p: top scorer split across ${topScorers.length} tied player(s)` }];
 }
