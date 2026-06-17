@@ -17,9 +17,11 @@ export interface CountyLeaderboardRow {
 
 interface CountyAccumulator {
   county: string;
-  totalPoints: number;
+  allPlayerPoints: number;
   players: CountyLeaderboardPlayer[];
 }
+
+const contributingPlayerLimit = 3;
 
 const missingCountyLabel = 'Andmed puuduvad';
 const countyAliases = new Map<string, string>([
@@ -54,9 +56,7 @@ const countyAliases = new Map<string, string>([
 export function buildCountyLeaderboard(input: {
   players: Player[];
   leaderboardEntries?: LeaderboardEntry[];
-  topPlayersLimit?: number;
 }): CountyLeaderboardRow[] {
-  const topPlayersLimit = input.topPlayersLimit ?? 3;
   const entryByPlayerId = new Map((input.leaderboardEntries ?? []).map((entry) => [entry.playerId, entry]));
   const countyByName = new Map<string, CountyAccumulator>();
 
@@ -64,8 +64,8 @@ export function buildCountyLeaderboard(input: {
     const county = normalizeCountyName(player.location);
     const entry = entryByPlayerId.get(player.id);
     const points = entryPoints(entry);
-    const accumulator = countyByName.get(county) ?? { county, totalPoints: 0, players: [] };
-    accumulator.totalPoints += points;
+    const accumulator = countyByName.get(county) ?? { county, allPlayerPoints: 0, players: [] };
+    accumulator.allPlayerPoints += points;
     accumulator.players.push({
       playerId: player.id,
       playerName: player.name,
@@ -76,14 +76,16 @@ export function buildCountyLeaderboard(input: {
 
   return [...countyByName.values()]
     .map((county) => {
-      const sortedPlayers = county.players.sort((a, b) => b.points - a.points || a.playerName.localeCompare(b.playerName, 'et'));
+      const sortedPlayers = [...county.players].sort((a, b) => b.points - a.points || a.playerName.localeCompare(b.playerName, 'et'));
+      const topPlayers = sortedPlayers.slice(0, contributingPlayerLimit);
+      const countyScore = topPlayers.reduce((sum, player) => sum + player.points, 0);
       return {
         rank: 0,
         county: county.county,
-        totalPoints: county.totalPoints,
-        averagePoints: county.players.length === 0 ? 0 : county.totalPoints / county.players.length,
+        totalPoints: countyScore,
+        averagePoints: county.players.length === 0 ? 0 : county.allPlayerPoints / county.players.length,
         playerCount: county.players.length,
-        topPlayers: sortedPlayers.slice(0, topPlayersLimit)
+        topPlayers
       };
     })
     .sort(compareCountyRows)
@@ -100,7 +102,6 @@ export function normalizeCountyName(value: string | undefined): string {
 function compareCountyRows(a: Omit<CountyLeaderboardRow, 'rank'>, b: Omit<CountyLeaderboardRow, 'rank'>): number {
   return (
     b.totalPoints - a.totalPoints ||
-    b.averagePoints - a.averagePoints ||
     a.county.localeCompare(b.county, 'et')
   );
 }

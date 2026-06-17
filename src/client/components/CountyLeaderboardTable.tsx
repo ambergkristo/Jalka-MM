@@ -18,7 +18,7 @@ export function CountyLeaderboardTable({ rows }: { rows: CountyLeaderboardRow[] 
             <CountyVisual county={row.county} />
             <span className="county-leaderboard-copy">
               <strong>{row.county}</strong>
-              <small>{formatCountyAverage(row.averagePoints)} p / mängija</small>
+              <small>{row.playerCount} mängijat · top 3 arvestus</small>
               {row.topPlayers.length > 0 && (
                 <small>{row.topPlayers.map((player) => `${player.playerName} ${player.points}`).join(' · ')}</small>
               )}
@@ -39,8 +39,4 @@ function CountyVisual({ county }: { county: string }) {
       {visual.crestUrl ? <img src={visual.crestUrl} alt="" loading="lazy" decoding="async" /> : visual.initials}
     </span>
   );
-}
-
-function formatCountyAverage(value: number): string {
-  return value.toLocaleString('et-EE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }

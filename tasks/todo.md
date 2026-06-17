@@ -146,3 +146,21 @@
 - `npx vitest run src/test/scorerIdentity.test.ts src/test/openWorldCupResultProvider.test.ts src/test/predictionViewModels.test.ts src/test/publicDashboardPages.test.tsx src/test/pointsEngine.test.ts src/test/scoring.test.ts` passed.
 - `node --test dist/test-db/top-scorer-standings-node-test.js dist/test-db/public-state-health-node-test.js dist/test-db/result-persistence-node-test.js dist/test-db/manual-result-correction-node-test.js` passed.
 - Extra `npx tsc -p tsconfig.json --noEmit --pretty false` still reports existing client/test type errors outside this scorer fix; the project build path remains green.
+
+# Sprint 27 - KOV Top 3 Leaderboard Scoring
+
+- [x] Audit current KOV leaderboard aggregation and production payload.
+- [x] Replace KOV score with the sum of the top 3 individual player scores from that KOV.
+- [x] Keep KOV player count and individual leaderboard scoring unchanged.
+- [x] Display the same top 3 contributors used in the KOV score.
+- [x] Add regression coverage for many-player KOVs, top-three contributor sums, and fewer-than-three-player KOVs.
+- [x] Run targeted tests plus build/typecheck.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Production audit confirmed the current payload was using all-player totals, for example Rae showed `totalPoints: 810` while its displayed top 3 summed to 122.
+- `npx vitest run src/test/countyLeaderboard.test.ts src/test/publicDashboardData.test.ts --reporter=verbose` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npm run build` passed.
+- Extra `npx tsc -p tsconfig.json --noEmit --pretty false` still reports existing client/test type errors outside this KOV scoring fix; the project build path remains green.

@@ -71,7 +71,7 @@ export function LeaderboardPreview({
                   <span>
                     {county.county}
                     <small>
-                      {county.playerCount} mängijat · {formatCountyAverage(county.averagePoints)} p / mängija
+                      {county.playerCount} mängijat · top 3 arvestus
                     </small>
                   </span>
                   <strong>{county.totalPoints}</strong>
@@ -95,8 +95,4 @@ function PreviewPanel({ eyebrow, title, children }: { eyebrow: string; title: st
       {children}
     </div>
   );
-}
-
-function formatCountyAverage(value: number): string {
-  return value.toLocaleString('et-EE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
