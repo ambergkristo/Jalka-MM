@@ -164,3 +164,21 @@
 - `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
 - `npm run build` passed.
 - Extra `npx tsc -p tsconfig.json --noEmit --pretty false` still reports existing client/test type errors outside this KOV scoring fix; the project build path remains green.
+
+# Sprint 28 - Poster-Inspired Leaderboard Visual Direction
+
+- [x] Inspect the local poster reference without copying private text or leaderboard data.
+- [x] Apply bright blue competition-panel styling to leaderboard surfaces.
+- [x] Convert player, scorer, and KOV leaderboard rows to compact white rows with medal rank badges.
+- [x] Show team flags and KOV crests in compact leaderboard preview/table rows.
+- [x] Keep scoring, player counts, and live data sources unchanged.
+- [x] Run targeted tests, build, and visual smoke.
+
+## Review
+
+- Used `C:\Users\Kasutaja\Documents\Jalka MM APP\Uploaded poester.jpg` as style reference only.
+- `npx vitest run src/test/publicDashboardPages.test.tsx src/test/publicDashboardData.test.ts src/test/countyLeaderboard.test.ts --reporter=verbose` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npm run build` passed.
+- Playwright visual smoke captured landing, leaderboard, and tournament screenshots under `tmp/poster-visual-smoke/`; mobile KOV table was corrected to avoid oversized oval rows and horizontal overflow.
+- Extra `npx tsc -p tsconfig.json --noEmit --pretty false` still reports existing client/test type errors outside this visual update; the project build path remains green.

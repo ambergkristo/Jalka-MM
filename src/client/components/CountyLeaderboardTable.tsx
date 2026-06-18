@@ -1,5 +1,5 @@
 import type { CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
-import { resolveCountyVisual } from '../lib/countyVisuals.js';
+import { CountyCrest } from './CountyCrest.js';
 
 export function CountyLeaderboardTable({ rows }: { rows: CountyLeaderboardRow[] }) {
   return (
@@ -15,7 +15,7 @@ export function CountyLeaderboardTable({ rows }: { rows: CountyLeaderboardRow[] 
         <div className={`county-leaderboard-row rank-${row.rank <= 3 ? row.rank : 'standard'}`} key={row.county}>
           <b>{row.rank}</b>
           <span className="county-leaderboard-county">
-            <CountyVisual county={row.county} />
+            <CountyCrest county={row.county} />
             <span className="county-leaderboard-copy">
               <strong>{row.county}</strong>
               <small>{row.playerCount} mängijat · top 3 arvestus</small>
@@ -29,14 +29,5 @@ export function CountyLeaderboardTable({ rows }: { rows: CountyLeaderboardRow[] 
         </div>
       ))}
     </section>
-  );
-}
-
-function CountyVisual({ county }: { county: string }) {
-  const visual = resolveCountyVisual(county);
-  return (
-    <span className={`county-crest tone-${visual.tone}`} aria-hidden="true">
-      {visual.crestUrl ? <img src={visual.crestUrl} alt="" loading="lazy" decoding="async" /> : visual.initials}
-    </span>
   );
 }
