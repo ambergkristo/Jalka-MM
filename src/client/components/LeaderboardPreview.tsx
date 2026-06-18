@@ -53,7 +53,7 @@ export function LeaderboardPreview({
                 <div className={`leaderboard-preview-row compact rank-${scorer.rank <= 3 ? scorer.rank : 'standard'}`} key={`${scorer.rank}-${scorer.player}`}>
                   <b>{scorer.rank}</b>
                   <span className="leaderboard-preview-scorer">
-                    <span>{scorer.player}</span>
+                    <span className="leaderboard-preview-scorer-name">{scorer.player}</span>
                     <TeamBadge team={teamFromName(scorer.team)} />
                   </span>
                   <strong>{scorer.goals}</strong>

@@ -182,3 +182,20 @@
 - `npm run build` passed.
 - Playwright visual smoke captured landing, leaderboard, and tournament screenshots under `tmp/poster-visual-smoke/`; mobile KOV table was corrected to avoid oversized oval rows and horizontal overflow.
 - Extra `npx tsc -p tsconfig.json --noEmit --pretty false` still reports existing client/test type errors outside this visual update; the project build path remains green.
+
+# Sprint 29 - Top Scorers Card UI Polish
+
+- [x] Audit the `Hetke edetabelid` top scorers card markup and CSS.
+- [x] Remove the large blue country-name pill by narrowing score-badge styles to direct goal-count elements.
+- [x] Keep flag, country name, and FIFA code in a compact metadata block.
+- [x] Preserve scorer ordering, player names, rank badges, goal badges, and all data/API logic.
+- [x] Run targeted UI test, build, server typecheck, and desktop/mobile visual smoke.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- `npx vitest run src/test/publicDashboardPages.test.tsx --reporter=verbose` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npm run build` passed.
+- Playwright desktop/mobile visual smoke with mocked scorer rows confirmed the country name has transparent background/no radius/no padding, while the direct goal badge remains styled.
+- Extra `npx tsc -p tsconfig.json --noEmit --pretty false` timed out in this run; the project build path remains green.

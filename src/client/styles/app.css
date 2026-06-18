@@ -702,7 +702,7 @@ main {
   min-height: 50px;
 }
 
-.leaderboard-preview-row strong {
+.leaderboard-preview-row > strong {
   display: inline-grid;
   place-items: center;
   min-width: 40px;
@@ -748,7 +748,8 @@ main {
 
 .leaderboard-preview-scorer {
   display: grid;
-  gap: 3px;
+  gap: 4px;
+  align-content: center;
 }
 
 .leaderboard-preview-scorer > span,
@@ -756,14 +757,59 @@ main {
   min-width: 0;
 }
 
+.leaderboard-preview-scorer-name {
+  display: block;
+  color: var(--poster-blue-ink);
+  font-size: .9rem;
+  line-height: 1.08;
+  font-weight: 950;
+}
+
 .leaderboard-preview-scorer .team-badge {
   grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
   gap: 6px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .leaderboard-preview-scorer .team-flag {
   width: 22px;
   height: 16px;
+  border-radius: 3px;
+  background: #edf5ff;
+  box-shadow: 0 0 0 1px rgba(5, 34, 90, .16);
+}
+
+.leaderboard-preview-scorer .team-copy {
+  gap: 0;
+}
+
+.leaderboard-preview-scorer .team-copy strong {
+  display: block;
+  min-width: 0;
+  min-height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #315489;
+  font-size: .67rem;
+  line-height: 1.05;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-preview-scorer .team-copy small {
+  display: block;
+  margin-top: 1px;
+  color: #63789f;
+  font-size: .56rem;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: .04em;
 }
 
 .leaderboard-preview-row .team-copy strong,
