@@ -10,6 +10,7 @@ import { touchPublicDashboardRead } from './publicStateHealth.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
+import { classifyPublicMatchState } from './publicMatchState.js';
 
 export interface PublicDashboardSnapshot {
   completedMatchesCount: number;
@@ -341,8 +342,13 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
     if (Number.isNaN(Date.parse(kickoffAt))) return [];
     const publicStatus = String(row.public_status ?? 'SCHEDULED');
     if (isConfirmedFinalResult(row)) return [];
-    const kickoffMs = Date.parse(kickoffAt);
-    const state = kickoffMs <= now.getTime() ? 'live' : sameTallinnDate(kickoffAt, now) ? 'today' : 'upcoming';
+    const state = classifyPublicMatchState({
+      kickoffAt,
+      publicStatus,
+      isConfirmedFinal: false,
+      now
+    });
+    if (state === 'finished' || state === 'stale') return [];
     const score = state === 'live'
       ? publicLiveScore(row.provisional_home_score ?? row.home_score, row.provisional_away_score ?? row.away_score)
       : {};
@@ -672,16 +678,6 @@ function publicMatchStatus(publicStatus: string): PublicMatchCard['status'] {
   if (publicStatus === 'LIVE') return 'live';
   if (publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW') return 'confirming';
   return 'scheduled';
-}
-
-function sameTallinnDate(kickoffAt: string, now: Date): boolean {
-  const formatter = new Intl.DateTimeFormat('et-EE', {
-    timeZone: 'Europe/Tallinn',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  return formatter.format(new Date(kickoffAt)) === formatter.format(now);
 }
 
 function slug(value: string): string {

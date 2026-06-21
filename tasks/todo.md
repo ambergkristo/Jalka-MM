@@ -199,3 +199,25 @@
 - `npm run build` passed.
 - Playwright desktop/mobile visual smoke with mocked scorer rows confirmed the country name has transparent background/no radius/no padding, while the direct goal badge remains styled.
 - Extra `npx tsc -p tsconfig.json --noEmit --pretty false` timed out in this run; the project build path remains green.
+
+# Sprint 30 - 21.06 Public Match State Audit
+
+- [x] Reproduce production public-dashboard and diagnostics state for 21.06.
+- [x] Audit OpenWorldCup provider payload for 21.06 fixtures.
+- [x] Verify confirmed final scores are not being stored because the provider still reports scheduled/not-started.
+- [x] Verify production public API is not serving a stale cached dashboard response.
+- [x] Fix public match section classification so stale scheduled fixtures do not remain live after the expected match window.
+- [x] Keep final-score confirmation and scoring rules unchanged.
+- [x] Add regression coverage for stale scheduled matches and Europe/Tallinn today grouping.
+- [x] Run targeted tests plus build/typecheck.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Production diagnostics showed the result agent was running and the public API read timestamp was fresh, but OpenWorldCup still reported 21.06 fixtures as scheduled/not-started, so no confirmed finals could safely be stored.
+- Fixed the public match section classifier so stale scheduled matches move out of `live` after the expected match window while same-day Tallinn fixtures remain in today's list.
+- `npx vitest run src/test/publicMatchState.test.ts src/test/matchScheduler.test.ts --reporter=verbose` passed.
+- `npx vitest run src/test/publicDashboardData.test.ts src/test/publicDashboardPages.test.tsx --reporter=verbose` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npm run build` passed.
+- `node --test dist/test-db/public-state-health-node-test.js dist/test-db/result-persistence-node-test.js` passed.

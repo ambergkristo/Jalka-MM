@@ -5,9 +5,10 @@ import { getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntim
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
-import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
+import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import type { ResultAgentStatus } from './resultTypes.js';
 import { rebuildPublicTournamentState } from './publicTournamentRebuild.js';
+import { classifyPublicMatchState } from './publicMatchState.js';
 
 const METADATA_ID = 'public-state';
 const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers', 'resync-scorers-from-confirmed-results']);
@@ -445,12 +446,19 @@ async function countLiveMatches(db: QueryableDatabase, now: Date): Promise<numbe
     SELECT
       m.kickoff_at,
       r.public_status,
-      r.is_final
+      r.is_final,
+      r.confirmed_home_score,
+      r.confirmed_away_score
     FROM matches m
     LEFT JOIN match_results r ON r.match_id = m.id
     ORDER BY m.kickoff_at, m.id
   `);
-  return rows.filter((row) => classifyMatchState(String(row.kickoff_at), String(row.public_status ?? 'SCHEDULED'), Number(row.is_final ?? 0), now) === 'live').length;
+  return rows.filter((row) => classifyPublicMatchState({
+    kickoffAt: String(row.kickoff_at),
+    publicStatus: String(row.public_status ?? 'SCHEDULED'),
+    isConfirmedFinal: isConfirmedFinalResult(row),
+    now
+  }) === 'live').length;
 }
 
 async function countAggregatedScorerRows(db: QueryableDatabase): Promise<number> {
@@ -667,24 +675,6 @@ function normalizeRepairStatus(value?: string): 'ok' | 'failed' | undefined {
   if (!value) return undefined;
   if (value === 'ok' || value === 'failed') return value;
   return undefined;
-}
-
-function classifyMatchState(kickoffAt: string, publicStatus: string, isFinal: number, now: Date): 'live' | 'today' | 'upcoming' | 'finished' {
-  const kickoffMs = Date.parse(kickoffAt);
-  if (Number.isNaN(kickoffMs)) return 'upcoming';
-  if (Number(isFinal) === 1 && publicStatus === 'CONFIRMED_FINAL') return 'finished';
-  if (kickoffMs <= now.getTime()) return 'live';
-  return sameTallinnDate(kickoffAt, now) ? 'today' : 'upcoming';
-}
-
-function sameTallinnDate(kickoffAt: string, now: Date): boolean {
-  const formatter = new Intl.DateTimeFormat('et-EE', {
-    timeZone: 'Europe/Tallinn',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  return formatter.format(new Date(kickoffAt)) === formatter.format(now);
 }
 
 async function teamIdForName(db: QueryableDatabase, teamName: string): Promise<string | undefined> {
