@@ -2412,6 +2412,125 @@ td a {
   line-height: 1.45;
 }
 
+.operator-copy.warning {
+  color: #f8e6a0;
+  font-weight: 850;
+}
+
+.operator-health,
+.operator-provider-health {
+  display: grid;
+  gap: 12px;
+}
+
+.operator-health-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.operator-health-section {
+  display: grid;
+  gap: 8px;
+}
+
+.operator-health-title {
+  color: var(--white);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.operator-health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+.operator-health-grid div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .035);
+}
+
+.operator-health-grid span {
+  color: var(--muted);
+  font-size: .66rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.operator-health-grid strong {
+  min-width: 0;
+  color: var(--white);
+  font-size: .86rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.operator-health-list,
+.operator-warning-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.operator-health-list {
+  padding-left: 18px;
+  color: #f8e6a0;
+  font-weight: 800;
+}
+
+.operator-warning-row,
+.operator-warning-empty {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .035);
+}
+
+.operator-warning-row {
+  display: grid;
+  gap: 4px;
+}
+
+.operator-warning-row.delayed {
+  border-color: rgba(212, 175, 55, .45);
+  background: rgba(212, 175, 55, .12);
+}
+
+.operator-warning-row.critical {
+  border-color: rgba(239, 68, 68, .52);
+  background: rgba(239, 68, 68, .13);
+}
+
+.operator-warning-row strong {
+  color: var(--white);
+  font-size: .88rem;
+  overflow-wrap: anywhere;
+}
+
+.operator-warning-row span,
+.operator-warning-empty {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.operator-repair-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .operator-locked {
   display: grid;
   gap: 10px;

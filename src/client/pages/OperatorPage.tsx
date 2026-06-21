@@ -113,6 +113,57 @@ interface PublicStateDiagnostics {
   operatorStatus: 'OK' | 'Needs sync' | 'Running' | 'Failed';
 }
 
+type ProviderHealthStatus = 'ProviderHealthy' | 'ProviderDelayed' | 'ProviderDegraded' | 'ProviderCritical';
+
+interface ProviderHealth {
+  generatedAt: string;
+  status: ProviderHealthStatus;
+  providerStatus: {
+    activeProviderName: string;
+    providerMode: 'mock' | 'live';
+    writeMode?: 'mock' | 'dry-run' | 'live';
+    lastSuccessfulPollAt?: string;
+    lastFailedPollAt?: string;
+    pollingIntervalSeconds: number;
+    processUptimeSeconds: number;
+  };
+  matchHealth: {
+    totalMatches: number;
+    confirmedMatches: number;
+    liveOrProvisionalMatches: number;
+    upcomingMatches: number;
+    awaitingConfirmationMatches: number;
+  };
+  delayedConfirmationWarnings: Array<{
+    matchId: number;
+    match: string;
+    kickoffAt: string;
+    minutesSinceKickoff: number;
+    currentProviderState: string;
+    severity: 'delayed' | 'critical';
+  }>;
+  scorerHealth: {
+    confirmedGoalsCount: number;
+    scorerFactsGoalsCount: number;
+    missingGoalsCount: number;
+    hasMismatch: boolean;
+  };
+  manualOverrideSafety: {
+    manualCorrectedMatchesCount: number;
+    confirmedManualResultsCount: number;
+    staleProviderOverwriteAttemptsBlockedCount: number | null;
+    staleProviderOverwriteAttemptsAvailable: boolean;
+    manualOverrideProtectionActive: boolean;
+  };
+  providerVerifierStatus: {
+    enabled: boolean;
+    status: 'Verifier active' | 'Verifier inactive';
+    lastVerifierCheckAt?: string;
+    providerDisagreementsDetected: number;
+    unresolvedDisagreementsCount: number;
+  };
+}
+
 const SECRET_STORAGE_KEY = 'jalka-mm-operator-secret';
 const EMPTY_SCORER_ROW: ScorerRow = { playerName: '', teamCode: '', goals: '1' };
 const teamById = new Map(teamsSeed.map((team) => [team.id, team]));
@@ -132,6 +183,7 @@ export function OperatorPage() {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting'>('idle');
   const [snapshot, setSnapshot] = useState<PublicDashboardSnapshot | undefined>();
   const [diagnostics, setDiagnostics] = useState<PublicStateDiagnostics | undefined>();
+  const [providerHealth, setProviderHealth] = useState<ProviderHealth | undefined>();
   const [repairState, setRepairState] = useState<{ action?: RepairAction; status: 'idle' | 'running' | 'ok' | 'failed'; message?: string }>({ status: 'idle' });
   const [refreshIndex, setRefreshIndex] = useState(0);
 
@@ -140,15 +192,19 @@ export function OperatorPage() {
     const controller = new AbortController();
     const load = async () => {
       try {
-        const [dashboardResponse, diagnosticsResponse] = await Promise.all([
+        const [dashboardResponse, diagnosticsResponse, providerHealthResponse] = await Promise.all([
           fetch('/api/public-dashboard', { cache: 'no-store', signal: controller.signal }),
-          fetch('/api/public-state/diagnostics', { cache: 'no-store', signal: controller.signal })
+          fetch('/api/public-state/diagnostics', { cache: 'no-store', signal: controller.signal }),
+          fetch('/api/provider-health', { cache: 'no-store', signal: controller.signal })
         ]);
         if (!cancelled && dashboardResponse.ok) {
           setSnapshot(await dashboardResponse.json() as PublicDashboardSnapshot);
         }
         if (!cancelled && diagnosticsResponse.ok) {
           setDiagnostics(await diagnosticsResponse.json() as PublicStateDiagnostics);
+        }
+        if (!cancelled && providerHealthResponse.ok) {
+          setProviderHealth(await providerHealthResponse.json() as ProviderHealth);
         }
       } catch {
         return undefined;
@@ -365,6 +421,92 @@ export function OperatorPage() {
               <p className="operator-copy warning">Scorer facts exceed confirmed match goal total. Scorer sync may be duplicating or assigning team goals per player.</p>
             ) : null}
             {diagnostics?.staleReasons?.length ? <ul className="operator-health-list">{diagnostics.staleReasons.map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
+          </div>
+        </Card>
+
+        <Card title="Provider Health" eyebrow="OpenWorldCup" className="operator-panel">
+          <div className="operator-provider-health">
+            <div className="operator-health-topline">
+              <StatusBadge value={providerHealth ? providerHealthLabel(providerHealth.status) : 'Loading'} tone={providerHealthTone(providerHealth?.status)} />
+              <span className="operator-copy">Updated: {formatTimestamp(providerHealth?.generatedAt)}</span>
+            </div>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Provider Status</div>
+              <div className="operator-health-grid">
+                <div><span>Active provider</span><strong>{providerHealth?.providerStatus.activeProviderName ?? '-'}</strong></div>
+                <div><span>Mode</span><strong>{providerHealth?.providerStatus.providerMode ?? '-'}</strong></div>
+                <div><span>Write mode</span><strong>{providerHealth?.providerStatus.writeMode ?? '-'}</strong></div>
+                <div><span>Last success</span><strong>{formatTimestamp(providerHealth?.providerStatus.lastSuccessfulPollAt)}</strong></div>
+                <div><span>Last failure</span><strong>{formatTimestamp(providerHealth?.providerStatus.lastFailedPollAt)}</strong></div>
+                <div><span>Poll interval</span><strong>{providerHealth ? `${providerHealth.providerStatus.pollingIntervalSeconds}s` : '-'}</strong></div>
+                <div><span>Process uptime</span><strong>{formatDuration(providerHealth?.providerStatus.processUptimeSeconds)}</strong></div>
+              </div>
+            </section>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Match Health</div>
+              <div className="operator-health-grid">
+                <div><span>Total matches</span><strong>{providerHealth?.matchHealth.totalMatches ?? 0}</strong></div>
+                <div><span>Confirmed</span><strong>{providerHealth?.matchHealth.confirmedMatches ?? 0}</strong></div>
+                <div><span>Live/provisional</span><strong>{providerHealth?.matchHealth.liveOrProvisionalMatches ?? 0}</strong></div>
+                <div><span>Upcoming</span><strong>{providerHealth?.matchHealth.upcomingMatches ?? 0}</strong></div>
+                <div><span>Awaiting confirmation</span><strong>{providerHealth?.matchHealth.awaitingConfirmationMatches ?? 0}</strong></div>
+              </div>
+            </section>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Delayed Confirmation Warnings</div>
+              {providerHealth?.delayedConfirmationWarnings.length ? (
+                <div className="operator-warning-list">
+                  {providerHealth.delayedConfirmationWarnings.map((warning) => (
+                    <div className={`operator-warning-row ${warning.severity}`} key={warning.matchId}>
+                      <strong>{warning.match}</strong>
+                      <span>{formatTimestamp(warning.kickoffAt)} - {warning.minutesSinceKickoff} min - {warning.currentProviderState}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="operator-warning-empty">No delayed confirmations over 120 minutes.</p>
+              )}
+            </section>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Scorer Health</div>
+              <div className="operator-health-grid">
+                <div><span>Confirmed goals</span><strong>{providerHealth?.scorerHealth.confirmedGoalsCount ?? 0}</strong></div>
+                <div><span>Scorer fact goals</span><strong>{providerHealth?.scorerHealth.scorerFactsGoalsCount ?? 0}</strong></div>
+                <div><span>Missing goals</span><strong>{providerHealth?.scorerHealth.missingGoalsCount ?? 0}</strong></div>
+              </div>
+              {providerHealth?.scorerHealth.hasMismatch ? <p className="operator-copy warning">Scorer facts do not match confirmed match goals.</p> : null}
+            </section>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Manual Override Safety</div>
+              <div className="operator-health-grid">
+                <div><span>Manual corrected</span><strong>{providerHealth?.manualOverrideSafety.manualCorrectedMatchesCount ?? 0}</strong></div>
+                <div><span>Confirmed manual</span><strong>{providerHealth?.manualOverrideSafety.confirmedManualResultsCount ?? 0}</strong></div>
+                <div>
+                  <span>Overwrite attempts blocked</span>
+                  <strong>{formatOptionalCount(providerHealth?.manualOverrideSafety.staleProviderOverwriteAttemptsBlockedCount, providerHealth?.manualOverrideSafety.staleProviderOverwriteAttemptsAvailable)}</strong>
+                </div>
+                <div><span>Protection</span><strong>{providerHealth?.manualOverrideSafety.manualOverrideProtectionActive ? 'Active' : 'Inactive'}</strong></div>
+              </div>
+            </section>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Provider Verifier Status</div>
+              {providerHealth?.providerVerifierStatus.enabled ? (
+                <div className="operator-health-grid">
+                  <div><span>Status</span><strong>{providerHealth.providerVerifierStatus.status}</strong></div>
+                  <div><span>Last check</span><strong>{formatTimestamp(providerHealth.providerVerifierStatus.lastVerifierCheckAt)}</strong></div>
+                  <div><span>Disagreements detected</span><strong>{providerHealth.providerVerifierStatus.providerDisagreementsDetected}</strong></div>
+                  <div><span>Unresolved</span><strong>{providerHealth.providerVerifierStatus.unresolvedDisagreementsCount}</strong></div>
+                </div>
+              ) : (
+                <p className="operator-warning-empty">Verifier inactive</p>
+              )}
+            </section>
           </div>
         </Card>
 
@@ -707,6 +849,36 @@ function formatTimestamp(value?: string): string {
     timeStyle: 'short',
     timeZone: 'Europe/Tallinn'
   }).format(date);
+}
+
+function formatDuration(seconds?: number): string {
+  if (seconds === undefined || !Number.isFinite(seconds)) return '-';
+  const wholeSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(wholeSeconds / 3600);
+  const minutes = Math.floor((wholeSeconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+function formatOptionalCount(value: number | null | undefined, available?: boolean): string {
+  if (!available || value === null || value === undefined) return 'Not tracked';
+  return String(value);
+}
+
+function providerHealthLabel(status: ProviderHealthStatus): string {
+  return ({
+    ProviderHealthy: 'Provider healthy',
+    ProviderDelayed: 'Provider delayed',
+    ProviderDegraded: 'Provider degraded',
+    ProviderCritical: 'Provider critical'
+  } as Record<ProviderHealthStatus, string>)[status];
+}
+
+function providerHealthTone(status?: ProviderHealthStatus): 'good' | 'gold' | 'danger' | 'neutral' {
+  if (!status) return 'neutral';
+  if (status === 'ProviderHealthy') return 'good';
+  if (status === 'ProviderDelayed') return 'gold';
+  return 'danger';
 }
 
 function classifyOperatorStatus(

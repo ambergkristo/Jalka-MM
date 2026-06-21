@@ -10,6 +10,7 @@ import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamen
 import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runPublicStateRepairAction } from './results/publicStateHealth.js';
 import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
+import { collectProviderHealth } from './results/providerHealth.js';
 
 await seedTournamentData();
 try {
@@ -55,6 +56,7 @@ createServer(async (request, response) => {
     }
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
     if (request.method === 'GET' && url.pathname === '/api/public-state/diagnostics') return json(response, 200, await collectPublicStateDiagnostics({ db }));
+    if (request.method === 'GET' && url.pathname === '/api/provider-health') return json(response, 200, await collectProviderHealth({ db, resultAgentStatus: await getResultsAgentStatus() }));
     if (request.method === 'POST' && url.pathname === '/api/public-state/repair') {
       const permission = getManualResultPermission({
         providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])

@@ -242,3 +242,20 @@
 - `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
 - `npm run build` passed.
 - `node dist/tools/validateProviderMatchMap.js` passed.
+
+# Sprint 32 - Free Provider Health Panel
+
+- [x] Add canonical provider health calculations for provider status, match health, scorer health, manual override safety, verifier status, and warning state.
+- [x] Expose `/api/provider-health` as structured JSON.
+- [x] Add the provider health panel to the existing operator area only.
+- [x] Add targeted regression tests for classification, delayed confirmations, scorer mismatch, and payload shape.
+- [x] Run targeted tests plus server typecheck/build.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Added `/api/provider-health` and an operator-only Provider Health panel.
+- `npx vitest run src/test/providerHealth.test.ts src/test/operatorPage.test.tsx --reporter=verbose` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npm run build` passed.
+- `node --test dist/test-db/provider-health-node-test.js` passed.

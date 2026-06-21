@@ -44,6 +44,8 @@ describe('operator page', () => {
     expect(markup).toContain('Match filter');
     expect(markup).toContain('Lisa väravalööja');
     expect(markup).toContain('Re-sync scorers from confirmed provider results');
+    expect(markup).toContain('Provider Health');
+    expect(markup).toContain('Verifier inactive');
   });
 
   it('shows the operator navigation link', () => {
