@@ -221,3 +221,24 @@
 - `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
 - `npm run build` passed.
 - `node --test dist/test-db/public-state-health-node-test.js dist/test-db/result-persistence-node-test.js` passed.
+
+# Sprint 31 - Free Provider Chain Audit
+
+- [x] Inspect current OpenWorldCup provider and production behavior.
+- [x] Verify football-data.org free-tier World Cup score/status suitability.
+- [x] Check OpenFootball/worldcup.json as static fixture fallback.
+- [x] Identify scorer-data limitations for free providers.
+- [x] Add low-risk free-provider preset skeleton.
+- [x] Keep OpenWorldCup and require confirmed mapping before football-data.org verifier activation.
+- [x] Add targeted mocked tests.
+- [x] Run targeted tests plus server typecheck/build.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Added `free-worldcup` provider preset: OpenWorldCup primary, optional football-data.org free verifier only with explicit config and confirmed fixture mapping, bundled schedule as static fixture fallback.
+- Documented free provider audit and scorer limitations in `docs/FREE_PROVIDER_CHAIN_AUDIT.md`.
+- `npx vitest run src/test/resultProviderFactory.test.ts src/test/providerMatchMap.test.ts src/test/footballDataResultProvider.test.ts src/test/providerChainResultProvider.test.ts --reporter=verbose` passed.
+- `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
+- `npm run build` passed.
+- `node dist/tools/validateProviderMatchMap.js` passed.

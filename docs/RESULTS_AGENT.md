@@ -1,6 +1,6 @@
 # Results Agent Plan
 
-The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. Sprint 17 adds a free/low-cost provider-chain foundation: API-Football can act as the primary candidate, football-data.org can act as a verifier, Sportmonks remains an optional paid provider, and an open World Cup API candidate plus operator/manual confirmation now provide a fallback path. Live use still requires credentials, confirmed fixture mapping, and endpoint protection. Provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
+The results agent is the backend workflow that updates tournament match statuses and scores. Mock remains the default provider. The free production path is `free-worldcup`: OpenWorldCup acts as the primary live/provisional source, football-data.org free tier can act as a mapped final-score verifier, and operator/manual confirmation remains the fallback. API-Football and Sportmonks adapters remain available for experiments but are not part of the free-only production recommendation. Live use still requires credentials, confirmed fixture mapping where relevant, and endpoint protection. Provider final scores may be stored provisionally, but public final scores and official leaderboard rebuilds require confirmation.
 
 Current implementation modules live in `src/server/results/`:
 
@@ -262,8 +262,8 @@ Sprint 17 supports a configurable provider chain while keeping mock as the defau
 
 Environment variables:
 
-- `RESULTS_PROVIDER=mock | api-football | football-data | sportmonks`
-- `RESULTS_PROVIDER_CHAIN=mock` or comma-separated provider names such as `api-football,football-data,sportmonks`
+- `RESULTS_PROVIDER=mock | free-worldcup | open-worldcup | api-football | football-data | sportmonks`
+- `RESULTS_PROVIDER_CHAIN=mock` or comma-separated provider names such as `open-worldcup,football-data`
 - `RESULTS_API_KEY`
 - `RESULTS_API_BASE_URL`
 - `RESULTS_COMPETITION_ID`
@@ -302,19 +302,18 @@ Defaults are safe:
 
 `createResultProvider(config)` returns `MockResultProvider` by default. When `RESULTS_PROVIDER_CHAIN` contains multiple providers, it returns a `ProviderChainResultProvider` that fetches the primary provider first and asks verifier providers only when confirmation is useful.
 
-Low-cost provider-chain dry-run example:
+The `free-worldcup` preset is the free-only production path. It always uses OpenWorldCup as the primary live/provisional score and scorer source. It adds football-data.org as a final-score verifier only when football-data.org free-token config and confirmed fixture mapping are present. Static fixture fallback comes from the bundled World Cup 2026 schedule data; static fixtures never create scores or scorers.
+
+Free provider-chain dry-run example:
 
 ```bash
-RESULTS_PROVIDER_CHAIN=api-football,football-data
+RESULTS_PROVIDER=free-worldcup
 RESULTS_WRITE_MODE=dry-run
 RESULT_CONFIRMATION_DELAY_MINUTES=10
-API_FOOTBALL_API_BASE_URL=https://v3.football.api-sports.io
-API_FOOTBALL_COMPETITION_ID=world-cup
-API_FOOTBALL_SEASON=2026
+OPEN_WORLDCUP_API_BASE_URL=https://worldcup26.ir
 FOOTBALL_DATA_API_BASE_URL=https://api.football-data.org/v4
 FOOTBALL_DATA_COMPETITION_ID=WC
 FOOTBALL_DATA_SEASON=2026
-API_FOOTBALL_API_KEY=...
 FOOTBALL_DATA_API_KEY=...
 ```
 

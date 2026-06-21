@@ -1,16 +1,17 @@
 import providerMatchMapSeed from '../data/providerMatchMap.example.json' with { type: 'json' };
 import matchesSeed from '../data/worldcup2026/matches.json' with { type: 'json' };
 import { loadResultProviderConfig } from '../server/results/resultProviderConfig.js';
-import { validateProviderMatchMap, validateProviderMatchMapForLive, type ProviderMatchMapEntry } from '../server/results/providerMatchMap.js';
+import { validateProviderMatchMap, validateProviderMatchMapForLive, type ProviderMatchMapEntry, type ProviderMatchMapProvider } from '../server/results/providerMatchMap.js';
 
 const config = loadResultProviderConfig();
 const entries = providerMatchMapSeed as ProviderMatchMapEntry[];
 const structuralErrors = validateProviderMatchMap(entries);
-const liveErrors = config.provider === 'mock'
+const mappedProvider = toMappedProvider(config.provider);
+const liveErrors = !mappedProvider
   ? []
   : validateProviderMatchMapForLive({
       entries,
-      provider: config.provider,
+      provider: mappedProvider,
       competitionId: config.competitionId,
       season: config.season,
       expectedInternalMatchIds: config.writeMode === 'live' ? matchesSeed.map((match) => Number(match.id)) : undefined
@@ -32,4 +33,9 @@ if (errors.length > 0) {
     writeMode: config.writeMode,
     entries: entries.length
   }, null, 2));
+}
+
+function toMappedProvider(provider: string): ProviderMatchMapProvider | undefined {
+  if (provider === 'api-football' || provider === 'football-data' || provider === 'sportmonks') return provider;
+  return undefined;
 }

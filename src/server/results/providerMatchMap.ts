@@ -1,10 +1,9 @@
-import type { ResultsProviderName } from './resultProviderConfig.js';
-
 export type ProviderMatchConfidence = 'example' | 'low' | 'medium' | 'high' | 'confirmed';
+export type ProviderMatchMapProvider = 'api-football' | 'football-data' | 'sportmonks';
 
 export interface ProviderMatchMapEntry {
   internalMatchId: number;
-  provider: Exclude<ResultsProviderName, 'mock'>;
+  provider: ProviderMatchMapProvider;
   providerCompetitionId: string;
   providerSeason: string;
   providerFixtureId?: string | null;
@@ -34,7 +33,7 @@ export function validateProviderMatchMap(entries: ProviderMatchMapEntry[]): stri
 
 export function findProviderMatchMapEntry(input: {
   entries: ProviderMatchMapEntry[];
-  provider: ProviderMatchMapEntry['provider'];
+  provider: ProviderMatchMapProvider;
   internalMatchId: number;
   competitionId?: string;
   season?: string;
@@ -50,7 +49,7 @@ export function findProviderMatchMapEntry(input: {
 
 export function validateProviderMatchMapForLive(input: {
   entries: ProviderMatchMapEntry[];
-  provider: ProviderMatchMapEntry['provider'];
+  provider: ProviderMatchMapProvider;
   competitionId?: string;
   season?: string;
   expectedInternalMatchIds?: number[];

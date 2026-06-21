@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createResultProvider } from '../server/results/resultProviderFactory.js';
 import { loadResultProviderConfig, validateResultProviderConfig } from '../server/results/resultProviderConfig.js';
 import { normalizeProviderStatusDetail } from '../server/results/resultProvider.js';
+import { FreeWorldCupResultProvider } from '../server/results/freeWorldCupResultProvider.js';
 
 describe('result provider config and factory', () => {
   it('defaults to safe mock mode without API credentials', () => {
@@ -58,6 +59,41 @@ describe('result provider config and factory', () => {
     ]);
   });
 
+  it('requires only OpenWorldCup config for the free World Cup provider preset', () => {
+    const missingConfig = loadResultProviderConfig({ RESULTS_PROVIDER: 'free-worldcup' });
+    expect(validateResultProviderConfig(missingConfig)).toEqual([
+      'OPEN_WORLDCUP_API_BASE_URL is required when free-worldcup is enabled'
+    ]);
+
+    const config = loadResultProviderConfig({
+      RESULTS_PROVIDER: 'free-worldcup',
+      OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir'
+    });
+    expect(validateResultProviderConfig(config)).toEqual([]);
+    expect(config.footballData).toMatchObject({ competitionId: 'WC', season: '2026' });
+  });
+
+  it('validates partial football-data verifier config inside the free World Cup preset', () => {
+    const config = loadResultProviderConfig({
+      RESULTS_PROVIDER: 'free-worldcup',
+      OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir',
+      FOOTBALL_DATA_API_KEY: 'free-token'
+    });
+
+    expect(validateResultProviderConfig(config)).toContain('FOOTBALL_DATA_API_BASE_URL is required when football-data.org verifier is configured for free-worldcup');
+  });
+
+  it('does not infer football-data verifier config from generic API key in the free World Cup preset', () => {
+    const config = loadResultProviderConfig({
+      RESULTS_PROVIDER: 'free-worldcup',
+      OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir',
+      RESULTS_API_KEY: 'open-worldcup-token-if-needed'
+    });
+
+    expect(config.footballData.apiKey).toBeUndefined();
+    expect(validateResultProviderConfig(config)).toEqual([]);
+  });
+
   it('creates the Sportmonks provider when required config is present', () => {
     const provider = createResultProvider(
       loadResultProviderConfig({
@@ -98,6 +134,49 @@ describe('result provider config and factory', () => {
 
     expect(provider.name).toBe('open-worldcup-result-provider');
     expect(provider.mode).toBe('live');
+  });
+
+  it('creates the free World Cup preset with OpenWorldCup only when football-data is unmapped', () => {
+    const provider = createResultProvider(
+      loadResultProviderConfig({
+        RESULTS_PROVIDER: 'free-worldcup',
+        OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir',
+        FOOTBALL_DATA_API_KEY: 'free-token',
+        FOOTBALL_DATA_API_BASE_URL: 'https://api.football-data.org/v4'
+      }),
+      []
+    );
+
+    expect(provider).toBeInstanceOf(FreeWorldCupResultProvider);
+    expect(provider.name).toBe('free-worldcup-provider-chain:open-worldcup-result-provider');
+    expect((provider as FreeWorldCupResultProvider).plan).toMatchObject({
+      providerNames: ['open-worldcup-result-provider'],
+      footballDataVerifier: 'disabled',
+      staticFixtureFallback: 'bundled-worldcup2026-schedule',
+      scorerProvider: 'open-worldcup-or-manual'
+    });
+  });
+
+  it('adds football-data as a free final-score verifier when confirmed mapping exists', () => {
+    const provider = createResultProvider(
+      loadResultProviderConfig({
+        RESULTS_PROVIDER: 'free-worldcup',
+        OPEN_WORLDCUP_API_BASE_URL: 'https://worldcup26.ir',
+        FOOTBALL_DATA_API_KEY: 'free-token',
+        FOOTBALL_DATA_API_BASE_URL: 'https://api.football-data.org/v4'
+      }),
+      [{
+        internalMatchId: 1,
+        provider: 'football-data',
+        providerCompetitionId: 'WC',
+        providerSeason: '2026',
+        providerFixtureId: '2001',
+        confidence: 'confirmed'
+      }]
+    );
+
+    expect(provider.name).toBe('free-worldcup-provider-chain:open-worldcup-result-provider,football-data-result-provider');
+    expect((provider as FreeWorldCupResultProvider).plan.footballDataVerifier).toBe('enabled');
   });
 
   it('requires an agent secret before live write mode can be enabled', () => {

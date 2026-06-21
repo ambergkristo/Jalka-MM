@@ -1,8 +1,9 @@
 import providerMatchMapSeed from '../../data/providerMatchMap.example.json' with { type: 'json' };
 import { ApiFootballResultProvider } from './apiFootballResultProvider.js';
 import { FootballDataResultProvider } from './footballDataResultProvider.js';
+import { FreeWorldCupResultProvider } from './freeWorldCupResultProvider.js';
 import { MockResultProvider } from './mockResultProvider.js';
-import { validateProviderMatchMapForLive, type ProviderMatchMapEntry } from './providerMatchMap.js';
+import { validateProviderMatchMapForLive, type ProviderMatchMapEntry, type ProviderMatchMapProvider } from './providerMatchMap.js';
 import { ProviderChainResultProvider } from './providerChainResultProvider.js';
 import type { ResultProvider } from './resultProvider.js';
 import { loadResultProviderConfig, validateResultProviderConfig, type ProviderSpecificConfig, type ResultProviderConfig, type ResultsProviderName } from './resultProviderConfig.js';
@@ -25,11 +26,12 @@ function createSingleProvider(provider: ResultsProviderName, config: ResultProvi
   if (provider === 'api-football') return new ApiFootballResultProvider(config.apiFootball, matchMap);
   if (provider === 'football-data') return new FootballDataResultProvider(config.footballData, matchMap);
   if (provider === 'open-worldcup') return new OpenWorldCupResultProvider(config.openWorldCup);
+  if (provider === 'free-worldcup') return createFreeWorldCupProvider(config, matchMap);
   return new SportmonksResultProvider(providerScopedConfig(config, config.sportmonks), matchMap);
 }
 
 function validateLiveMatchMaps(config: ResultProviderConfig, matchMap: ProviderMatchMapEntry[]): void {
-  const providers = [...new Set(config.providerChain.filter((provider) => provider !== 'mock' && provider !== 'open-worldcup'))];
+  const providers = [...new Set(config.providerChain.filter(isMappedProvider))];
   const errors = providers.flatMap((provider) => {
     const providerConfig = providerConfigFor(provider, config);
     return validateProviderMatchMapForLive({
@@ -42,11 +44,38 @@ function validateLiveMatchMaps(config: ResultProviderConfig, matchMap: ProviderM
   if (errors.length > 0) throw new Error(`Invalid provider match map for live writes: ${errors.join('; ')}`);
 }
 
-function providerConfigFor(provider: Exclude<ResultsProviderName, 'mock'>, config: ResultProviderConfig): ProviderSpecificConfig {
+function providerConfigFor(provider: ProviderMatchMapProvider, config: ResultProviderConfig): ProviderSpecificConfig {
   if (provider === 'api-football') return config.apiFootball;
   if (provider === 'football-data') return config.footballData;
-  if (provider === 'open-worldcup') return config.openWorldCup;
   return config.sportmonks;
+}
+
+function createFreeWorldCupProvider(config: ResultProviderConfig, matchMap: ProviderMatchMapEntry[]): FreeWorldCupResultProvider {
+  const providers: ResultProvider[] = [new OpenWorldCupResultProvider(config.openWorldCup)];
+  if (hasUsableFootballDataVerifier(config, matchMap)) {
+    providers.push(new FootballDataResultProvider(config.footballData, matchMap));
+  }
+  return new FreeWorldCupResultProvider(providers, {
+    providerNames: providers.map((provider) => provider.name),
+    footballDataVerifier: providers.some((provider) => provider.name === 'football-data-result-provider') ? 'enabled' : 'disabled',
+    staticFixtureFallback: 'bundled-worldcup2026-schedule',
+    scorerProvider: 'open-worldcup-or-manual'
+  });
+}
+
+function hasUsableFootballDataVerifier(config: ResultProviderConfig, matchMap: ProviderMatchMapEntry[]): boolean {
+  if (!config.footballData.apiKey || !config.footballData.apiBaseUrl) return false;
+  return matchMap.some((entry) =>
+    entry.provider === 'football-data' &&
+    entry.providerFixtureId &&
+    entry.confidence === 'confirmed' &&
+    (!config.footballData.competitionId || entry.providerCompetitionId === config.footballData.competitionId) &&
+    (!config.footballData.season || entry.providerSeason === config.footballData.season)
+  );
+}
+
+function isMappedProvider(provider: ResultsProviderName): provider is ProviderMatchMapProvider {
+  return provider === 'api-football' || provider === 'football-data' || provider === 'sportmonks';
 }
 
 function providerScopedConfig(config: ResultProviderConfig, providerConfig: ProviderSpecificConfig): ResultProviderConfig {
