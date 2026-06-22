@@ -162,11 +162,11 @@ describe('manual result correction with persistent storage', () => {
 
       const manualScorers = await db.all('SELECT player_name, goals FROM result_manual_scorers WHERE match_id = ? ORDER BY player_name', [1]);
       const topScorers = await db.all('SELECT player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
-      assert.equal(manualScorers.length, 1);
-      assert.equal(String(manualScorers[0]?.player_name), 'Raul Jimenez');
-      assert.equal(Number(manualScorers[0]?.goals), 1);
+      assert.equal(manualScorers.length, 2);
+      assert.deepEqual(manualScorers.map((row) => String(row.player_name)), ['Raúl Jiménez', 'manual_unknown_scorer']);
+      assert.deepEqual(manualScorers.map((row) => Number(row.goals)), [1, 1]);
       assert.equal(topScorers.length, 1);
-      assert.equal(String(topScorers[0]?.player_name), 'Raul Jimenez');
+      assert.equal(String(topScorers[0]?.player_name), 'Raúl Jiménez');
       assert.equal(Number(topScorers[0]?.goals), 1);
     });
   });

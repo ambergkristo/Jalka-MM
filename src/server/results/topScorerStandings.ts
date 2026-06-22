@@ -4,7 +4,11 @@ import { normalizeScorerName } from './scorerNormalization.js';
 import { resolveScorerIdentity, scorerIdentityGroupKey } from '../../domain/scorerIdentity.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
-import type { ResultScorer } from './resultTypes.js';
+import { loadResultProviderConfig } from './resultProviderConfig.js';
+import { OpenWorldCupResultProvider } from './openWorldCupResultProvider.js';
+import type { ResultProvider } from './resultProvider.js';
+import type { ResultScorer, TrackedMatch } from './resultTypes.js';
+import { getManualScorerCorrections, MANUAL_UNKNOWN_SCORER_NAME, isManualUnknownScorerName } from './manualScorerCorrections.js';
 
 export interface ScorerBackfillResult {
   repaired: boolean;
@@ -15,13 +19,44 @@ export interface ScorerBackfillResult {
   scorerFactsSkipped: number;
 }
 
-export async function backfillTopScorersFromConfirmedResults(db: QueryableDatabase, nowIso: string): Promise<ScorerBackfillResult> {
+export interface BackfillTopScorersOptions {
+  provider?: Pick<ResultProvider, 'fetchMatchUpdate'>;
+}
+
+export async function backfillTopScorersFromConfirmedResults(
+  db: QueryableDatabase,
+  nowIso: string,
+  options: BackfillTopScorersOptions = {}
+): Promise<ScorerBackfillResult> {
   await migrateResultPersistenceSchema(db);
   const confirmedResults = await db.all(`
-    SELECT match_id, provider_results_json
-    FROM match_results
-    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND provider_results_json IS NOT NULL
-    ORDER BY match_id
+    SELECT
+      r.match_id,
+      r.provider_results_json,
+      r.confirmed_home_score,
+      r.confirmed_away_score,
+      r.status,
+      r.public_status,
+      r.is_final,
+      r.provider_fixture_id,
+      r.last_checked_at,
+      r.confirmed_at,
+      r.updated_at,
+      m.kickoff_at,
+      m.home_team_id,
+      m.away_team_id,
+      m.home_slot,
+      m.away_slot,
+      COALESCE(home.name, m.home_slot) AS home_team,
+      COALESCE(away.name, m.away_slot) AS away_team,
+      COALESCE(home.code, '') AS home_team_code,
+      COALESCE(away.code, '') AS away_team_code
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
+    LEFT JOIN teams home ON home.id = m.home_team_id
+    LEFT JOIN teams away ON away.id = m.away_team_id
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
+    ORDER BY r.match_id
   `);
   if (confirmedResults.length === 0) {
     return emptyBackfillResult('no-confirmed-results');
@@ -33,7 +68,31 @@ export async function backfillTopScorersFromConfirmedResults(db: QueryableDataba
   let scorerFactsSkipped = 0;
   for (const result of confirmedResults) {
     const matchId = Number(result.match_id);
-    const scorers = parseProviderScorers(result.provider_results_json);
+    const expectedGoals = Number(result.confirmed_home_score ?? 0) + Number(result.confirmed_away_score ?? 0);
+    const existingScorers = await loadExistingScorersForMatch(db, matchId);
+    const storedScorers = parseProviderScorers(result.provider_results_json);
+    const liveScorers = storedScorers.length >= expectedGoals ? [] : await fetchCurrentProviderScorers(result as {
+      match_id: number;
+      kickoff_at?: string;
+      home_team?: string;
+      away_team?: string;
+    }, nowIso, options.provider);
+    const providerScorers = choosePreferredScorers(storedScorers, liveScorers);
+    const manualScorers = getManualScorerCorrections(matchId);
+    const resolvedScorers = existingScorers.length > 0
+      ? existingScorers
+      : [...providerScorers, ...manualScorers];
+    const scorers = fillMissingScorers(
+      resolvedScorers,
+      expectedGoals,
+      {
+        homeTeam: String(result.home_team ?? result.home_slot ?? ''),
+        homeTeamCode: stringOrUndefined(result.home_team_code),
+        awayTeam: String(result.away_team ?? result.away_slot ?? ''),
+        awayTeamCode: stringOrUndefined(result.away_team_code)
+      }
+    );
+
     if (scorers.length === 0) {
       scorerFactsSkipped += 1;
       continue;
@@ -50,7 +109,7 @@ export async function backfillTopScorersFromConfirmedResults(db: QueryableDataba
 
   return {
     repaired: repairedMatches > 0,
-    reason: repairedMatches > 0 ? 'backfilled-from-stored-provider-results' : 'no-provider-scorers-found',
+    reason: repairedMatches > 0 ? 'backfilled-from-confirmed-results' : 'no-provider-scorers-found',
     repairedMatches,
     scorerFactsInserted,
     scorerFactsUpdated,
@@ -101,6 +160,21 @@ export async function rebuildTopScorerStandings(db: QueryableDatabase, nowIso: s
   });
 }
 
+export async function countUnknownManualScorerGoals(db: QueryableDatabase): Promise<number> {
+  return Number((await db.one(`
+    SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
+    FROM result_manual_scorers
+    WHERE player_name = ?
+  `, [MANUAL_UNKNOWN_SCORER_NAME]))?.total ?? 0);
+}
+
+export async function countVisibleScorerFactGoals(db: QueryableDatabase): Promise<number> {
+  return Number((await db.one(`
+    SELECT COALESCE(SUM(CASE WHEN player_name = ? THEN 0 ELSE COALESCE(goals, 0) END), 0) AS total
+    FROM result_manual_scorers
+  `, [MANUAL_UNKNOWN_SCORER_NAME]))?.total ?? 0);
+}
+
 async function rebuildTopScorerStandingsInTransaction(db: QueryableDatabase, nowIso: string): Promise<void> {
   const rows = await db.all(`
     SELECT player_id, provider_player_id, player_name, team_id, team_code, goals
@@ -109,6 +183,7 @@ async function rebuildTopScorerStandingsInTransaction(db: QueryableDatabase, now
   `);
   const grouped = new Map<string, { playerId: string | null; providerPlayerId: string | null; playerName: string; teamId: string | null; goals: number }>();
   for (const row of rows) {
+    if (isManualUnknownScorerName(String(row.player_name ?? ''))) continue;
     const playerId = row.player_id === null || row.player_id === undefined || row.player_id === '' ? undefined : String(row.player_id);
     const providerPlayerId = row.provider_player_id === null || row.provider_player_id === undefined || row.provider_player_id === '' ? undefined : String(row.provider_player_id);
     const identity = resolveScorerIdentity({ playerName: String(row.player_name ?? ''), playerId, providerPlayerId });
@@ -189,6 +264,28 @@ async function countScorerFactsForMatch(db: QueryableDatabase, matchId: number):
   return Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_scorers WHERE match_id = ?', [matchId]))?.count ?? 0);
 }
 
+async function loadExistingScorersForMatch(db: QueryableDatabase, matchId: number): Promise<ResultScorer[]> {
+  const rows = await db.all(`
+    SELECT player_name, player_id, provider_player_id, raw_player_name, team_code, goals
+    FROM result_manual_scorers
+    WHERE match_id = ?
+    ORDER BY created_at, player_name
+  `, [matchId]);
+  return rows.flatMap((row) => {
+    const playerName = typeof row.player_name === 'string' ? normalizeScorerName(row.player_name) : '';
+    const goals = Number(row.goals ?? 0);
+    if (!playerName || !Number.isInteger(goals) || goals <= 0) return [];
+    return [{
+      playerName,
+      playerId: typeof row.player_id === 'string' && row.player_id.trim() ? row.player_id.trim() : undefined,
+      providerPlayerId: typeof row.provider_player_id === 'string' && row.provider_player_id.trim() ? row.provider_player_id.trim() : undefined,
+      rawPlayerName: typeof row.raw_player_name === 'string' ? row.raw_player_name : undefined,
+      teamCode: typeof row.team_code === 'string' && row.team_code.trim() ? row.team_code.trim() : undefined,
+      goals
+    }];
+  });
+}
+
 function emptyBackfillResult(reason: string): ScorerBackfillResult {
   return {
     repaired: false,
@@ -247,4 +344,89 @@ function normalizeScorer(value: unknown): ResultScorer[] {
     teamCode: teamCode || undefined,
     goals
   }];
+}
+
+async function fetchCurrentProviderScorers(
+  result: {
+    match_id: number;
+    kickoff_at?: string;
+    home_team?: string;
+    away_team?: string;
+  },
+  nowIso: string,
+  providerOverride?: Pick<ResultProvider, 'fetchMatchUpdate'>
+): Promise<ResultScorer[]> {
+  try {
+    const provider = providerOverride ?? await buildOpenWorldCupProvider();
+    if (!provider) return [];
+    const match = buildTrackedMatch(result);
+    const update = await provider.fetchMatchUpdate(match, new Date(nowIso));
+    return update.scorers ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function buildOpenWorldCupProvider(): Promise<Pick<ResultProvider, 'fetchMatchUpdate'> | undefined> {
+  const config = loadResultProviderConfig();
+  if (!config.openWorldCup.apiBaseUrl) return undefined;
+  return new OpenWorldCupResultProvider(config.openWorldCup);
+}
+
+function buildTrackedMatch(result: {
+  match_id: number;
+  kickoff_at?: string;
+  home_team?: string;
+  away_team?: string;
+}): TrackedMatch {
+  return {
+    id: Number(result.match_id),
+    kickoffUtc: String(result.kickoff_at ?? new Date().toISOString()),
+    status: 'FINISHED',
+    homeTeam: String(result.home_team ?? ''),
+    awayTeam: String(result.away_team ?? ''),
+    isFinal: true
+  };
+}
+
+function choosePreferredScorers(primary: ResultScorer[], secondary: ResultScorer[]): ResultScorer[] {
+  const primaryGoals = scorerGoalTotal(primary);
+  const secondaryGoals = scorerGoalTotal(secondary);
+  if (secondaryGoals > primaryGoals) return secondary;
+  if (primaryGoals > secondaryGoals) return primary;
+  if (secondary.length > primary.length) return secondary;
+  return primary.length > 0 ? primary : secondary;
+}
+
+function scorerGoalTotal(scorers: ResultScorer[]): number {
+  return scorers.reduce((total, scorer) => total + Number(scorer.goals ?? 0), 0);
+}
+
+function fillMissingScorers(
+  scorers: ResultScorer[],
+  expectedGoals: number,
+  teams: {
+    homeTeam: string;
+    homeTeamCode?: string;
+    awayTeam: string;
+    awayTeamCode?: string;
+  }
+): ResultScorer[] {
+  const totalGoals = scorerGoalTotal(scorers);
+  if (totalGoals >= expectedGoals) return scorers;
+  const fillers: ResultScorer[] = [];
+  for (let index = 0; index < expectedGoals - totalGoals; index += 1) {
+    fillers.push({
+      playerName: MANUAL_UNKNOWN_SCORER_NAME,
+      teamName: teams.homeTeam || teams.awayTeam || undefined,
+      teamCode: teams.homeTeamCode ?? teams.awayTeamCode,
+      goals: 1
+    });
+  }
+  return [...scorers, ...fillers];
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  return String(value);
 }

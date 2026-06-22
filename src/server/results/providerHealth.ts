@@ -5,6 +5,7 @@ import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
 import type { ProviderMatchMapEntry } from './providerMatchMap.js';
 import type { ResultAgentStatus } from './resultTypes.js';
+import { MANUAL_UNKNOWN_SCORER_NAME } from './manualScorerCorrections.js';
 
 const DEFAULT_POLLING_INTERVAL_SECONDS = 60;
 const PROCESS_STARTED_AT = new Date();
@@ -43,6 +44,12 @@ export interface ProviderHealthPayload {
     scorerFactsGoalsCount: number;
     missingGoalsCount: number;
     hasMismatch: boolean;
+    unknownManualScorerCount: number;
+    unknownManualScorerMatches: Array<{
+      matchId: number;
+      match: string;
+      goalsCount: number;
+    }>;
     mismatchDetails: Array<{
       matchId: number;
       match: string;
@@ -224,15 +231,47 @@ async function getScorerHealth(db: QueryableDatabase): Promise<ProviderHealthPay
     SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
     FROM result_manual_scorers
   `);
+  const unknownManualScorerRow = await db.one(`
+    SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
+    FROM result_manual_scorers
+    WHERE player_name = ?
+  `, [MANUAL_UNKNOWN_SCORER_NAME]);
   const confirmedGoalsCount = Number(confirmedGoalsRow?.total ?? 0);
   const scorerFactsGoalsCount = Number(scorerGoalsRow?.total ?? 0);
+  const unknownManualScorerCount = Number(unknownManualScorerRow?.total ?? 0);
   return {
     confirmedGoalsCount,
     scorerFactsGoalsCount,
     missingGoalsCount: Math.max(confirmedGoalsCount - scorerFactsGoalsCount, 0),
     hasMismatch: confirmedGoalsCount !== scorerFactsGoalsCount,
+    unknownManualScorerCount,
+    unknownManualScorerMatches: await getUnknownManualScorerMatches(db),
     mismatchDetails: await getScorerMismatchDetails(db)
   };
+}
+
+async function getUnknownManualScorerMatches(db: QueryableDatabase): Promise<ProviderHealthPayload['scorerHealth']['unknownManualScorerMatches']> {
+  const rows = await db.all(`
+    SELECT
+      r.match_id,
+      COALESCE(home.name, m.home_slot) AS home_team,
+      COALESCE(away.name, m.away_slot) AS away_team,
+      COALESCE(SUM(COALESCE(facts.goals, 0)), 0) AS goals_count
+    FROM result_manual_scorers facts
+    JOIN match_results r ON r.match_id = facts.match_id
+    JOIN matches m ON m.id = r.match_id
+    LEFT JOIN teams home ON home.id = m.home_team_id
+    LEFT JOIN teams away ON away.id = m.away_team_id
+    WHERE facts.player_name = ?
+      AND ${CONFIRMED_FINAL_RESULT_SQL}
+    GROUP BY r.match_id, home.name, m.home_slot, away.name, m.away_slot
+    ORDER BY r.match_id
+  `, [MANUAL_UNKNOWN_SCORER_NAME]);
+  return rows.map((row) => ({
+    matchId: Number(row.match_id),
+    match: `${String(row.home_team ?? 'Home')} vs ${String(row.away_team ?? 'Away')}`,
+    goalsCount: Number(row.goals_count ?? 0)
+  }));
 }
 
 async function getScorerMismatchDetails(db: QueryableDatabase): Promise<ProviderHealthPayload['scorerHealth']['mismatchDetails']> {

@@ -160,6 +160,30 @@ describe('top scorer standings persistence', () => {
     }
   });
 
+  it('excludes manual unknown scorer placeholders from the public top scorer standings', async () => {
+    const { db, sqlitePath } = createTempDatabase();
+    try {
+      await seedMatchTables(db);
+      await migrateResultPersistenceSchema(db);
+
+      await db.run(
+        `INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at) VALUES
+          ('1-a', 1, 'manual_unknown_scorer', 'MEX', 'MEX', 1, '2026-06-12T07:10:20.007Z'),
+          ('1-b', 1, 'Rui Costa', 'MEX', 'MEX', 2, '2026-06-12T07:10:20.007Z')
+        `
+      );
+
+      await rebuildTopScorerStandings(db, '2026-06-12T07:15:20.007Z');
+      const standings = await db.all('SELECT player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.equal(standings.length, 1);
+      assert.equal(String(standings[0]?.player_name), 'Rui Costa');
+      assert.equal(Number(standings[0]?.goals), 2);
+    } finally {
+      await db.close();
+      rmSync(sqlitePath, { force: true });
+    }
+  });
+
   it('lets manual confirmed results populate the public top scorers table', async () => {
     const { db, sqlitePath } = createTempDatabase();
     try {

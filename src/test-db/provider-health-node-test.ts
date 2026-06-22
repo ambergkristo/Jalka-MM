@@ -72,6 +72,8 @@ describe('provider health', () => {
         assert.equal(health.scorerHealth.scorerFactsGoalsCount, 1);
         assert.equal(health.scorerHealth.missingGoalsCount, 1);
         assert.equal(health.scorerHealth.hasMismatch, true);
+        assert.equal(health.scorerHealth.unknownManualScorerCount, 0);
+        assert.deepEqual(health.scorerHealth.unknownManualScorerMatches, []);
         assert.equal(health.scorerHealth.mismatchDetails.length, 1);
         assert.deepEqual(health.scorerHealth.mismatchDetails[0], {
           matchId: 3,
@@ -149,6 +151,44 @@ describe('provider health', () => {
       assert.equal(second.repairedMatches, 1);
       assert.equal(Number(facts?.count ?? 0), 2);
       assert.equal(Number(facts?.goals ?? 0), 2);
+    });
+  });
+
+  it('reports manual unknown scorer placeholders separately and closes the scorer gap', async () => {
+    await withHealthDb(async (db) => {
+      const envSnapshot = snapshotProviderEnv();
+      try {
+        process.env.RESULTS_PROVIDER = 'mock';
+        process.env.RESULTS_PROVIDER_CHAIN = 'mock';
+        await seedProviderHealthState(db);
+        await db.run(`
+          INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, ['unknown-scorer-1', 3, 'manual_unknown_scorer', 'arg', 'ARG', 1, '2026-06-21T12:03:00.000Z']);
+
+        const health = await collectProviderHealth({
+          db,
+          now: new Date('2026-06-21T20:10:00.000Z'),
+          processStartedAt: new Date('2026-06-21T20:05:00.000Z'),
+          resultAgentStatus: RESULT_AGENT_STATUS,
+          providerMatchMap: []
+        });
+
+        assert.equal(health.scorerHealth.confirmedGoalsCount, 2);
+        assert.equal(health.scorerHealth.scorerFactsGoalsCount, 2);
+        assert.equal(health.scorerHealth.missingGoalsCount, 0);
+        assert.equal(health.scorerHealth.hasMismatch, false);
+        assert.equal(health.scorerHealth.unknownManualScorerCount, 1);
+        assert.deepEqual(health.scorerHealth.unknownManualScorerMatches, [
+          {
+            matchId: 3,
+            match: 'Argentina vs France',
+            goalsCount: 1
+          }
+        ]);
+      } finally {
+        restoreProviderEnv(envSnapshot);
+      }
     });
   });
 });

@@ -77,6 +77,91 @@ const knownScorers: KnownScorer[] = [
     id: 'mauricio',
     displayName: 'Maur\u00edcio',
     aliases: ['Maur\u00edcio', 'Mauricio']
+  },
+  {
+    id: 'julian-quinones',
+    displayName: 'Juli\u00e1n Qui\u00f1ones',
+    aliases: ['Julian Quinones', 'Julian Qui\u00f1ones', 'J. Qui\u00f1ones', 'J. Quinones', 'Qui\u00f1ones', 'Quinones']
+  },
+  {
+    id: 'raul-jimenez',
+    displayName: 'Ra\u00fal Jim\u00e9nez',
+    aliases: ['Raul Jimenez', 'Ra\u00fal Jimenez', 'R. Jim\u00e9nez', 'R. Jimenez', 'Jimenez', 'Jim\u00e9nez']
+  },
+  {
+    id: 'hwang-inbeom',
+    displayName: 'Hwang Inbeom',
+    aliases: ['Hwang In-beom', 'In-beom Hwang', 'I.B. Hwang', 'I B Hwang', 'Inbeom Hwang']
+  },
+  {
+    id: 'oh-hyeongyu',
+    displayName: 'Oh Hyeongyu',
+    aliases: ['Oh Hyeon-gyu', 'Oh Hyeong-gyu', 'H.G. Oh', 'H G Oh']
+  },
+  {
+    id: 'ladislav-krejci',
+    displayName: 'Ladislav Krej\u010d\u00ed',
+    aliases: ['Ladislav Krejci', 'L. Krejci', 'L. Krej\u010d\u00ed', 'Krejci', 'Krej\u010d\u00ed']
+  },
+  {
+    id: 'cyle-larin',
+    displayName: 'Cyle Larin',
+    aliases: ['C. Larin']
+  },
+  {
+    id: 'jovo-lukic',
+    displayName: 'Jovo Luki\u0107',
+    aliases: ['Jovo Lukic', 'J. Lukic', 'Lukic']
+  },
+  {
+    id: 'michal-sadilek',
+    displayName: 'Michal Sad\u00edlek',
+    aliases: ['Michal Sadilek', 'Mikhal Sadilk', 'M. Sadilek', 'Sadilek']
+  },
+  {
+    id: 'amad-diallo',
+    displayName: 'Amad Diallo',
+    aliases: ['A. Diallo', 'Amad Diallo']
+  },
+  {
+    id: 'romano-schmid',
+    displayName: 'Romano Schmid',
+    aliases: ['Rvmanv Ashmid', 'R. Schmid', 'Romano Schmid']
+  },
+  {
+    id: 'marko-arnautovic',
+    displayName: 'Marko Arnautovi\u0107',
+    aliases: ['Marko Arnautovic', 'M. Arnautovic', 'Arnautovic']
+  },
+  {
+    id: 'teboho-mokoena',
+    displayName: 'Teboho Mokoena',
+    aliases: ['T. Mokoena', 'Mokoena']
+  },
+  {
+    id: 'granit-xhaka',
+    displayName: 'Granit Xhaka',
+    aliases: ['Xhaka', 'G. Xhaka']
+  },
+  {
+    id: 'johan-manzambi',
+    displayName: 'Johan Manzambi',
+    aliases: ['Jvhan Mnzambi', 'J. Manzambi', 'Manzambi']
+  },
+  {
+    id: 'ruben-vargas',
+    displayName: 'Ruben Vargas',
+    aliases: ['Rvbn Vargas', 'R. Vargas', 'Vargas']
+  },
+  {
+    id: 'yazan-al-arab',
+    displayName: 'Yazan Al-Arab',
+    aliases: ['Yazan Alarab', 'Yazan Al-Arab', 'Izn Alarb', 'Al Arab']
+  },
+  {
+    id: 'ali-olwan',
+    displayName: 'Ali Olwan',
+    aliases: ['Ali Olwan', 'Ali Olwan', 'Ali Avlvan', 'Ali Olan']
   }
 ];
 

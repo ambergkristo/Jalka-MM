@@ -94,6 +94,7 @@ interface PublicStateDiagnostics {
   canonicalLeaderboardRowsCount: number;
   scorerFactsCount: number;
   scorerFactsGoalsCount: number;
+  manualUnknownScorerGoalsCount: number;
   topScorerCacheRowsCount: number;
   leaderboardCacheRowsCount: number;
   topScorerGoalsCount: number;
@@ -148,6 +149,12 @@ interface ProviderHealth {
     scorerFactsGoalsCount: number;
     missingGoalsCount: number;
     hasMismatch: boolean;
+    unknownManualScorerCount: number;
+    unknownManualScorerMatches: Array<{
+      matchId: number;
+      match: string;
+      goalsCount: number;
+    }>;
     mismatchDetails: Array<{
       matchId: number;
       match: string;
@@ -543,8 +550,19 @@ export function OperatorPage() {
                 <div><span>Confirmed goals</span><strong>{providerHealth?.scorerHealth.confirmedGoalsCount ?? 0}</strong></div>
                 <div><span>Scorer fact goals</span><strong>{providerHealth?.scorerHealth.scorerFactsGoalsCount ?? 0}</strong></div>
                 <div><span>Missing goals</span><strong>{providerHealth?.scorerHealth.missingGoalsCount ?? 0}</strong></div>
+                <div><span>Manual unknown</span><strong>{providerHealth?.scorerHealth.unknownManualScorerCount ?? 0}</strong></div>
               </div>
               {providerHealth?.scorerHealth.hasMismatch ? <p className="operator-copy warning">Scorer facts do not match confirmed match goals.</p> : null}
+              {providerHealth?.scorerHealth.unknownManualScorerMatches.length ? (
+                <div className="operator-mismatch-list">
+                  {providerHealth.scorerHealth.unknownManualScorerMatches.map((match) => (
+                    <div className="operator-mismatch-row" key={match.matchId}>
+                      <strong>{match.match}</strong>
+                      <span>{match.goalsCount} manual_unknown_scorer goal{match.goalsCount === 1 ? '' : 's'}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               {providerHealth?.scorerHealth.mismatchDetails.length ? (
                 <div className="operator-mismatch-list">
                   {providerHealth.scorerHealth.mismatchDetails.map((detail) => (

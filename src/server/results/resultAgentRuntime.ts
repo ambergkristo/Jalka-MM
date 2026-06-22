@@ -8,7 +8,7 @@ import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
-import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
+import { backfillTopScorersFromConfirmedResults, countVisibleScorerFactGoals, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { ResultUpdate } from './resultTypes.js';
 import { reconcileLeaderboardEntries } from './leaderboardProjection.js';
 import { normalizeScorerName } from './scorerNormalization.js';
@@ -112,6 +112,7 @@ export async function repairTopScorersFromConfirmedResults(now = new Date()) {
     SELECT COALESCE(SUM(COALESCE(goals, 0)), 0) AS total
     FROM result_manual_scorers
   `))?.total ?? 0);
+  const visibleScorerFactsGoalsCount = await countVisibleScorerFactGoals(db);
   const standingsCount = Number((await db.one('SELECT COUNT(*) AS count FROM top_scorer_standings'))?.count ?? 0);
   const standingsRows = await db.all('SELECT player_name, goals FROM top_scorer_standings');
   const hasNameAnomaly = standingsRows.some((row) => normalizeScorerName(String(row.player_name ?? '')) !== String(row.player_name ?? '').trim());
@@ -131,7 +132,7 @@ export async function repairTopScorersFromConfirmedResults(now = new Date()) {
     await rebuildTopScorerStandings(db, now.toISOString());
     return {
       repaired: true,
-      reason: standingsCount === 0 || hasNameAnomaly || standingsGoalsCount !== scorerFactsGoalsCount ? 'rebuilt-from-stored-scorers' : 'rebuilt-from-stored-scorers',
+      reason: standingsCount === 0 || hasNameAnomaly || standingsGoalsCount !== visibleScorerFactsGoalsCount ? 'rebuilt-from-stored-scorers' : 'rebuilt-from-stored-scorers',
       repairedMatches: 0
     };
   }

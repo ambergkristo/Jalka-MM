@@ -3,7 +3,7 @@ import { predictionRepository } from '../../domain/predictionRepository.js';
 import { db } from '../db.js';
 import { getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
-import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
+import { backfillTopScorersFromConfirmedResults, countUnknownManualScorerGoals, countVisibleScorerFactGoals, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import type { ResultAgentStatus } from './resultTypes.js';
@@ -43,6 +43,7 @@ export interface PublicStateDiagnostics {
   canonicalLeaderboardRowsCount: number;
   scorerFactsCount: number;
   scorerFactsGoalsCount: number;
+  manualUnknownScorerGoalsCount: number;
   topScorerCacheRowsCount: number;
   leaderboardCacheRowsCount: number;
   topScorerGoalsCount: number;
@@ -155,6 +156,8 @@ export async function collectPublicStateDiagnostics(input: {
   const topScorerCacheRowsCount = await countRows(database, 'top_scorer_standings');
   const scorerFactsCount = await countRows(database, 'result_manual_scorers');
   const scorerFactsGoalsCount = await countScorerFactGoals(database);
+  const manualUnknownScorerGoalsCount = await countUnknownManualScorerGoals(database);
+  const visibleScorerFactsGoalsCount = await countVisibleScorerFactGoals(database);
   const topScorerGoalsCount = await countTopScorerGoals(database);
   const topScorerNameAnomaliesCount = await countTopScorerNameAnomalies(database);
   const topScorerRowsCount = topScorerCacheRowsCount;
@@ -176,7 +179,8 @@ export async function collectPublicStateDiagnostics(input: {
     topScorerCacheRowsCount,
     topScorerGoalsCount,
     topScorerNameAnomaliesCount,
-    providerScorerDataDetected
+    providerScorerDataDetected,
+    visibleScorerFactsGoalsCount
   });
   const operatorStatus = deriveOperatorStatus(resultAgentStatus, staleReasons, metadata);
 
@@ -195,6 +199,7 @@ export async function collectPublicStateDiagnostics(input: {
     canonicalLeaderboardRowsCount,
     scorerFactsCount,
     scorerFactsGoalsCount,
+    manualUnknownScorerGoalsCount,
     topScorerCacheRowsCount,
     leaderboardCacheRowsCount,
     topScorerGoalsCount,
@@ -565,7 +570,7 @@ export function choosePublicStateRepairAction(diagnostics: PublicStateDiagnostic
   if (scorerOnlyStale) {
     return 'rebuild-top-scorers';
   }
-  if (diagnostics.topScorerNameAnomaliesCount > 0 || diagnostics.topScorerGoalsCount !== diagnostics.scorerFactsGoalsCount) {
+  if (diagnostics.topScorerNameAnomaliesCount > 0 || diagnostics.topScorerGoalsCount !== (diagnostics.scorerFactsGoalsCount - diagnostics.manualUnknownScorerGoalsCount)) {
     return 'rebuild-top-scorers';
   }
   if (diagnostics.staleState) {
@@ -889,6 +894,7 @@ function buildStaleReasons(input: {
   topScorerGoalsCount: number;
   topScorerNameAnomaliesCount: number;
   providerScorerDataDetected: 'yes' | 'no' | 'unknown';
+  visibleScorerFactsGoalsCount: number;
 }): string[] {
   const reasons: string[] = [];
   if (input.confirmedResultsCount > 0 && input.latestResultsCount === 0) reasons.push('Confirmed results exist, but latest public results are empty.');
@@ -905,7 +911,7 @@ function buildStaleReasons(input: {
   if (input.topScorerNameAnomaliesCount > 0) {
     reasons.push('Stored top scorer standings still contain unnormalized scorer names and need a rebuild.');
   }
-  if (input.scorerFactsCount > 0 && input.topScorerRowsCount > 0 && input.topScorerGoalsCount !== input.scorerFactsGoalsCount) {
+  if (input.scorerFactsCount > 0 && input.topScorerRowsCount > 0 && input.topScorerGoalsCount !== input.visibleScorerFactsGoalsCount) {
     reasons.push('Stored top scorer standings are out of sync with scorer facts.');
   }
   if (input.scorerFactsCount > 0 && input.topScorerCacheRowsCount === 0) {

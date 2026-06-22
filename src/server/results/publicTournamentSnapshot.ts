@@ -608,6 +608,7 @@ async function getPublicTopScorers(db: QueryableDatabase): Promise<PublicTopScor
         COALESCE(t.name, t.name_et, facts.team_id, '') AS team_name
       FROM result_manual_scorers facts
       LEFT JOIN teams t ON t.id = facts.team_id
+      WHERE facts.player_name <> 'manual_unknown_scorer'
       GROUP BY facts.player_id, facts.provider_player_id, facts.player_name, facts.team_id, COALESCE(t.name, t.name_et, facts.team_id, '')
     ) grouped
     ORDER BY grouped.goals DESC, grouped.player_name ASC, grouped.team_name ASC
