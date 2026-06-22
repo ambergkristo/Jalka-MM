@@ -2355,15 +2355,32 @@ td a {
 .operator-page {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .operator-grid {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .operator-panel {
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.operator-page .button-link {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 10px 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.18;
 }
 
 .operator-form {
@@ -2475,7 +2492,8 @@ td a {
 }
 
 .operator-health-list,
-.operator-warning-list {
+.operator-warning-list,
+.operator-mismatch-list {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -2489,6 +2507,7 @@ td a {
 }
 
 .operator-warning-row,
+.operator-mismatch-row,
 .operator-warning-empty {
   margin: 0;
   padding: 10px;
@@ -2497,9 +2516,11 @@ td a {
   background: rgba(255, 255, 255, .035);
 }
 
-.operator-warning-row {
+.operator-warning-row,
+.operator-mismatch-row {
   display: grid;
   gap: 4px;
+  min-width: 0;
 }
 
 .operator-warning-row.delayed {
@@ -2512,23 +2533,31 @@ td a {
   background: rgba(239, 68, 68, .13);
 }
 
-.operator-warning-row strong {
+.operator-warning-row strong,
+.operator-mismatch-row strong {
   color: var(--white);
   font-size: .88rem;
   overflow-wrap: anywhere;
 }
 
 .operator-warning-row span,
+.operator-mismatch-row span,
 .operator-warning-empty {
   color: var(--muted);
   font-size: .78rem;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .operator-repair-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 8px;
+  min-width: 0;
+}
+
+.operator-action-button {
+  align-self: stretch;
 }
 
 .operator-locked {

@@ -20,7 +20,7 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
   const nowIso = now.toISOString();
   const finalizedResults = await readFinalizedResults(db, nowIso);
   if (finalizedResults.length === 0) {
-    await writePublicSnapshotRebuildAt(db, nowIso);
+    await markPublicDashboardStateRebuilt(db, nowIso);
     return {
       scorerRepair: { repaired: false, reason: 'no-confirmed-results', repairedMatches: 0 },
       publicSnapshotRebuiltAt: nowIso,
@@ -33,7 +33,7 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
   const previousEntries = await readLeaderboardEntries(db);
   const scorerRepair = await backfillTopScorersFromConfirmedResults(db, nowIso);
   await rebuildTopScorerStandings(db, nowIso);
-  const groupStandingsRowsCount = await rebuildGroupStandingsCache(db, now);
+  const groupStandingsRowsCount = await rebuildGroupStandingsCacheFromConfirmedResults(db, now);
   const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
     finalizedResults,
     now,
@@ -42,7 +42,7 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
   await writeLeaderboardEntries(db, leaderboardRebuild.entries);
   await writeLeaderboardMetadata(db, leaderboardRebuild);
   await markConfirmedResultsRecalculated(db, nowIso);
-  await writePublicSnapshotRebuildAt(db, nowIso);
+  await markPublicDashboardStateRebuilt(db, nowIso);
 
   return {
     leaderboardRebuild,
@@ -52,6 +52,23 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
     leaderboardRowsCount: leaderboardRebuild.entries.length,
     topScorerRowsCount: await countRows(db, 'top_scorer_standings')
   };
+}
+
+export async function rebuildLeaderboardCacheFromConfirmedResults(db: QueryableDatabase, now: Date): Promise<LeaderboardRebuildResult | undefined> {
+  await migrateResultPersistenceSchema(db);
+  const nowIso = now.toISOString();
+  const finalizedResults = await readFinalizedResults(db, nowIso);
+  if (finalizedResults.length === 0) return undefined;
+  const previousEntries = await readLeaderboardEntries(db);
+  const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
+    finalizedResults,
+    now,
+    previousEntries
+  });
+  await writeLeaderboardEntries(db, leaderboardRebuild.entries);
+  await writeLeaderboardMetadata(db, leaderboardRebuild);
+  await markConfirmedResultsRecalculated(db, nowIso);
+  return leaderboardRebuild;
 }
 
 async function readFinalizedResults(db: QueryableDatabase, nowIso: string): Promise<ResultUpdate[]> {
@@ -171,7 +188,8 @@ async function writeLeaderboardMetadata(db: QueryableDatabase, metadata: Leaderb
   );
 }
 
-async function rebuildGroupStandingsCache(db: QueryableDatabase, now: Date): Promise<number> {
+export async function rebuildGroupStandingsCacheFromConfirmedResults(db: QueryableDatabase, now: Date): Promise<number> {
+  await migrateResultPersistenceSchema(db);
   const teams = await db.all('SELECT id, name, group_id FROM teams WHERE group_id IS NOT NULL ORDER BY group_id, id');
   const standings = new Map<string, {
     groupId: string;
@@ -269,7 +287,8 @@ async function markConfirmedResultsRecalculated(db: QueryableDatabase, timestamp
   );
 }
 
-async function writePublicSnapshotRebuildAt(db: QueryableDatabase, timestamp: string): Promise<void> {
+export async function markPublicDashboardStateRebuilt(db: QueryableDatabase, timestamp: string): Promise<void> {
+  await migrateResultPersistenceSchema(db);
   await db.run(
     `INSERT INTO public_state_metadata (id, last_public_snapshot_rebuild_at)
      VALUES ('public-state', ?)

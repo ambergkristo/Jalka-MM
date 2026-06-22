@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import { createDatabase, type QueryableDatabase } from '../server/databaseAdapter.js';
 import { collectProviderHealth } from '../server/results/providerHealth.js';
 import { migrateResultPersistenceSchema } from '../server/results/resultPersistenceSchema.js';
+import { backfillTopScorersFromConfirmedResults } from '../server/results/topScorerStandings.js';
 import type { ResultAgentStatus } from '../server/results/resultTypes.js';
 
 const RESULT_AGENT_STATUS: ResultAgentStatus = {
@@ -71,6 +72,20 @@ describe('provider health', () => {
         assert.equal(health.scorerHealth.scorerFactsGoalsCount, 1);
         assert.equal(health.scorerHealth.missingGoalsCount, 1);
         assert.equal(health.scorerHealth.hasMismatch, true);
+        assert.equal(health.scorerHealth.mismatchDetails.length, 1);
+        assert.deepEqual(health.scorerHealth.mismatchDetails[0], {
+          matchId: 3,
+          match: 'Argentina 2-0 France',
+          teams: { home: 'Argentina', away: 'France' },
+          finalScore: '2-0',
+          expectedGoalsCount: 2,
+          persistedScorerFactsCount: 1,
+          missingGoalsCount: 1,
+          providerScorerCount: 2,
+          source: 'manual-ui',
+          status: 'CONFIRMED_FINAL',
+          lastUpdatedAt: '2026-06-21T12:00:00.000Z'
+        });
         assert.equal(health.manualOverrideSafety.manualCorrectedMatchesCount, 1);
         assert.equal(health.manualOverrideSafety.confirmedManualResultsCount, 1);
         assert.equal(health.manualOverrideSafety.staleProviderOverwriteAttemptsAvailable, false);
@@ -84,6 +99,56 @@ describe('provider health', () => {
       } finally {
         restoreProviderEnv(envSnapshot);
       }
+    });
+  });
+
+  it('does not report scorer mismatch details when scorer facts equal confirmed goals', async () => {
+    await withHealthDb(async (db) => {
+      const envSnapshot = snapshotProviderEnv();
+      try {
+        process.env.RESULTS_PROVIDER = 'mock';
+        process.env.RESULTS_PROVIDER_CHAIN = 'mock';
+        await seedProviderHealthState(db);
+        await db.run(`
+          INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, ['scorer-2', 3, 'Julian Alvarez', 'arg', 'ARG', 1, '2026-06-21T12:02:00.000Z']);
+
+        const health = await collectProviderHealth({
+          db,
+          now: new Date('2026-06-21T20:10:00.000Z'),
+          processStartedAt: new Date('2026-06-21T20:05:00.000Z'),
+          resultAgentStatus: RESULT_AGENT_STATUS,
+          providerMatchMap: []
+        });
+
+        assert.equal(health.scorerHealth.confirmedGoalsCount, 2);
+        assert.equal(health.scorerHealth.scorerFactsGoalsCount, 2);
+        assert.equal(health.scorerHealth.missingGoalsCount, 0);
+        assert.equal(health.scorerHealth.hasMismatch, false);
+        assert.deepEqual(health.scorerHealth.mismatchDetails, []);
+      } finally {
+        restoreProviderEnv(envSnapshot);
+      }
+    });
+  });
+
+  it('re-syncs scorer facts from confirmed provider results without duplicating rows', async () => {
+    await withHealthDb(async (db) => {
+      await seedProviderHealthState(db);
+
+      const first = await backfillTopScorersFromConfirmedResults(db, '2026-06-21T13:00:00.000Z');
+      const second = await backfillTopScorersFromConfirmedResults(db, '2026-06-21T13:01:00.000Z');
+      const facts = await db.one(`
+        SELECT COUNT(*) AS count, COALESCE(SUM(goals), 0) AS goals
+        FROM result_manual_scorers
+        WHERE match_id = ?
+      `, [3]);
+
+      assert.equal(first.repairedMatches, 1);
+      assert.equal(second.repairedMatches, 1);
+      assert.equal(Number(facts?.count ?? 0), 2);
+      assert.equal(Number(facts?.goals ?? 0), 2);
     });
   });
 });
@@ -161,9 +226,15 @@ async function seedProviderHealthState(db: QueryableDatabase): Promise<void> {
     INSERT INTO match_results (
       match_id, home_score, away_score, confirmed_home_score, confirmed_away_score,
       confirmed_at, confirmation_source, confirmation_confidence, status, public_status,
-      is_final, provider, raw_provider_status, last_checked_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [3, 2, 0, 2, 0, '2026-06-21T12:00:00.000Z', 'manual-ui', 'manual', 'FINISHED', 'CONFIRMED_FINAL', 1, 'manual', 'FINISHED', '2026-06-21T12:00:00.000Z', '2026-06-21T12:00:00.000Z']);
+      is_final, provider, raw_provider_status, last_checked_at, provider_results_json, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [3, 2, 0, 2, 0, '2026-06-21T12:00:00.000Z', 'manual-ui', 'manual', 'FINISHED', 'CONFIRMED_FINAL', 1, 'manual', 'FINISHED', '2026-06-21T12:00:00.000Z', JSON.stringify([{
+    provider: 'open-worldcup-result-provider',
+    scorers: [
+      { playerName: 'Lionel Messi', teamName: 'Argentina', goals: 1 },
+      { playerName: 'Julian Alvarez', teamName: 'Argentina', goals: 1 }
+    ]
+  }]), '2026-06-21T12:00:00.000Z']);
 
   await db.run(`
     INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at)

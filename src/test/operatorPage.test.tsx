@@ -11,6 +11,7 @@ import {
   filterOperatorMatches,
   parseScore,
   persistSecret,
+  postFullSafeRebuild,
   postManualConfirm,
   readStoredSecret,
   removeScorerRow
@@ -44,6 +45,7 @@ describe('operator page', () => {
     expect(markup).toContain('Match filter');
     expect(markup).toContain('Lisa väravalööja');
     expect(markup).toContain('Re-sync scorers from confirmed provider results');
+    expect(markup).toContain('Run full safe rebuild now');
     expect(markup).toContain('Provider Health');
     expect(markup).toContain('Verifier inactive');
   });
@@ -148,6 +150,31 @@ describe('operator page', () => {
 
     expect(response.ok).toBe(true);
     expect(response.body).toMatchObject({ auditId: 'audit-1' });
+  });
+
+  it('calls the protected full safe rebuild endpoint', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return { status: 'ok', message: 'done' };
+      }
+    } as Response));
+
+    const response = await postFullSafeRebuild({
+      secret: 'top-secret',
+      fetchImpl
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('/api/operator/full-safe-rebuild', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-results-agent-secret': 'top-secret'
+      }
+    });
+    expect(response.ok).toBe(true);
+    expect(response.body).toMatchObject({ status: 'ok' });
   });
 
   it('clears the saved secret when logging out', () => {

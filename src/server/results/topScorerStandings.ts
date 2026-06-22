@@ -6,7 +6,16 @@ import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import type { ResultScorer } from './resultTypes.js';
 
-export async function backfillTopScorersFromConfirmedResults(db: QueryableDatabase, nowIso: string): Promise<{ repaired: boolean; reason: string; repairedMatches: number }> {
+export interface ScorerBackfillResult {
+  repaired: boolean;
+  reason: string;
+  repairedMatches: number;
+  scorerFactsInserted: number;
+  scorerFactsUpdated: number;
+  scorerFactsSkipped: number;
+}
+
+export async function backfillTopScorersFromConfirmedResults(db: QueryableDatabase, nowIso: string): Promise<ScorerBackfillResult> {
   await migrateResultPersistenceSchema(db);
   const confirmedResults = await db.all(`
     SELECT match_id, provider_results_json
@@ -15,21 +24,37 @@ export async function backfillTopScorersFromConfirmedResults(db: QueryableDataba
     ORDER BY match_id
   `);
   if (confirmedResults.length === 0) {
-    return { repaired: false, reason: 'no-confirmed-results', repairedMatches: 0 };
+    return emptyBackfillResult('no-confirmed-results');
   }
 
   let repairedMatches = 0;
+  let scorerFactsInserted = 0;
+  let scorerFactsUpdated = 0;
+  let scorerFactsSkipped = 0;
   for (const result of confirmedResults) {
+    const matchId = Number(result.match_id);
     const scorers = parseProviderScorers(result.provider_results_json);
-    if (scorers.length === 0) continue;
-    await syncConfirmedScorersForMatch(db, Number(result.match_id), scorers, nowIso);
+    if (scorers.length === 0) {
+      scorerFactsSkipped += 1;
+      continue;
+    }
+    const existingFacts = await countScorerFactsForMatch(db, matchId);
+    await syncConfirmedScorersForMatch(db, matchId, scorers, nowIso);
     repairedMatches += 1;
+    if (existingFacts > 0) {
+      scorerFactsUpdated += scorers.length;
+    } else {
+      scorerFactsInserted += scorers.length;
+    }
   }
 
   return {
     repaired: repairedMatches > 0,
     reason: repairedMatches > 0 ? 'backfilled-from-stored-provider-results' : 'no-provider-scorers-found',
-    repairedMatches
+    repairedMatches,
+    scorerFactsInserted,
+    scorerFactsUpdated,
+    scorerFactsSkipped
   };
 }
 
@@ -158,6 +183,21 @@ async function resolveTeam(
 
 function slug(value: string): string {
   return value.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+async function countScorerFactsForMatch(db: QueryableDatabase, matchId: number): Promise<number> {
+  return Number((await db.one('SELECT COUNT(*) AS count FROM result_manual_scorers WHERE match_id = ?', [matchId]))?.count ?? 0);
+}
+
+function emptyBackfillResult(reason: string): ScorerBackfillResult {
+  return {
+    repaired: false,
+    reason,
+    repairedMatches: 0,
+    scorerFactsInserted: 0,
+    scorerFactsUpdated: 0,
+    scorerFactsSkipped: 0
+  };
 }
 
 function parseProviderScorers(value: unknown): ResultScorer[] {

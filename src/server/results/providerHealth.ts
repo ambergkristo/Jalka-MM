@@ -43,6 +43,22 @@ export interface ProviderHealthPayload {
     scorerFactsGoalsCount: number;
     missingGoalsCount: number;
     hasMismatch: boolean;
+    mismatchDetails: Array<{
+      matchId: number;
+      match: string;
+      teams: {
+        home: string;
+        away: string;
+      };
+      finalScore: string;
+      expectedGoalsCount: number;
+      persistedScorerFactsCount: number;
+      missingGoalsCount: number;
+      providerScorerCount?: number;
+      source: string;
+      status: string;
+      lastUpdatedAt?: string;
+    }>;
   };
   manualOverrideSafety: {
     manualCorrectedMatchesCount: number;
@@ -214,8 +230,59 @@ async function getScorerHealth(db: QueryableDatabase): Promise<ProviderHealthPay
     confirmedGoalsCount,
     scorerFactsGoalsCount,
     missingGoalsCount: Math.max(confirmedGoalsCount - scorerFactsGoalsCount, 0),
-    hasMismatch: confirmedGoalsCount !== scorerFactsGoalsCount
+    hasMismatch: confirmedGoalsCount !== scorerFactsGoalsCount,
+    mismatchDetails: await getScorerMismatchDetails(db)
   };
+}
+
+async function getScorerMismatchDetails(db: QueryableDatabase): Promise<ProviderHealthPayload['scorerHealth']['mismatchDetails']> {
+  const rows = await db.all(`
+    SELECT
+      r.match_id,
+      COALESCE(home.name, m.home_slot) AS home_team,
+      COALESCE(away.name, m.away_slot) AS away_team,
+      COALESCE(r.confirmed_home_score, r.home_score, 0) AS home_score,
+      COALESCE(r.confirmed_away_score, r.away_score, 0) AS away_score,
+      COALESCE(facts.scorer_goals, 0) AS scorer_goals,
+      r.provider_results_json,
+      COALESCE(r.confirmation_source, r.provider, 'unknown') AS source,
+      COALESCE(r.public_status, r.status, 'unknown') AS status,
+      COALESCE(r.updated_at, r.confirmed_at, r.last_checked_at) AS last_updated_at
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
+    LEFT JOIN teams home ON home.id = m.home_team_id
+    LEFT JOIN teams away ON away.id = m.away_team_id
+    LEFT JOIN (
+      SELECT match_id, COALESCE(SUM(COALESCE(goals, 0)), 0) AS scorer_goals
+      FROM result_manual_scorers
+      GROUP BY match_id
+    ) facts ON facts.match_id = r.match_id
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
+    ORDER BY r.match_id
+  `);
+
+  return rows.flatMap((row) => {
+    const homeScore = Number(row.home_score ?? 0);
+    const awayScore = Number(row.away_score ?? 0);
+    const expectedGoalsCount = homeScore + awayScore;
+    const persistedScorerFactsCount = Number(row.scorer_goals ?? 0);
+    if (expectedGoalsCount === persistedScorerFactsCount) return [];
+    const home = String(row.home_team ?? 'Home');
+    const away = String(row.away_team ?? 'Away');
+    return [{
+      matchId: Number(row.match_id),
+      match: `${home} ${homeScore}-${awayScore} ${away}`,
+      teams: { home, away },
+      finalScore: `${homeScore}-${awayScore}`,
+      expectedGoalsCount,
+      persistedScorerFactsCount,
+      missingGoalsCount: Math.max(expectedGoalsCount - persistedScorerFactsCount, 0),
+      providerScorerCount: providerScorerGoalsCount(row.provider_results_json),
+      source: String(row.source ?? 'unknown'),
+      status: String(row.status ?? 'unknown'),
+      lastUpdatedAt: stringOrUndefined(row.last_updated_at)
+    }];
+  });
 }
 
 async function getManualOverrideSafety(db: QueryableDatabase): Promise<ProviderHealthPayload['manualOverrideSafety']> {
@@ -325,6 +392,30 @@ function parseWarnings(value: unknown): string[] {
 function stringOrUndefined(value: unknown): string | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   return String(value);
+}
+
+function providerScorerGoalsCount(value: unknown): number | undefined {
+  if (typeof value !== 'string' || !value) return undefined;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return undefined;
+    const scorerLists = parsed.flatMap((observation) => {
+      if (!observation || typeof observation !== 'object') return [];
+      const scorers = (observation as Record<string, unknown>).scorers;
+      return Array.isArray(scorers) && scorers.length > 0 ? [scorers] : [];
+    });
+    const latestScorers = scorerLists.at(-1);
+    if (!latestScorers) return undefined;
+    return latestScorers.reduce((total, scorer) => total + scorerGoalCount(scorer), 0);
+  } catch {
+    return undefined;
+  }
+}
+
+function scorerGoalCount(value: unknown): number {
+  if (!value || typeof value !== 'object') return 0;
+  const goals = Number((value as Record<string, unknown>).goals ?? 1);
+  return Number.isFinite(goals) && goals > 0 ? goals : 0;
 }
 
 function latestIsoString(...values: Array<string | undefined>): string | undefined {

@@ -8,7 +8,7 @@ import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
 import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, runResultsAgentCycle } from './results/resultAgentRuntime.js';
-import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runPublicStateRepairAction } from './results/publicStateHealth.js';
+import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runFullSafeRebuild, runPublicStateRepairAction } from './results/publicStateHealth.js';
 import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
 import { collectProviderHealth } from './results/providerHealth.js';
 
@@ -65,6 +65,13 @@ createServer(async (request, response) => {
       const body = await readJsonBody(request) as { action?: string };
       if (!body.action) return json(response, 400, { error: 'Repair action is required.' });
       return json(response, 200, await runPublicStateRepairAction({ action: body.action as Parameters<typeof runPublicStateRepairAction>[0]['action'], db }));
+    }
+    if (request.method === 'POST' && url.pathname === '/api/operator/full-safe-rebuild') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      return json(response, 200, await runFullSafeRebuild({ db }));
     }
     if (request.method === 'POST' && url.pathname === '/api/results-agent/run') {
       const permission = getResultsAgentRunPermission({

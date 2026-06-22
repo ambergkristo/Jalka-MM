@@ -7,7 +7,12 @@ import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } fro
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import type { ResultAgentStatus } from './resultTypes.js';
-import { rebuildPublicTournamentState } from './publicTournamentRebuild.js';
+import {
+  markPublicDashboardStateRebuilt,
+  rebuildGroupStandingsCacheFromConfirmedResults,
+  rebuildLeaderboardCacheFromConfirmedResults,
+  rebuildPublicTournamentState
+} from './publicTournamentRebuild.js';
 import { classifyPublicMatchState } from './publicMatchState.js';
 
 const METADATA_ID = 'public-state';
@@ -68,6 +73,57 @@ export interface PublicStateRepairResult {
   leaderboardRowsCount: number;
   topScorerRowsCount: number;
   groupStandingsRowsCount: number;
+}
+
+export type FullSafeRebuildStepKey =
+  | 'result-agent-catch-up'
+  | 'resync-scorers-from-confirmed-results'
+  | 'rebuild-group-standings'
+  | 'rebuild-leaderboard'
+  | 'rebuild-top-scorers'
+  | 'rebuild-public-dashboard';
+
+export interface FullSafeRebuildSummary {
+  scoresUpdated: number;
+  scorerFactsInserted: number;
+  scorerFactsUpdated: number;
+  scorerFactsSkipped: number;
+  groupStandingsRebuilt: boolean;
+  groupStandingsRowsCount: number;
+  leaderboardRebuilt: boolean;
+  leaderboardRowsCount: number;
+  topScorerStandingsRebuilt: boolean;
+  topScorerRowsCount: number;
+  publicDashboardRebuilt: boolean;
+  publicDashboardRebuiltAt?: string;
+}
+
+export interface FullSafeRebuildStepResult {
+  step: FullSafeRebuildStepKey;
+  label: string;
+  status: 'ok' | 'failed';
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface FullSafeRebuildResult {
+  status: 'ok' | 'failed';
+  message: string;
+  generatedAt: string;
+  stepsCompleted: string[];
+  failedStep?: FullSafeRebuildStepResult;
+  steps: FullSafeRebuildStepResult[];
+  summary: FullSafeRebuildSummary;
+}
+
+export interface FullSafeRebuildStepDefinition {
+  step: FullSafeRebuildStepKey;
+  label: string;
+  run(): Promise<{
+    message: string;
+    summary?: Partial<FullSafeRebuildSummary>;
+    details?: Record<string, unknown>;
+  }>;
 }
 
 interface PublicStateMetadataRow {
@@ -254,6 +310,198 @@ export async function runPublicStateRepairAction(input: {
       groupStandingsRowsCount: await countRows(database, 'group_standings').catch(() => 0)
     };
   }
+}
+
+export async function runFullSafeRebuild(input: {
+  db?: QueryableDatabase;
+  now?: Date;
+  steps?: FullSafeRebuildStepDefinition[];
+} = {}): Promise<FullSafeRebuildResult> {
+  const database = input.db ?? db;
+  const now = input.now ?? new Date();
+  await migrateResultPersistenceSchema(database);
+
+  const result = await runFullSafeRebuildSequence({
+    now,
+    steps: input.steps ?? buildFullSafeRebuildSteps(database, now)
+  });
+
+  const metadataPatch: Partial<PublicStateMetadataRow> = {
+    last_repair_action: 'full-safe-rebuild',
+    last_repair_action_at: now.toISOString(),
+    last_repair_action_status: result.status,
+    last_repair_action_error: result.status === 'failed' ? result.failedStep?.message ?? result.message : undefined
+  };
+  if (result.summary.publicDashboardRebuiltAt) {
+    metadataPatch.last_public_snapshot_rebuild_at = result.summary.publicDashboardRebuiltAt;
+  }
+  await writePublicStateMetadata(database, metadataPatch);
+
+  return result;
+}
+
+export async function runFullSafeRebuildSequence(input: {
+  now: Date;
+  steps: FullSafeRebuildStepDefinition[];
+}): Promise<FullSafeRebuildResult> {
+  const summary = emptyFullSafeRebuildSummary();
+  const steps: FullSafeRebuildStepResult[] = [];
+  const stepsCompleted: string[] = [];
+  for (const step of input.steps) {
+    try {
+      const result = await step.run();
+      mergeFullSafeRebuildSummary(summary, result.summary);
+      const stepResult: FullSafeRebuildStepResult = {
+        step: step.step,
+        label: step.label,
+        status: 'ok',
+        message: result.message,
+        details: result.details
+      };
+      steps.push(stepResult);
+      stepsCompleted.push(step.label);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const failedStep: FullSafeRebuildStepResult = {
+        step: step.step,
+        label: step.label,
+        status: 'failed',
+        message
+      };
+      steps.push(failedStep);
+      return {
+        status: 'failed',
+        message: `Full safe rebuild stopped at ${step.label}: ${message}`,
+        generatedAt: input.now.toISOString(),
+        stepsCompleted,
+        failedStep,
+        steps,
+        summary
+      };
+    }
+  }
+
+  return {
+    status: 'ok',
+    message: `Full safe rebuild completed: ${stepsCompleted.length} step(s) completed.`,
+    generatedAt: input.now.toISOString(),
+    stepsCompleted,
+    steps,
+    summary
+  };
+}
+
+function buildFullSafeRebuildSteps(database: QueryableDatabase, now: Date): FullSafeRebuildStepDefinition[] {
+  const nowIso = now.toISOString();
+  return [
+    {
+      step: 'result-agent-catch-up',
+      label: 'Run result-agent catch-up',
+      async run() {
+        const result = await runResultsAgentCycle(now);
+        return {
+          message: `Result-agent catch-up completed: ${result.updatedMatches} match update(s), ${result.finalizedResults} finalized.`,
+          summary: { scoresUpdated: result.updatedMatches },
+          details: {
+            checkedMatches: result.checkedMatches,
+            updatedMatches: result.updatedMatches,
+            finalizedResults: result.finalizedResults,
+            warningsCount: result.warnings.length
+          }
+        };
+      }
+    },
+    {
+      step: 'resync-scorers-from-confirmed-results',
+      label: 'Re-sync scorers from confirmed provider results',
+      async run() {
+        const result = await backfillTopScorersFromConfirmedResults(database, nowIso);
+        return {
+          message: result.repaired
+            ? `Scorer facts re-synced for ${result.repairedMatches} confirmed match(es).`
+            : summarizeRepairMessage('resync-scorers-from-confirmed-results', undefined, result),
+          summary: {
+            scorerFactsInserted: result.scorerFactsInserted,
+            scorerFactsUpdated: result.scorerFactsUpdated,
+            scorerFactsSkipped: result.scorerFactsSkipped
+          },
+          details: {
+            repairedMatches: result.repairedMatches,
+            reason: result.reason
+          }
+        };
+      }
+    },
+    {
+      step: 'rebuild-group-standings',
+      label: 'Rebuild group standings',
+      async run() {
+        const rows = await rebuildGroupStandingsCacheFromConfirmedResults(database, now);
+        return {
+          message: `Group standings rebuilt with ${rows} row(s).`,
+          summary: {
+            groupStandingsRebuilt: true,
+            groupStandingsRowsCount: rows
+          },
+          details: { rows }
+        };
+      }
+    },
+    {
+      step: 'rebuild-leaderboard',
+      label: 'Rebuild leaderboard',
+      async run() {
+        const result = await rebuildLeaderboardCacheFromConfirmedResults(database, now);
+        const rows = result?.entries.length ?? await countRows(database, 'leaderboard_entries');
+        return {
+          message: result
+            ? `Leaderboard rebuilt for ${result.playersProcessed} player(s).`
+            : 'Leaderboard rebuild skipped because no confirmed results exist.',
+          summary: {
+            leaderboardRebuilt: Boolean(result),
+            leaderboardRowsCount: rows
+          },
+          details: {
+            rows,
+            playersProcessed: result?.playersProcessed ?? 0,
+            matchesProcessed: result?.matchesProcessed ?? 0,
+            changedEntries: result?.changedEntries ?? 0
+          }
+        };
+      }
+    },
+    {
+      step: 'rebuild-top-scorers',
+      label: 'Rebuild top scorer standings',
+      async run() {
+        await rebuildTopScorerStandings(database, nowIso);
+        const rows = await countRows(database, 'top_scorer_standings');
+        return {
+          message: `Top scorer standings rebuilt with ${rows} row(s).`,
+          summary: {
+            topScorerStandingsRebuilt: true,
+            topScorerRowsCount: rows
+          },
+          details: { rows }
+        };
+      }
+    },
+    {
+      step: 'rebuild-public-dashboard',
+      label: 'Rebuild public dashboard state',
+      async run() {
+        await markPublicDashboardStateRebuilt(database, nowIso);
+        return {
+          message: 'Public dashboard state rebuilt from confirmed cached facts.',
+          summary: {
+            publicDashboardRebuilt: true,
+            publicDashboardRebuiltAt: nowIso
+          },
+          details: { rebuiltAt: nowIso }
+        };
+      }
+    }
+  ];
 }
 
 export async function queuePublicStateRepairIfStale(input: {
@@ -526,6 +774,38 @@ async function countTopScorerNameAnomalies(db: QueryableDatabase): Promise<numbe
 
 async function countRows(db: QueryableDatabase, table: string): Promise<number> {
   return Number((await db.one(`SELECT COUNT(*) AS count FROM ${table}`))?.count ?? 0);
+}
+
+function emptyFullSafeRebuildSummary(): FullSafeRebuildSummary {
+  return {
+    scoresUpdated: 0,
+    scorerFactsInserted: 0,
+    scorerFactsUpdated: 0,
+    scorerFactsSkipped: 0,
+    groupStandingsRebuilt: false,
+    groupStandingsRowsCount: 0,
+    leaderboardRebuilt: false,
+    leaderboardRowsCount: 0,
+    topScorerStandingsRebuilt: false,
+    topScorerRowsCount: 0,
+    publicDashboardRebuilt: false
+  };
+}
+
+function mergeFullSafeRebuildSummary(summary: FullSafeRebuildSummary, patch?: Partial<FullSafeRebuildSummary>): void {
+  if (!patch) return;
+  summary.scoresUpdated += patch.scoresUpdated ?? 0;
+  summary.scorerFactsInserted += patch.scorerFactsInserted ?? 0;
+  summary.scorerFactsUpdated += patch.scorerFactsUpdated ?? 0;
+  summary.scorerFactsSkipped += patch.scorerFactsSkipped ?? 0;
+  summary.groupStandingsRebuilt = summary.groupStandingsRebuilt || Boolean(patch.groupStandingsRebuilt);
+  summary.groupStandingsRowsCount = patch.groupStandingsRowsCount ?? summary.groupStandingsRowsCount;
+  summary.leaderboardRebuilt = summary.leaderboardRebuilt || Boolean(patch.leaderboardRebuilt);
+  summary.leaderboardRowsCount = patch.leaderboardRowsCount ?? summary.leaderboardRowsCount;
+  summary.topScorerStandingsRebuilt = summary.topScorerStandingsRebuilt || Boolean(patch.topScorerStandingsRebuilt);
+  summary.topScorerRowsCount = patch.topScorerRowsCount ?? summary.topScorerRowsCount;
+  summary.publicDashboardRebuilt = summary.publicDashboardRebuilt || Boolean(patch.publicDashboardRebuilt);
+  summary.publicDashboardRebuiltAt = patch.publicDashboardRebuiltAt ?? summary.publicDashboardRebuiltAt;
 }
 
 async function detectProviderScorerData(db: QueryableDatabase): Promise<'yes' | 'no' | 'unknown'> {

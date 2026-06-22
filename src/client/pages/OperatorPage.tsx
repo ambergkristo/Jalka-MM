@@ -44,6 +44,7 @@ interface ManualConfirmResponse {
 }
 
 type RepairAction = 'catch-up' | 'rebuild-public-dashboard' | 'rebuild-group-standings' | 'rebuild-leaderboard' | 'rebuild-top-scorers' | 'resync-scorers-from-confirmed-results';
+type OperatorAction = RepairAction | 'full-safe-rebuild';
 
 interface PublicStateDiagnostics {
   generatedAt: string;
@@ -147,6 +148,22 @@ interface ProviderHealth {
     scorerFactsGoalsCount: number;
     missingGoalsCount: number;
     hasMismatch: boolean;
+    mismatchDetails: Array<{
+      matchId: number;
+      match: string;
+      teams: {
+        home: string;
+        away: string;
+      };
+      finalScore: string;
+      expectedGoalsCount: number;
+      persistedScorerFactsCount: number;
+      missingGoalsCount: number;
+      providerScorerCount?: number;
+      source: string;
+      status: string;
+      lastUpdatedAt?: string;
+    }>;
   };
   manualOverrideSafety: {
     manualCorrectedMatchesCount: number;
@@ -161,6 +178,25 @@ interface ProviderHealth {
     lastVerifierCheckAt?: string;
     providerDisagreementsDetected: number;
     unresolvedDisagreementsCount: number;
+  };
+}
+
+interface FullSafeRebuildResponse {
+  status?: 'ok' | 'failed';
+  message?: string;
+  failedStep?: {
+    label: string;
+    message: string;
+  };
+  summary?: {
+    scoresUpdated?: number;
+    scorerFactsInserted?: number;
+    scorerFactsUpdated?: number;
+    scorerFactsSkipped?: number;
+    groupStandingsRebuilt?: boolean;
+    leaderboardRebuilt?: boolean;
+    topScorerStandingsRebuilt?: boolean;
+    publicDashboardRebuilt?: boolean;
   };
 }
 
@@ -184,7 +220,7 @@ export function OperatorPage() {
   const [snapshot, setSnapshot] = useState<PublicDashboardSnapshot | undefined>();
   const [diagnostics, setDiagnostics] = useState<PublicStateDiagnostics | undefined>();
   const [providerHealth, setProviderHealth] = useState<ProviderHealth | undefined>();
-  const [repairState, setRepairState] = useState<{ action?: RepairAction; status: 'idle' | 'running' | 'ok' | 'failed'; message?: string }>({ status: 'idle' });
+  const [repairState, setRepairState] = useState<{ action?: OperatorAction; status: 'idle' | 'running' | 'ok' | 'failed'; message?: string }>({ status: 'idle' });
   const [refreshIndex, setRefreshIndex] = useState(0);
 
   useEffect(() => {
@@ -292,6 +328,36 @@ export function OperatorPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Tõrge paranduse käivitamisel.';
       setRepairState({ action, status: 'failed', message });
+      setFeedback({ tone: 'danger', message: classifyError(message) });
+    }
+  }
+
+  async function runFullSafeRebuild() {
+    if (!storedSecret) {
+      setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+      return;
+    }
+    setRepairState({ action: 'full-safe-rebuild', status: 'running', message: 'TĆ¶Ć¶tan...' });
+    try {
+      const response = await postFullSafeRebuild({ secret: storedSecret });
+      if (response.status === 401 || response.status === 403) {
+        clearStoredSecret();
+        setStoredSecret('');
+        setRepairState({ action: 'full-safe-rebuild', status: 'failed', message: 'Vale operaatori kood.' });
+        setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+        return;
+      }
+      const body = response.body;
+      if (!response.ok || body?.status === 'failed') {
+        throw new Error(fullSafeRebuildErrorMessage(body));
+      }
+      const message = fullSafeRebuildSuccessMessage(body);
+      setRepairState({ action: 'full-safe-rebuild', status: 'ok', message });
+      setFeedback({ tone: 'good', message });
+      setRefreshIndex((value) => value + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'TĆµrge paranduse kĆ¤ivitamisel.';
+      setRepairState({ action: 'full-safe-rebuild', status: 'failed', message });
       setFeedback({ tone: 'danger', message: classifyError(message) });
     }
   }
@@ -479,6 +545,16 @@ export function OperatorPage() {
                 <div><span>Missing goals</span><strong>{providerHealth?.scorerHealth.missingGoalsCount ?? 0}</strong></div>
               </div>
               {providerHealth?.scorerHealth.hasMismatch ? <p className="operator-copy warning">Scorer facts do not match confirmed match goals.</p> : null}
+              {providerHealth?.scorerHealth.mismatchDetails.length ? (
+                <div className="operator-mismatch-list">
+                  {providerHealth.scorerHealth.mismatchDetails.map((detail) => (
+                    <div className="operator-mismatch-row" key={detail.matchId}>
+                      <strong>{detail.teams.home} {detail.finalScore} {detail.teams.away}</strong>
+                      <span>expected {detail.expectedGoalsCount}, scorer facts {detail.persistedScorerFactsCount}, missing {detail.missingGoalsCount}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </section>
 
             <section className="operator-health-section">
@@ -512,11 +588,19 @@ export function OperatorPage() {
 
         <Card title="Parandused" eyebrow="Turvalised toimingud" className="operator-panel">
           <div className="operator-repair-actions">
+            <button
+              type="button"
+              className="button-link operator-action-button"
+              onClick={() => void runFullSafeRebuild()}
+              disabled={repairState.status === 'running'}
+            >
+              {repairState.action === 'full-safe-rebuild' && repairState.status === 'running' ? 'Running full safe rebuild...' : 'Run full safe rebuild now'}
+            </button>
             {REPAIR_ACTIONS.map((action) => (
               <button
                 key={action.action}
                 type="button"
-                className="button-link"
+                className="button-link operator-action-button"
                 onClick={() => void runRepair(action.action)}
                 disabled={repairState.status === 'running'}
               >
@@ -786,6 +870,44 @@ async function postManualConfirm(input: {
   return { ok: response.ok, status: response.status, body: body as ManualConfirmResult | undefined, authFailed: false };
 }
 
+async function postFullSafeRebuild(input: {
+  secret: string;
+  fetchImpl?: typeof fetch;
+}): Promise<{ ok: boolean; status: number; body?: FullSafeRebuildResponse }> {
+  const fetchFn = input.fetchImpl ?? fetch;
+  const response = await fetchFn('/api/operator/full-safe-rebuild', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-results-agent-secret': input.secret
+    }
+  });
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: await safeJson(response) as FullSafeRebuildResponse | undefined
+  };
+}
+
+function fullSafeRebuildSuccessMessage(body?: FullSafeRebuildResponse): string {
+  const summary = body?.summary;
+  if (!summary) return body?.message ?? 'Full safe rebuild completed.';
+  return [
+    body?.message ?? 'Full safe rebuild completed.',
+    `Scores updated: ${summary.scoresUpdated ?? 0}.`,
+    `Scorer facts inserted/updated/skipped: ${summary.scorerFactsInserted ?? 0}/${summary.scorerFactsUpdated ?? 0}/${summary.scorerFactsSkipped ?? 0}.`,
+    `Group standings: ${summary.groupStandingsRebuilt ? 'rebuilt' : 'skipped'}.`,
+    `Leaderboard: ${summary.leaderboardRebuilt ? 'rebuilt' : 'skipped'}.`,
+    `Top scorers: ${summary.topScorerStandingsRebuilt ? 'rebuilt' : 'skipped'}.`,
+    `Public dashboard: ${summary.publicDashboardRebuilt ? 'rebuilt' : 'skipped'}.`
+  ].join(' ');
+}
+
+function fullSafeRebuildErrorMessage(body?: FullSafeRebuildResponse): string {
+  if (body?.failedStep) return `${body.failedStep.label} failed: ${body.failedStep.message}`;
+  return body?.message ?? 'Full safe rebuild failed.';
+}
+
 function safeJson(response: Response): Promise<Record<string, unknown> | undefined> {
   return response.json().then((data) => data as Record<string, unknown>).catch(() => undefined);
 }
@@ -931,6 +1053,7 @@ export {
   filterOperatorMatches,
   parseScore,
   persistSecret,
+  postFullSafeRebuild,
   postManualConfirm,
   readStoredSecret,
   removeScorerRow,

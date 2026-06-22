@@ -259,3 +259,19 @@
 - `npx tsc -p tsconfig.server.json --noEmit --pretty false` passed.
 - `npm run build` passed.
 - `node --test dist/test-db/provider-health-node-test.js` passed.
+
+# Sprint 33 - Operator Full Safe Rebuild + Scorer Drilldown
+
+- [x] Add scorer mismatch drilldown to `/api/provider-health`.
+- [x] Add protected `/api/operator/full-safe-rebuild`.
+- [x] Run safe rebuild steps in order and stop on first failure.
+- [x] Keep scorer sync idempotent so repeated rebuilds do not duplicate scorer facts.
+- [x] Add operator button and health drilldown list.
+- [x] Fix operator mobile action button wrapping and horizontal overflow.
+- [x] Run targeted Vitest, node regressions, server typecheck, build, and mobile smoke.
+- [x] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Production currently reports aggregate scorer mismatch only: 121 confirmed goals vs 110 scorer fact goals, missing 11; exact match drilldown requires this deploy.
+- Mobile overflow check passed at 320px, 375px, and 430px with `documentElement.scrollWidth === clientWidth`.
