@@ -7,7 +7,7 @@ import { createDatabase } from '../server/databaseAdapter.js';
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
 import { confirmManualResult } from '../server/results/manualResultCorrection.js';
 import { migrateResultPersistenceSchema } from '../server/results/resultPersistenceSchema.js';
-import { rebuildTopScorerStandings, syncConfirmedScorersForMatch } from '../server/results/topScorerStandings.js';
+import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from '../server/results/topScorerStandings.js';
 
 describe('top scorer standings persistence', () => {
   it('aggregates scorer facts across confirmed matches', async () => {
@@ -212,6 +212,80 @@ describe('top scorer standings persistence', () => {
       assert.equal(Number(standings[0]?.rank), 1);
       assert.equal(String(standings[0]?.player_name), 'Rui Costa');
       assert.equal(Number(standings[0]?.goals), 2);
+    } finally {
+      await db.close();
+      rmSync(sqlitePath, { force: true });
+    }
+  });
+
+  it('replaces inflated scorer facts with canonical provider rows and stays idempotent', async () => {
+    const { db, sqlitePath } = createTempDatabase();
+    try {
+      await seedMatchTables(db);
+      await migrateResultPersistenceSchema(db);
+
+      await db.run(
+        `INSERT INTO match_results (
+          match_id, home_score, away_score, minute, status, public_status, is_final,
+          confirmed_home_score, confirmed_away_score, confirmed_at, confirmation_source,
+          confirmation_confidence, provider, provider_fixture_id, raw_provider_status,
+          last_checked_at, updated_at, provider_results_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          1,
+          2,
+          0,
+          90,
+          'FINISHED',
+          'CONFIRMED_FINAL',
+          1,
+          2,
+          0,
+          '2026-06-12T07:10:20.007Z',
+          'provider',
+          'provider-repeat',
+          'open-worldcup-result-provider',
+          '1',
+          'FINISHED',
+          '2026-06-12T07:10:20.007Z',
+          '2026-06-12T07:10:20.007Z',
+          JSON.stringify([
+            {
+              scorers: [
+                { playerName: 'J. Quiñones', teamName: 'Mexico', goals: 1 },
+                { playerName: 'R. Jiménez', teamName: 'Mexico', goals: 1 }
+              ]
+            }
+          ])
+        ]
+      );
+      await db.run(
+        `INSERT INTO result_manual_scorers (id, match_id, player_name, team_id, team_code, goals, created_at) VALUES
+          ('bad-1', 1, 'Julián Quiñones', 'MEX', 'MEX', 8, '2026-06-12T07:10:20.007Z'),
+          ('bad-2', 1, 'Raúl Jiménez', 'MEX', 'MEX', 8, '2026-06-12T07:10:20.007Z')
+        `
+      );
+      await db.run(
+        `INSERT INTO top_scorer_standings (id, rank, player_name, team_id, goals, assists, minutes_played, updated_at) VALUES
+          ('bad-rank-1', 1, 'Julián Quiñones', 'MEX', 8, 0, NULL, '2026-06-12T07:10:20.007Z'),
+          ('bad-rank-2', 2, 'Raúl Jiménez', 'MEX', 8, 0, NULL, '2026-06-12T07:10:20.007Z')
+        `
+      );
+
+      const firstBackfill = await backfillTopScorersFromConfirmedResults(db, '2026-06-12T07:15:20.007Z');
+      for (let index = 0; index < 10; index += 1) {
+        await rebuildTopScorerStandings(db, `2026-06-12T07:17:${String(index).padStart(2, '0')}.007Z`);
+      }
+
+      const scorerFacts = await db.all('SELECT player_name, goals FROM result_manual_scorers WHERE match_id = ? ORDER BY player_name', [1]);
+      const standings = await db.all('SELECT player_name, goals FROM top_scorer_standings ORDER BY rank, player_name');
+      assert.equal(firstBackfill.repaired, true);
+      assert.equal(scorerFacts.length, 2);
+      assert.deepEqual(scorerFacts.map((row) => String(row.player_name)), ['Julián Quiñones', 'Raúl Jiménez']);
+      assert.deepEqual(scorerFacts.map((row) => Number(row.goals)), [1, 1]);
+      assert.equal(standings.length, 2);
+      assert.deepEqual(standings.map((row) => String(row.player_name)), ['Julián Quiñones', 'Raúl Jiménez']);
+      assert.deepEqual(standings.map((row) => Number(row.goals)), [1, 1]);
     } finally {
       await db.close();
       rmSync(sqlitePath, { force: true });

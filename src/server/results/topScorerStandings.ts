@@ -69,7 +69,6 @@ export async function backfillTopScorersFromConfirmedResults(
   for (const result of confirmedResults) {
     const matchId = Number(result.match_id);
     const expectedGoals = Number(result.confirmed_home_score ?? 0) + Number(result.confirmed_away_score ?? 0);
-    const existingScorers = await loadExistingScorersForMatch(db, matchId);
     const storedScorers = parseProviderScorers(result.provider_results_json);
     const liveScorers = storedScorers.length >= expectedGoals ? [] : await fetchCurrentProviderScorers(result as {
       match_id: number;
@@ -78,10 +77,18 @@ export async function backfillTopScorersFromConfirmedResults(
       away_team?: string;
     }, nowIso, options.provider);
     const providerScorers = choosePreferredScorers(storedScorers, liveScorers);
+    const manualCorrectionScorers = await loadManualCorrectionScorersForMatch(db, matchId);
     const manualScorers = getManualScorerCorrections(matchId);
-    const resolvedScorers = existingScorers.length > 0
-      ? existingScorers
-      : [...providerScorers, ...manualScorers];
+    const existingScorers = manualCorrectionScorers.length > 0 || providerScorers.length > 0
+      ? []
+      : await loadExistingScorersForMatch(db, matchId);
+    const resolvedScorers = manualCorrectionScorers.length > 0
+      ? manualCorrectionScorers
+      : providerScorers.length > 0
+        ? providerScorers
+        : manualScorers.length > 0
+          ? manualScorers
+          : existingScorers;
     const scorers = fillMissingScorers(
       resolvedScorers,
       expectedGoals,
@@ -284,6 +291,25 @@ async function loadExistingScorersForMatch(db: QueryableDatabase, matchId: numbe
       goals
     }];
   });
+}
+
+async function loadManualCorrectionScorersForMatch(db: QueryableDatabase, matchId: number): Promise<ResultScorer[]> {
+  const row = await db.one(`
+    SELECT scorers_json
+    FROM result_manual_corrections
+    WHERE match_id = ?
+      AND scorers_json IS NOT NULL
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [matchId]);
+  if (!row?.scorers_json || typeof row.scorers_json !== 'string') return [];
+  try {
+    const parsed = JSON.parse(row.scorers_json) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((item) => normalizeScorer(item));
+  } catch {
+    return [];
+  }
 }
 
 function emptyBackfillResult(reason: string): ScorerBackfillResult {
