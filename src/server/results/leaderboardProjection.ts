@@ -1,17 +1,24 @@
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { rebuildLeaderboardAfterFinalResult } from './leaderboardRebuild.js';
+import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
 import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
 
 export async function reconcileLeaderboardEntries(input: {
   persistedEntries: LeaderboardEntry[];
   finalizedResults: ResultUpdate[];
   now?: Date;
+  actualGroupStandings?: ActualGroupStanding[];
+  actualKnockoutResults?: ActualKnockoutResults;
+  actualTopScorers?: ActualTopScorer[];
 }): Promise<LeaderboardRebuildResult | undefined> {
   if (input.finalizedResults.length === 0) return undefined;
   return rebuildLeaderboardAfterFinalResult({
     finalizedResults: input.finalizedResults,
     now: input.now ?? new Date(),
-    previousEntries: input.persistedEntries
+    previousEntries: input.persistedEntries,
+    actualGroupStandings: input.actualGroupStandings,
+    actualKnockoutResults: input.actualKnockoutResults,
+    actualTopScorers: input.actualTopScorers
   });
 }
 

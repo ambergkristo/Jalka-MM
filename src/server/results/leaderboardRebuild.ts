@@ -65,6 +65,13 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
     ...entry,
     previousRank: previousRanks.get(entry.playerId)
   }));
+  logLeaderboardRebuildSummary({
+    playersProcessed: entries.length,
+    actualGroupStandings: input.actualGroupStandings,
+    actualKnockoutResults: input.actualKnockoutResults,
+    actualTopScorers: input.actualTopScorers,
+    entries
+  });
   const previousByPlayer = new Map(previousEntries.map((entry) => [entry.playerId, entry]));
   const changedEntries = entries.filter((entry) => {
     const previous = previousByPlayer.get(entry.playerId);
@@ -79,6 +86,30 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
     entries,
     warnings: leaderboard.warnings
   };
+}
+
+function logLeaderboardRebuildSummary(input: {
+  playersProcessed: number;
+  actualGroupStandings?: ActualGroupStanding[];
+  actualKnockoutResults?: ActualKnockoutResults;
+  actualTopScorers?: ActualTopScorer[];
+  entries: Array<{
+    groupBonusPoints?: number;
+    playoffBonusPoints?: number;
+    topScorerBonusPoints?: number;
+  }>;
+}): void {
+  const bonusStateLoaded = Boolean(input.actualGroupStandings?.length || input.actualKnockoutResults || input.actualTopScorers?.length);
+  const bonusCounts = {
+    groupBonusPlayers: input.entries.filter((entry) => (entry.groupBonusPoints ?? 0) > 0).length,
+    playoffBonusPlayers: input.entries.filter((entry) => (entry.playoffBonusPoints ?? 0) > 0).length,
+    topScorerBonusPlayers: input.entries.filter((entry) => (entry.topScorerBonusPoints ?? 0) > 0).length
+  };
+  console.info('Leaderboard rebuilt', {
+    playersProcessed: input.playersProcessed,
+    bonusStateLoaded,
+    bonusCounts
+  });
 }
 
 function selectMovementBaselineResults(finalizedResults: ResultUpdate[]): ResultUpdate[] {

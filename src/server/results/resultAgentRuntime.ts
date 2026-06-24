@@ -10,9 +10,10 @@ import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
 import { backfillTopScorersFromConfirmedResults, countVisibleScorerFactGoals, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import type { ResultUpdate } from './resultTypes.js';
-import { reconcileLeaderboardEntries } from './leaderboardProjection.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
+import { buildActualScoringState } from './scoringState.js';
+import { repairPersistedLeaderboardSnapshot as repairPersistedLeaderboardSnapshotImpl } from './leaderboardRepair.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -77,7 +78,16 @@ export function confirmManualResultRuntime(confirmation: ManualResultConfirmatio
 export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRepository = repository) {
   const persisted = await leaderboardRepository.getLeaderboard();
   const metadata = await leaderboardRepository.getLeaderboardMetadata();
-  const reconciled = await reconcileLeaderboardIfPossible(leaderboardRepository, persisted);
+  const source = leaderboardRepository as LeaderboardRepository & { getFinalizedResults?: () => Promise<ResultUpdate[]> };
+  const finalizedResults = typeof source.getFinalizedResults === 'function' ? await source.getFinalizedResults() : [];
+  const actualScoringState = finalizedResults.length > 0 ? await buildActualScoringState(db) : undefined;
+  const reconciled = await repairPersistedLeaderboardSnapshotImpl({
+    leaderboardRepository,
+    persistedEntries: persisted,
+    finalizedResults,
+    now: new Date(),
+    actualScoringState
+  });
   const canonicalEntries = reconciled?.entries ?? buildCanonicalPublicLeaderboardEntries(persisted);
   const warnings = reconciled?.warnings ?? metadata.warnings;
   const recalculatedAt = reconciled?.recalculatedAt ?? metadata.lastRebuildAt;
@@ -157,19 +167,4 @@ export async function repairTopScorersFromConfirmedResults(now = new Date()) {
 
 export function getZeroedPublicLeaderboard(): LeaderboardEntry[] {
   return buildCanonicalPublicLeaderboardEntries();
-}
-
-async function reconcileLeaderboardIfPossible(
-  leaderboardRepository: LeaderboardRepository,
-  persisted: LeaderboardEntry[]
-) {
-  const source = leaderboardRepository as LeaderboardRepository & { getFinalizedResults?: () => Promise<ResultUpdate[]> };
-  if (typeof source.getFinalizedResults !== 'function') return undefined;
-  const finalizedResults = await source.getFinalizedResults();
-  if (finalizedResults.length === 0) return undefined;
-  return reconcileLeaderboardEntries({
-    finalizedResults,
-    now: new Date(),
-    persistedEntries: persisted
-  });
 }
