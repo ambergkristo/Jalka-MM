@@ -204,4 +204,66 @@ describe('player totals and leaderboard rebuild', () => {
     });
     expect(leaderboard.entries.map((entry) => entry.playerId)).toEqual(['a-player', 'm-player', 'z-player']);
   });
+
+  it('includes official group, playoff, and top scorer bonuses in leaderboard totals', () => {
+    const players: Player[] = [{ id: 'p1', name: 'P1' }, { id: 'p2', name: 'P2' }];
+    const predictions: PlayerMatchPrediction[] = [{ playerId: 'p1', matchId: 1, homeScore: 2, awayScore: 1 }];
+    const groupPredictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Team A', second: 'Team B', third: 'Team C' }];
+    const knockoutPrediction: KnockoutPrediction = {
+      playerId: 'p1',
+      rounds: [
+        { round: 'R16', teams: ['R16 Team'] },
+        { round: 'QF', teams: ['QF Team'] },
+        { round: 'SF', teams: ['SF Team'] },
+        { round: 'Final', teams: ['Final Team'] }
+      ],
+      thirdPlaceWinner: 'Third Team'
+    };
+    const awardsPrediction: AwardsPrediction = {
+      playerId: 'p1',
+      championTeam: 'Champion Team',
+      championStatus: 'Won Tournament',
+      topScorerName: 'Lionel Messi',
+      topScorerTeam: 'Argentina',
+      topScorerCurrentGoals: 0,
+      topScorerStatus: 'Leading'
+    };
+
+    const leaderboard = rebuildLeaderboard({
+      players,
+      predictions,
+      groupPredictions,
+      knockoutPredictions: [knockoutPrediction],
+      awardsPredictions: [awardsPrediction],
+      results: [{ matchId: 1, homeScore: 2, awayScore: 1, isFinal: true }],
+      actualGroupStandings: [
+        { group: 'A', team: 'Team A', rank: 1, qualified: true },
+        { group: 'A', team: 'Team B', rank: 2, qualified: true },
+        { group: 'A', team: 'Team C', rank: 3, qualified: true },
+        { group: 'A', team: 'Team D', rank: 4, qualified: false }
+      ],
+      actualKnockoutResults: {
+        stageTeams: {
+          R16: ['R16 Team'],
+          QF: ['QF Team'],
+          SF: ['SF Team'],
+          Final: ['Final Team']
+        },
+        thirdPlaceWinner: 'Third Team',
+        champion: 'Champion Team'
+      },
+      actualTopScorers: [{ name: 'Lionel Messi' }, { name: 'Kylian Mbappe' }],
+      recalculatedAt: '2026-06-15T18:00:00.000Z'
+    });
+
+    expect(leaderboard.entries[0]).toMatchObject({
+      playerId: 'p1',
+      matchPoints: 6,
+      groupBonusPoints: 24,
+      playoffBonusPoints: 230,
+      topScorerBonusPoints: 50,
+      totalPoints: 310
+    });
+    expect(leaderboard.entries[1]).toMatchObject({ playerId: 'p2', totalPoints: 0 });
+  });
 });

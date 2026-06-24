@@ -1,11 +1,15 @@
 import { rebuildLeaderboard } from '../../domain/pointsEngine.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
 import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
 
 export async function rebuildLeaderboardAfterFinalResult(input: {
   finalizedResults: ResultUpdate[];
   now: Date;
   previousEntries?: ReturnType<typeof predictionRepository.getLeaderboard>;
+  actualGroupStandings?: ActualGroupStanding[];
+  actualKnockoutResults?: ActualKnockoutResults;
+  actualTopScorers?: ActualTopScorer[];
 }): Promise<LeaderboardRebuildResult> {
   const recalculatedAt = input.now.toISOString();
   const finalizedResults = input.finalizedResults.filter((result) => result.isFinal);
@@ -25,6 +29,9 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
         isFinal: result.isFinal
       }];
     }),
+    actualGroupStandings: input.actualGroupStandings,
+    actualKnockoutResults: input.actualKnockoutResults,
+    actualTopScorers: input.actualTopScorers,
     previousEntries,
     recalculatedAt
   });
@@ -47,7 +54,10 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
           }];
         }),
         previousEntries,
-        recalculatedAt
+        recalculatedAt,
+        actualGroupStandings: input.actualGroupStandings,
+        actualKnockoutResults: input.actualKnockoutResults,
+        actualTopScorers: input.actualTopScorers
       }).entries.map((entry) => [entry.playerId, entry.rank])
     )
     : new Map(previousEntries.map((entry) => [entry.playerId, entry.rank]));

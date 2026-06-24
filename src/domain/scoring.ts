@@ -82,8 +82,7 @@ export function scoreTopScorer(predicted: string, actualTopScorers: string[]): B
   const topScorers = unique(actualTopScorers.map((name) => name.trim()).filter(Boolean));
   const predictedIdentity = resolveScorerIdentity({ playerName: predicted });
   if (!predicted.trim() || !topScorers.some((name) => resolveScorerIdentity({ playerName: name }).lookupKey === predictedIdentity.lookupKey)) return [];
-  const points = 50 / topScorers.length;
-  return [{ code: `top-scorer:${predicted.trim()}`, points, explanation: `${points}p: top scorer split across ${topScorers.length} tied player(s)` }];
+  return [{ code: `top-scorer:${predicted.trim()}`, points: 50, explanation: '50p: correct tournament top scorer' }];
 }
 
 export function rankParticipants(scores: ParticipantScore[]): ParticipantScore[] {

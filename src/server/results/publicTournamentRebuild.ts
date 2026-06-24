@@ -5,6 +5,7 @@ import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
+import { buildActualScoringState } from './scoringState.js';
 
 export interface PublicTournamentStateRefreshResult {
   leaderboardRebuild?: LeaderboardRebuildResult;
@@ -34,10 +35,14 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
   const scorerRepair = await backfillTopScorersFromConfirmedResults(db, nowIso);
   await rebuildTopScorerStandings(db, nowIso);
   const groupStandingsRowsCount = await rebuildGroupStandingsCacheFromConfirmedResults(db, now);
+  const actualScoringState = await buildActualScoringState(db);
   const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
     finalizedResults,
     now,
-    previousEntries
+    previousEntries,
+    actualGroupStandings: actualScoringState.actualGroupStandings,
+    actualKnockoutResults: actualScoringState.actualKnockoutResults,
+    actualTopScorers: actualScoringState.actualTopScorers
   });
   await writeLeaderboardEntries(db, leaderboardRebuild.entries);
   await writeLeaderboardMetadata(db, leaderboardRebuild);
@@ -60,10 +65,14 @@ export async function rebuildLeaderboardCacheFromConfirmedResults(db: QueryableD
   const finalizedResults = await readFinalizedResults(db, nowIso);
   if (finalizedResults.length === 0) return undefined;
   const previousEntries = await readLeaderboardEntries(db);
+  const actualScoringState = await buildActualScoringState(db);
   const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
     finalizedResults,
     now,
-    previousEntries
+    previousEntries,
+    actualGroupStandings: actualScoringState.actualGroupStandings,
+    actualKnockoutResults: actualScoringState.actualKnockoutResults,
+    actualTopScorers: actualScoringState.actualTopScorers
   });
   await writeLeaderboardEntries(db, leaderboardRebuild.entries);
   await writeLeaderboardMetadata(db, leaderboardRebuild);

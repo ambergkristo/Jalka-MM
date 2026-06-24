@@ -36,6 +36,6 @@ describe('bonus scoring', () => {
     expect(points.find((item) => item.code === 'winner')?.points).toBe(100);
   });
 
-  it('splits top scorer points', () => expect(scoreTopScorer('Player A', ['Player A', 'Player B'])[0].points).toBe(25));
+  it('awards the full top scorer bonus for tied official top scorers', () => expect(scoreTopScorer('Player A', ['Player A', 'Player B'])[0].points).toBe(50));
 });
 
