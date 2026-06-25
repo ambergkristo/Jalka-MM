@@ -5,16 +5,22 @@ import { Navigation } from '../client/components/Navigation.js';
 import {
   OperatorPage,
   appendScorerRow,
+  buildThirdPlaceQualifierGroupState,
+  buildThirdPlaceQualifierLockPayload,
   buildScorersPayload,
   clearStoredSecret,
   classifyError,
   filterOperatorMatches,
+  GROUP_OPTIONS,
+  isThirdPlaceQualifierLockDuplicate,
   parseScore,
   persistSecret,
   postFullSafeRebuild,
   postManualConfirm,
+  postThirdPlaceQualifierLock,
   readStoredSecret,
-  removeScorerRow
+  removeScorerRow,
+  thirdPlaceQualifierSuccessMessage
 } from '../client/pages/OperatorPage.js';
 
 describe('operator page', () => {
@@ -50,6 +56,20 @@ describe('operator page', () => {
     expect(markup).toContain('Verifier inactive');
   });
 
+  it('renders the third-place qualifier operator section with group options A-L', () => {
+    const storage = memoryStorage();
+    Object.defineProperty(globalThis, 'window', { value: { localStorage: storage }, configurable: true });
+    persistSecret('top-secret');
+
+    const markup = renderToStaticMarkup(<OperatorPage />);
+
+    expect(markup).toContain('3. koha edasipääsejad');
+    expect(markup).toContain('Kinnita 3. koha edasipääs');
+    for (const group of GROUP_OPTIONS) {
+      expect(markup).toContain(`value="${group}"`);
+    }
+  });
+
   it('shows the operator navigation link', () => {
     const markup = renderToStaticMarkup(<Navigation pathname="/" />);
 
@@ -66,6 +86,43 @@ describe('operator page', () => {
     expect(filterOperatorMatches(matches as never, 'confirmed')).toHaveLength(1);
     expect(appendScorerRow([{ playerName: '', teamCode: '', goals: '1' }])).toHaveLength(2);
     expect(removeScorerRow([{ playerName: '', teamCode: '', goals: '1' }], 0)).toHaveLength(1);
+  });
+
+  it('builds the third-place qualifier group state and highlights the current third-place team', () => {
+    const state = buildThirdPlaceQualifierGroupState({
+      liveMatches: [],
+      todayMatches: [],
+      upcomingMatches: [],
+      latestResults: [],
+      groupLeaders: [],
+      topScorers: [],
+      playoffBracket: { left: { side: 'LEFT', rounds: [] }, right: { side: 'RIGHT', rounds: [] }, center: { final: undefined, thirdPlace: undefined } },
+      tournamentSummary: [],
+      tournamentStats: [],
+      tournamentProgressByStage: [],
+      leaderboard: [],
+      groupStandings: [{
+        group: 'B',
+        teams: [
+          { rank: 1, team: 'Šveits', played: 3, wins: 2, draws: 1, losses: 0, goalsFor: 5, goalsAgainst: 2, goalDifference: 3, points: 7, state: 'qualified' },
+          { rank: 2, team: 'Kanada', played: 3, wins: 2, draws: 0, losses: 1, goalsFor: 4, goalsAgainst: 3, goalDifference: 1, points: 6, state: 'qualified' },
+          { rank: 3, team: 'Bosnia ja Hertsegoviina', played: 3, wins: 1, draws: 0, losses: 2, goalsFor: 3, goalsAgainst: 4, goalDifference: -1, points: 3, state: 'third-place' },
+          { rank: 4, team: 'Katar', played: 3, wins: 0, draws: 1, losses: 2, goalsFor: 1, goalsAgainst: 4, goalDifference: -3, points: 1, state: 'out' }
+        ]
+      }]
+    } as never, 'B');
+
+    expect(state.currentThirdPlaceTeam).toMatchObject({
+      code: 'BIH',
+      nameEt: 'Bosnia ja Hertsegoviina'
+    });
+    expect(state.availableTeams.map((team) => team.code)).toEqual(expect.arrayContaining(['SUI', 'CAN', 'BIH', 'QAT']));
+    expect(state.standings.find((row) => row.rank === 3)).toMatchObject({
+      teamName: 'Bosnia ja Hertsegoviina',
+      isCurrentThirdPlace: true,
+      points: 3,
+      goalDifference: -1
+    });
   });
 
   it('builds a scorer payload only when the row is complete', () => {
@@ -175,6 +232,51 @@ describe('operator page', () => {
     });
     expect(response.ok).toBe(true);
     expect(response.body).toMatchObject({ status: 'ok' });
+  });
+
+  it('sends the correct third-place qualifier lock payload and exposes rebuild data', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return {
+          lock: { group: 'B', teamId: 'BIH', team: 'Bosnia ja Hertsegoviina', source: 'organizerLock', status: 'qualified', updatedAt: '2026-06-25T20:00:00.000Z' },
+          locks: [{ group: 'B', teamId: 'BIH', team: 'Bosnia ja Hertsegoviina', source: 'organizerLock', status: 'qualified', updatedAt: '2026-06-25T20:00:00.000Z' }],
+          leaderboardRebuild: { playersProcessed: 109 }
+        };
+      }
+    } as Response));
+
+    const payload = buildThirdPlaceQualifierLockPayload('B', 'BIH');
+    const response = await postThirdPlaceQualifierLock({
+      secret: 'top-secret',
+      payload,
+      fetchImpl
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('/api/operator/third-place-qualifier-locks', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-results-agent-secret': 'top-secret'
+      },
+      body: JSON.stringify({
+        group: 'B',
+        teamId: 'BIH',
+        status: 'qualified',
+        source: 'organizerLock',
+        note: 'Operator confirmed mathematically guaranteed third-place qualifier'
+      })
+    });
+    expect(response.ok).toBe(true);
+    expect(response.body?.leaderboardRebuild).toMatchObject({ playersProcessed: 109 });
+  });
+
+  it('detects duplicate third-place locks and builds the success message', () => {
+    expect(isThirdPlaceQualifierLockDuplicate([
+      { group: 'B', teamId: 'BIH', team: 'Bosnia ja Hertsegoviina', status: 'qualified', source: 'organizerLock', updatedAt: '2026-06-25T20:00:00.000Z', lockedAt: '2026-06-25T20:00:00.000Z' }
+    ], 'B', 'BIH')).toBe(true);
+    expect(thirdPlaceQualifierSuccessMessage('Bosnia ja Hertsegoviina')).toBe('Bosnia ja Hertsegoviina kinnitatud 3. koha edasipääsejana. Punktid arvutati ümber.');
   });
 
   it('clears the saved secret when logging out', () => {

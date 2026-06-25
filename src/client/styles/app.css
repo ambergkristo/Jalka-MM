@@ -2823,6 +2823,62 @@ td a {
   gap: 12px;
 }
 
+.operator-qualifier-team {
+  display: grid;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: var(--radius);
+  background: rgba(10, 18, 32, .52);
+  color: var(--white);
+}
+
+.operator-qualifier-team strong {
+  color: var(--white);
+  font-size: .9rem;
+  overflow-wrap: anywhere;
+}
+
+.operator-group-standings-list {
+  display: grid;
+  gap: 8px;
+}
+
+.operator-group-standing-row {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .035);
+}
+
+.operator-group-standing-row.third-place {
+  border-color: rgba(212, 175, 55, .45);
+  background: rgba(212, 175, 55, .10);
+}
+
+.operator-group-standing-team,
+.operator-group-standing-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.operator-group-standing-team strong {
+  color: var(--gold);
+  font-size: .9rem;
+}
+
+.operator-group-standing-metrics {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 850;
+}
+
 .operator-match-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

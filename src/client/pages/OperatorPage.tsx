@@ -207,9 +207,58 @@ interface FullSafeRebuildResponse {
   };
 }
 
+interface ThirdPlaceQualifierLock {
+  group: string;
+  teamId: string;
+  team: string;
+  status: 'qualified';
+  source: 'organizerLock';
+  note?: string;
+  lockedAt: string;
+  updatedAt: string;
+}
+
+interface ThirdPlaceQualifierLocksResponse {
+  locks: ThirdPlaceQualifierLock[];
+}
+
+interface ThirdPlaceQualifierLockResponse {
+  lock?: ThirdPlaceQualifierLock;
+  locks?: ThirdPlaceQualifierLock[];
+  leaderboardRebuild?: {
+    recalculatedAt?: string;
+    playersProcessed?: number;
+    matchesProcessed?: number;
+    changedEntries?: number;
+    warnings?: string[];
+  };
+  error?: string;
+}
+
+interface GroupStandingPreviewRow {
+  rank: number;
+  teamName: string;
+  points: number;
+  goalDifference: number;
+  team?: SeedTeam;
+  isCurrentThirdPlace: boolean;
+}
+
+interface ThirdPlaceQualifierGroupState {
+  group: string;
+  standings: GroupStandingPreviewRow[];
+  currentThirdPlaceTeam?: SeedTeam;
+  availableTeams: SeedTeam[];
+}
+
 const SECRET_STORAGE_KEY = 'jalka-mm-operator-secret';
 const EMPTY_SCORER_ROW: ScorerRow = { playerName: '', teamCode: '', goals: '1' };
 const teamById = new Map(teamsSeed.map((team) => [team.id, team]));
+const teamByName = new Map(teamsSeed.flatMap((team) => {
+  const keys = new Set([normalizeLookup(team.name), normalizeLookup(team.nameEt ?? ''), normalizeLookup(team.name_et ?? '')].filter(Boolean));
+  return [...keys].map((key) => [key, team] as const);
+}));
+const GROUP_OPTIONS = 'ABCDEFGHIJKL'.split('');
 const allMatches = matchesSeed.map((match) => toOperatorMatch(match, undefined));
 
 export function OperatorPage() {
@@ -227,6 +276,10 @@ export function OperatorPage() {
   const [snapshot, setSnapshot] = useState<PublicDashboardSnapshot | undefined>();
   const [diagnostics, setDiagnostics] = useState<PublicStateDiagnostics | undefined>();
   const [providerHealth, setProviderHealth] = useState<ProviderHealth | undefined>();
+  const [thirdPlaceQualifierLocks, setThirdPlaceQualifierLocks] = useState<ThirdPlaceQualifierLock[]>([]);
+  const [selectedQualifierGroup, setSelectedQualifierGroup] = useState<string>('A');
+  const [selectedQualifierTeamId, setSelectedQualifierTeamId] = useState<string>('');
+  const [qualifierLockState, setQualifierLockState] = useState<'idle' | 'submitting'>('idle');
   const [repairState, setRepairState] = useState<{ action?: OperatorAction; status: 'idle' | 'running' | 'ok' | 'failed'; message?: string }>({ status: 'idle' });
   const [refreshIndex, setRefreshIndex] = useState(0);
 
@@ -235,10 +288,19 @@ export function OperatorPage() {
     const controller = new AbortController();
     const load = async () => {
       try {
-        const [dashboardResponse, diagnosticsResponse, providerHealthResponse] = await Promise.all([
+        const [dashboardResponse, diagnosticsResponse, providerHealthResponse, qualifierLocksResponse] = await Promise.all([
           fetch('/api/public-dashboard', { cache: 'no-store', signal: controller.signal }),
           fetch('/api/public-state/diagnostics', { cache: 'no-store', signal: controller.signal }),
-          fetch('/api/provider-health', { cache: 'no-store', signal: controller.signal })
+          fetch('/api/provider-health', { cache: 'no-store', signal: controller.signal }),
+          storedSecret
+            ? fetch('/api/operator/third-place-qualifier-locks', {
+              cache: 'no-store',
+              signal: controller.signal,
+              headers: {
+                'x-results-agent-secret': storedSecret
+              }
+            })
+            : Promise.resolve(undefined)
         ]);
         if (!cancelled && dashboardResponse.ok) {
           setSnapshot(await dashboardResponse.json() as PublicDashboardSnapshot);
@@ -248,6 +310,14 @@ export function OperatorPage() {
         }
         if (!cancelled && providerHealthResponse.ok) {
           setProviderHealth(await providerHealthResponse.json() as ProviderHealth);
+        }
+        if (!cancelled) {
+          if (qualifierLocksResponse?.ok) {
+            const body = await qualifierLocksResponse.json() as ThirdPlaceQualifierLocksResponse;
+            setThirdPlaceQualifierLocks(body.locks ?? []);
+          } else if (!storedSecret) {
+            setThirdPlaceQualifierLocks([]);
+          }
         }
       } catch {
         return undefined;
@@ -263,13 +333,19 @@ export function OperatorPage() {
       controller.abort();
       window.clearInterval(interval);
     };
-  }, [refreshIndex]);
+  }, [refreshIndex, storedSecret]);
 
   const publicMatchState = useMemo(() => buildPublicMatchState(snapshot), [snapshot]);
   const matches = useMemo(() => buildOperatorMatches(publicMatchState), [publicMatchState]);
   const visibleMatches = useMemo(() => filterOperatorMatches(matches, matchFilter), [matches, matchFilter]);
+  const thirdPlaceQualifierGroupState = useMemo(
+    () => buildThirdPlaceQualifierGroupState(snapshot, selectedQualifierGroup),
+    [snapshot, selectedQualifierGroup]
+  );
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? matches[0];
   const selectedMatchTeamOptions = selectedMatch ? [selectedMatch.homeTeam, selectedMatch.awayTeam].filter(Boolean) as SeedTeam[] : [];
+  const selectedQualifierTeam = thirdPlaceQualifierGroupState.availableTeams.find((team) => team.id === selectedQualifierTeamId);
+  const qualifierAlreadyLocked = isThirdPlaceQualifierLockDuplicate(thirdPlaceQualifierLocks, selectedQualifierGroup, selectedQualifierTeamId);
   const statusLabel = classifyOperatorStatus(diagnostics, repairState.status);
   const statusTone = statusToneForLabel(statusLabel);
   const submitLabel = selectedMatch?.isConfirmed ? 'Salvesta parandus' : 'Kinnita tulemus';
@@ -282,6 +358,15 @@ export function OperatorPage() {
     setNotes('');
     setScorers([EMPTY_SCORER_ROW]);
   }, [selectedMatchId, selectedMatch?.confirmedHomeScore, selectedMatch?.confirmedAwayScore]);
+
+  useEffect(() => {
+    const nextTeamId = thirdPlaceQualifierGroupState.currentThirdPlaceTeam?.id
+      ?? thirdPlaceQualifierGroupState.availableTeams[0]?.id
+      ?? '';
+    if (!selectedQualifierTeamId || !thirdPlaceQualifierGroupState.availableTeams.some((team) => team.id === selectedQualifierTeamId)) {
+      setSelectedQualifierTeamId(nextTeamId);
+    }
+  }, [selectedQualifierGroup, selectedQualifierTeamId, thirdPlaceQualifierGroupState]);
 
   async function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -366,6 +451,49 @@ export function OperatorPage() {
       const message = error instanceof Error ? error.message : 'TĆµrge paranduse kĆ¤ivitamisel.';
       setRepairState({ action: 'full-safe-rebuild', status: 'failed', message });
       setFeedback({ tone: 'danger', message: classifyError(message) });
+    }
+  }
+
+  async function confirmThirdPlaceQualifier() {
+    if (!storedSecret) {
+      setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+      return;
+    }
+    if (!selectedQualifierTeam) {
+      setFeedback({ tone: 'danger', message: 'Vali samast alagrupist võistkond.' });
+      return;
+    }
+    if (qualifierAlreadyLocked) {
+      setFeedback({ tone: 'gold', message: 'See võistkond on juba kinnitatud.' });
+      return;
+    }
+    const confirmed = window.confirm(`Kas kinnitad, et ${selectedQualifierTeam.nameEt ?? selectedQualifierTeam.name} on 3. koha edasipääsejana matemaatiliselt kindel?`);
+    if (!confirmed) return;
+
+    setQualifierLockState('submitting');
+    try {
+      const response = await postThirdPlaceQualifierLock({
+        secret: storedSecret,
+        payload: buildThirdPlaceQualifierLockPayload(selectedQualifierGroup, selectedQualifierTeam.id)
+      });
+      if (response.authFailed) {
+        clearStoredSecret();
+        setStoredSecret('');
+        setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+        return;
+      }
+      if (!response.ok) {
+        throw new Error(response.body?.error ?? '3. koha edasipääsejat ei saanud kinnitada.');
+      }
+
+      setThirdPlaceQualifierLocks(response.body?.locks ?? thirdPlaceQualifierLocks);
+      setFeedback({ tone: 'good', message: thirdPlaceQualifierSuccessMessage(selectedQualifierTeam.nameEt ?? selectedQualifierTeam.name) });
+      setRefreshIndex((value) => value + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '3. koha edasipääsejat ei saanud kinnitada.';
+      setFeedback({ tone: 'danger', message: classifyError(message) === 'Tulemust ei saanud salvestada.' ? '3. koha edasipääsejat ei saanud kinnitada.' : classifyError(message) });
+    } finally {
+      setQualifierLockState('idle');
     }
   }
 
@@ -604,6 +732,87 @@ export function OperatorPage() {
           </div>
         </Card>
 
+        <Card title="3. koha edasipääsejad" eyebrow="Scoring tools" className="operator-panel">
+          <div className="operator-form">
+            <p className="operator-copy">Kinnita siin ainult need 3. koha võistkonnad, kelle edasipääs on korraldaja hinnangul 100% kindel.</p>
+
+            <div className="operator-score-grid">
+              <label className="operator-field">
+                <span>Alagrupp</span>
+                <select value={selectedQualifierGroup} onChange={(event) => setSelectedQualifierGroup(event.target.value)}>
+                  {GROUP_OPTIONS.map((group) => (
+                    <option key={group} value={group}>{group}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="operator-field">
+                <span>Võistkond</span>
+                <select value={selectedQualifierTeamId} onChange={(event) => setSelectedQualifierTeamId(event.target.value)}>
+                  {thirdPlaceQualifierGroupState.availableTeams.length > 0 ? thirdPlaceQualifierGroupState.availableTeams.map((team) => (
+                    <option key={team.id} value={team.id}>{team.nameEt ?? team.name}</option>
+                  )) : <option value="">Selles alagrupis andmeid veel pole</option>}
+                </select>
+              </label>
+              <div className="operator-field">
+                <span>Hetke 3. koht</span>
+                <div className="operator-qualifier-team">
+                  {thirdPlaceQualifierGroupState.currentThirdPlaceTeam ? (
+                    <TeamBadge team={thirdPlaceQualifierGroupState.currentThirdPlaceTeam} />
+                  ) : (
+                    <strong>3. koht pole veel teada</strong>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {thirdPlaceQualifierGroupState.standings.length > 0 ? (
+              <div className="operator-group-standings-list">
+                {thirdPlaceQualifierGroupState.standings.map((row) => (
+                  <div className={`operator-group-standing-row ${row.isCurrentThirdPlace ? 'third-place' : ''}`} key={`${selectedQualifierGroup}-${row.rank}-${row.teamName}`}>
+                    <div className="operator-group-standing-team">
+                      <strong>{row.rank}.</strong>
+                      <TeamBadge team={row.team} slotLabel={row.teamName} />
+                    </div>
+                    <div className="operator-group-standing-metrics">
+                      <span>{row.points} p</span>
+                      <span>VV {row.goalDifference >= 0 ? `+${row.goalDifference}` : row.goalDifference}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="operator-copy">Selle alagrupi tabel ei ole veel saadaval.</p>
+            )}
+
+            {qualifierAlreadyLocked ? <p className="operator-copy warning">See võistkond on juba kinnitatud.</p> : null}
+
+            <button
+              type="button"
+              className="button-link operator-action-button"
+              onClick={() => void confirmThirdPlaceQualifier()}
+              disabled={qualifierLockState === 'submitting' || qualifierAlreadyLocked || !selectedQualifierTeamId}
+            >
+              {qualifierLockState === 'submitting' ? 'Kinnitan...' : 'Kinnita 3. koha edasipääs'}
+            </button>
+
+            <section className="operator-health-section">
+              <div className="operator-health-title">Kinnitatud lukud</div>
+              {thirdPlaceQualifierLocks.length > 0 ? (
+                <div className="operator-mismatch-list">
+                  {thirdPlaceQualifierLocks.map((lock) => (
+                    <div className="operator-mismatch-row" key={`${lock.group}-${lock.teamId}`}>
+                      <strong>{lock.group} - {lock.team}</strong>
+                      <span>{lock.source} - {lock.note ?? 'Märkust pole'} - {formatTimestamp(lock.updatedAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="operator-warning-empty">Ühtegi 3. koha lukku ei ole veel lisatud.</p>
+              )}
+            </section>
+          </div>
+        </Card>
+
         <Card title="Parandused" eyebrow="Turvalised toimingud" className="operator-panel">
           <div className="operator-repair-actions">
             <button
@@ -775,6 +984,51 @@ export function OperatorPage() {
   );
 }
 
+function buildThirdPlaceQualifierGroupState(snapshot: PublicDashboardSnapshot | undefined, group: string): ThirdPlaceQualifierGroupState {
+  const standingGroup = snapshot?.groupStandings.find((row) => row.group === group);
+  const standings = (standingGroup?.teams ?? [])
+    .map((row) => ({
+      rank: row.rank,
+      teamName: row.team,
+      points: row.points,
+      goalDifference: row.goalDifference,
+      team: seedTeamForStandingName(row.team),
+      isCurrentThirdPlace: row.rank === 3
+    }))
+    .sort((left, right) => left.rank - right.rank);
+  const currentThirdPlaceTeam = standings.find((row) => row.isCurrentThirdPlace)?.team;
+  const availableTeams = teamsSeed.filter((team) => String(team.groupId ?? team.group_id ?? '').toUpperCase() === group);
+  return {
+    group,
+    standings,
+    currentThirdPlaceTeam,
+    availableTeams
+  };
+}
+
+function seedTeamForStandingName(teamName: string): SeedTeam | undefined {
+  return teamByName.get(normalizeLookup(teamName));
+}
+
+function isThirdPlaceQualifierLockDuplicate(locks: ThirdPlaceQualifierLock[], group: string, teamId: string | undefined): boolean {
+  if (!teamId) return false;
+  return locks.some((lock) => lock.group === group && lock.teamId === teamId);
+}
+
+function buildThirdPlaceQualifierLockPayload(group: string, teamId: string) {
+  return {
+    group,
+    teamId,
+    status: 'qualified' as const,
+    source: 'organizerLock' as const,
+    note: 'Operator confirmed mathematically guaranteed third-place qualifier'
+  };
+}
+
+function thirdPlaceQualifierSuccessMessage(teamName: string): string {
+  return `${teamName} kinnitatud 3. koha edasipääsejana. Punktid arvutati ümber.`;
+}
+
 function buildPublicMatchState(snapshot?: PublicDashboardSnapshot): Map<string, { publicStatus: string; confirmedHomeScore?: number; confirmedAwayScore?: number }> {
   const map = new Map<string, { publicStatus: string; confirmedHomeScore?: number; confirmedAwayScore?: number }>();
   for (const match of snapshot?.upcomingMatches ?? []) {
@@ -907,6 +1161,32 @@ async function postFullSafeRebuild(input: {
   };
 }
 
+async function postThirdPlaceQualifierLock(input: {
+  secret: string;
+  payload: ReturnType<typeof buildThirdPlaceQualifierLockPayload>;
+  fetchImpl?: typeof fetch;
+}): Promise<{ ok: boolean; status: number; body?: ThirdPlaceQualifierLockResponse; authFailed: boolean }> {
+  const fetchFn = input.fetchImpl ?? fetch;
+  const response = await fetchFn('/api/operator/third-place-qualifier-locks', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-results-agent-secret': input.secret
+    },
+    body: JSON.stringify(input.payload)
+  });
+  const body = await safeJson(response) as ThirdPlaceQualifierLockResponse | undefined;
+  if (response.status === 401 || response.status === 403) {
+    return { ok: false, status: response.status, body, authFailed: true };
+  }
+  return {
+    ok: response.ok,
+    status: response.status,
+    body,
+    authFailed: false
+  };
+}
+
 function fullSafeRebuildSuccessMessage(body?: FullSafeRebuildResponse): string {
   const summary = body?.summary;
   if (!summary) return body?.message ?? 'Full safe rebuild completed.';
@@ -947,6 +1227,10 @@ function clearStoredSecret(): void {
 
 function updateScorer<K extends keyof ScorerRow>(index: number, key: K, value: string, setRows: Dispatch<SetStateAction<ScorerRow[]>>) {
   setRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [key]: value } : row));
+}
+
+function normalizeLookup(value: string): string {
+  return value.trim().toLocaleLowerCase('et');
 }
 
 function formatTallinnDate(value: string): string {
@@ -1065,15 +1349,21 @@ export interface ManualConfirmPayload {
 
 export {
   appendScorerRow,
+  buildThirdPlaceQualifierGroupState,
+  buildThirdPlaceQualifierLockPayload,
   buildScorersPayload,
   clearStoredSecret,
   classifyError,
   filterOperatorMatches,
+  GROUP_OPTIONS,
+  isThirdPlaceQualifierLockDuplicate,
   parseScore,
   persistSecret,
   postFullSafeRebuild,
   postManualConfirm,
+  postThirdPlaceQualifierLock,
   readStoredSecret,
   removeScorerRow,
+  thirdPlaceQualifierSuccessMessage,
   stageLabel
 };
