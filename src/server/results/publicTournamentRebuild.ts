@@ -5,7 +5,7 @@ import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
-import { buildActualScoringState } from './scoringState.js';
+import { buildConfiguredActualScoringState } from './scoringState.js';
 
 export interface PublicTournamentStateRefreshResult {
   leaderboardRebuild?: LeaderboardRebuildResult;
@@ -35,7 +35,7 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
   const scorerRepair = await backfillTopScorersFromConfirmedResults(db, nowIso);
   await rebuildTopScorerStandings(db, nowIso);
   const groupStandingsRowsCount = await rebuildGroupStandingsCacheFromConfirmedResults(db, now);
-  const actualScoringState = await buildActualScoringState(db);
+  const actualScoringState = await buildConfiguredActualScoringState(db, now);
   const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
     finalizedResults,
     now,
@@ -65,7 +65,7 @@ export async function rebuildLeaderboardCacheFromConfirmedResults(db: QueryableD
   const finalizedResults = await readFinalizedResults(db, nowIso);
   if (finalizedResults.length === 0) return undefined;
   const previousEntries = await readLeaderboardEntries(db);
-  const actualScoringState = await buildActualScoringState(db);
+  const actualScoringState = await buildConfiguredActualScoringState(db, now);
   const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
     finalizedResults,
     now,

@@ -1,7 +1,7 @@
 import { rebuildLeaderboard, type MatchResultForScoring, type PlayerPointsResult, type RebuildLeaderboardResult } from '../../domain/pointsEngine.js';
 import { predictionRepository, type LeaderboardEntry, type PredictionRepository } from '../../domain/predictionRepository.js';
 import type { QueryableDatabase } from '../databaseAdapter.js';
-import { buildActualScoringState, type ActualScoringState } from './scoringState.js';
+import { buildConfiguredActualScoringState, type ActualScoringState, type GroupQualifierAudit } from './scoringState.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import type { ResultUpdate, ResultsAgentRepository } from './resultTypes.js';
 
@@ -27,6 +27,7 @@ export interface LeaderboardScoringBreakdown {
   playerName: string;
   recalculatedAt: string;
   finalizedGroups: string[];
+  qualifierAudit: GroupQualifierAudit;
   persistedEntry?: LeaderboardEntry;
   rebuiltEntry: LeaderboardEntry;
   playerResult: PlayerPointsResult;
@@ -82,7 +83,7 @@ export async function buildLeaderboardScoringBreakdown(input: {
     input.leaderboardRepository.getLeaderboard()
   ]);
   const actualScoringState = input.actualScoringState ?? (
-    finalizedResults.length > 0 ? await buildActualScoringState(input.database) : undefined
+    finalizedResults.length > 0 ? await buildConfiguredActualScoringState(input.database, now) : undefined
   );
   const rebuilt = rebuildLeaderboard({
     players: predictionSource.getPlayers(),
@@ -138,6 +139,26 @@ export async function buildLeaderboardScoringBreakdown(input: {
     playerName: player.name,
     recalculatedAt: now.toISOString(),
     finalizedGroups: unique(actualScoringState?.actualGroupStandings?.map((standing) => standing.group) ?? []),
+    qualifierAudit: actualScoringState?.qualifierAudit ?? {
+      confirmedDirectQualifiers: unique(actualScoringState?.actualGroupStandings?.map((standing) => standing.group) ?? [])
+        .sort()
+        .map((group) => ({
+          group,
+          teams: (actualScoringState?.actualGroupStandings ?? [])
+            .filter((standing) => standing.group === group && (standing.qualifierSource === 'groupTop2' || (!standing.qualifierSource && standing.rank <= 2)))
+            .sort((left, right) => left.rank - right.rank)
+            .map((standing) => standing.team)
+        })),
+      confirmedThirdPlaceQualifiers: (actualScoringState?.actualGroupStandings ?? [])
+        .filter((standing) => standing.rank === 3 && standing.qualifierSource === 'providerKnockoutSlot')
+        .map((standing) => ({
+          group: standing.group,
+          team: standing.team,
+          source: 'providerKnockoutSlot' as const,
+          matchId: standing.qualifierMatchId,
+          slotLabel: standing.qualifierSlotLabel
+        }))
+    },
     persistedEntry,
     rebuiltEntry,
     playerResult,

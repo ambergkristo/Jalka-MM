@@ -4,7 +4,7 @@ import { rebuildLeaderboardAfterFinalResult } from './leaderboardRebuild.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { syncConfirmedScorersForMatch } from './topScorerStandings.js';
-import { buildActualScoringState } from './scoringState.js';
+import { buildConfiguredActualScoringState } from './scoringState.js';
 import type { LeaderboardRebuildResult, ResultUpdate, ResultsAgentRepository } from './resultTypes.js';
 
 export type ManualResultDecidedAfter = 'FT' | 'AET' | 'PEN';
@@ -128,7 +128,7 @@ export async function confirmManualResult(input: {
     if (!rebuild) {
       const existingLeaderboard = await input.leaderboardRepository.getLeaderboard();
       const finalized = await input.repository.getFinalizedResults();
-      const actualScoringState = await buildActualScoringState(input.db);
+      const actualScoringState = await buildConfiguredActualScoringState(input.db, new Date());
       rebuild = await rebuildLeaderboardAfterFinalResult({
         finalizedResults: finalized,
         now: confirmation.now ?? new Date(nowIso),

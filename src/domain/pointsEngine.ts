@@ -22,6 +22,9 @@ export interface ActualGroupStanding {
   team: string;
   rank: number;
   qualified?: boolean;
+  qualifierSource?: 'groupTop2' | 'providerKnockoutSlot' | 'mathematicalLock' | 'notConfirmed';
+  qualifierMatchId?: number;
+  qualifierSlotLabel?: string;
 }
 
 export interface ActualKnockoutResults {

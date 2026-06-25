@@ -28,6 +28,8 @@ interface OpenWorldCupGameResponse {
   venue?: string;
   home_team_label?: string;
   away_team_label?: string;
+  home_team_name_en?: string;
+  away_team_name_en?: string;
   goalscorers?: Array<unknown>;
   goal_scorers?: Array<unknown>;
   events?: Array<unknown>;
@@ -51,6 +53,13 @@ interface OpenWorldCupCandidateFile {
 
 interface OpenWorldCupFixtureLookup {
   fixtureIdByMatchId: Map<number, string>;
+}
+
+export interface OpenWorldCupThirdPlaceQualifierSignal {
+  teamName: string;
+  source: 'providerKnockoutSlot';
+  matchId: number;
+  slotLabel: string;
 }
 
 const OPEN_WORLDCUP_CANDIDATE_FILE = join(process.cwd(), 'imports', 'open-worldcup-fixtures-2026.candidate.json');
@@ -135,21 +144,45 @@ export class OpenWorldCupResultProvider implements ResultProvider {
   }
 
   private async fetchGamesOnce(): Promise<OpenWorldCupGameResponse[]> {
-    if (!this.config.apiBaseUrl) throw new Error('OPEN_WORLDCUP_API_BASE_URL is required for open-worldcup provider.');
-
-    const baseUrl = trimTrailingSlash(this.config.apiBaseUrl);
-    const directUrl = new URL(`${baseUrl}/get/games`);
-    const headers: Record<string, string> = { accept: 'application/json' };
-    if (this.config.apiKey) headers.authorization = `Bearer ${this.config.apiKey}`;
-
-    const response = await this.fetchImpl(directUrl.toString(), { headers });
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
-      throw new Error(`Open World Cup fixture request failed with HTTP ${response.status}${body ? `: ${body.slice(0, 160)}` : ''}`);
-    }
-    const payload = (await response.json()) as OpenWorldCupGamesResponse;
-    return collectGames(payload);
+    return fetchOpenWorldCupGames(this.config, this.fetchImpl);
   }
+}
+
+export async function fetchOpenWorldCupGames(
+  config: ProviderSpecificConfig,
+  fetchImpl: FetchLike = fetch
+): Promise<OpenWorldCupGameResponse[]> {
+  return fetchOpenWorldCupGamesOnce(config, fetchImpl);
+}
+
+export function extractOpenWorldCupThirdPlaceQualifierSignals(games: OpenWorldCupGameResponse[]): OpenWorldCupThirdPlaceQualifierSignal[] {
+  const signals: OpenWorldCupThirdPlaceQualifierSignal[] = [];
+  for (const game of games) {
+    const matchId = toNumber(game.id);
+    if (!matchId || normalizeToken(String(game.type ?? '')) !== 'R32') continue;
+
+    const candidates = [
+      { teamName: stringValue(game.home_team_name_en), slotLabel: stringValue(game.home_team_label) },
+      { teamName: stringValue(game.away_team_name_en), slotLabel: stringValue(game.away_team_label) }
+    ];
+
+    for (const candidate of candidates) {
+      if (!candidate.teamName || !candidate.slotLabel || !isThirdPlaceSlotLabel(candidate.slotLabel)) continue;
+      signals.push({
+        teamName: candidate.teamName,
+        source: 'providerKnockoutSlot',
+        matchId,
+        slotLabel: candidate.slotLabel
+      });
+    }
+  }
+
+  const uniqueSignals = new Map<string, OpenWorldCupThirdPlaceQualifierSignal>();
+  for (const signal of signals) {
+    const key = normalizeToken(signal.teamName);
+    if (!uniqueSignals.has(key)) uniqueSignals.set(key, signal);
+  }
+  return [...uniqueSignals.values()].sort((left, right) => left.matchId - right.matchId || left.teamName.localeCompare(right.teamName, 'en'));
 }
 
 export function buildOpenWorldCupFixtureLookup(candidateFile: OpenWorldCupCandidateFile): OpenWorldCupFixtureLookup {
@@ -249,6 +282,23 @@ function collectGames(payload: OpenWorldCupGamesResponse): OpenWorldCupGameRespo
   return direct && typeof direct === 'object' ? [direct as OpenWorldCupGameResponse] : [];
 }
 
+async function fetchOpenWorldCupGamesOnce(config: ProviderSpecificConfig, fetchImpl: FetchLike): Promise<OpenWorldCupGameResponse[]> {
+  if (!config.apiBaseUrl) throw new Error('OPEN_WORLDCUP_API_BASE_URL is required for open-worldcup provider.');
+
+  const baseUrl = trimTrailingSlash(config.apiBaseUrl);
+  const directUrl = new URL(`${baseUrl}/get/games`);
+  const headers: Record<string, string> = { accept: 'application/json' };
+  if (config.apiKey) headers.authorization = `Bearer ${config.apiKey}`;
+
+  const response = await fetchImpl(directUrl.toString(), { headers });
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`Open World Cup fixture request failed with HTTP ${response.status}${body ? `: ${body.slice(0, 160)}` : ''}`);
+  }
+  const payload = (await response.json()) as OpenWorldCupGamesResponse;
+  return collectGames(payload);
+}
+
 function warningUpdate(match: TrackedMatch, now: Date, provider: string, warning: string): ResultUpdate {
   return {
     matchId: match.id,
@@ -315,4 +365,9 @@ function normalizeScorerName(value: string): string {
 
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '');
+}
+
+function isThirdPlaceSlotLabel(value: string): boolean {
+  const normalized = normalizeToken(value);
+  return normalized.startsWith('3RD_GROUP');
 }

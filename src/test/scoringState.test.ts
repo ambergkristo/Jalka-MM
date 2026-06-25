@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { calculateGroupBonusPoints } from '../domain/pointsEngine.js';
+import type { GroupPrediction } from '../domain/predictionRepository.js';
 import type { QueryableDatabase } from '../server/databaseAdapter.js';
 import { buildActualGroupStandings, buildActualKnockoutResults, buildActualScoringState, buildActualTopScorers } from '../server/results/scoringState.js';
 
@@ -80,7 +82,43 @@ describe('actual scoring state group qualification timing', () => {
     expect(standings.filter((standing) => standing.group === 'A')).toHaveLength(4);
     expect(groupAThird).toMatchObject({
       team: 'Team A3',
-      qualified: false
+      qualified: false,
+      qualifierSource: 'notConfirmed'
+    });
+  });
+
+  it('marks a third-place team as qualified when a provider knockout slot already assigns that team', async () => {
+    const groupA = createFinalGroup('A', 4);
+    const groupB = createFinalGroup('B', 3);
+    const db = createScoringStateDb([...groupA.teams, ...groupB.teams], [...groupA.results, ...groupB.results]);
+
+    const standings = await buildActualGroupStandings(db, {
+      confirmedThirdPlaceQualifierSignals: [{
+        teamName: 'Team B3',
+        source: 'providerKnockoutSlot',
+        matchId: 81,
+        slotLabel: '3rd Group B/E/F/I/J'
+      }]
+    });
+    const groupBThird = standings.find((standing) => standing.group === 'B' && standing.rank === 3);
+
+    expect(groupBThird).toMatchObject({
+      team: 'Team B3',
+      qualified: true,
+      qualifierSource: 'providerKnockoutSlot',
+      qualifierMatchId: 81,
+      qualifierSlotLabel: '3rd Group B/E/F/I/J'
+    });
+
+    const result = calculateGroupBonusPoints(
+      [{ playerId: 'p1', group: 'B', first: 'Team B1', second: 'Team B2', third: 'Team B3' } satisfies GroupPrediction],
+      standings.filter((standing) => standing.group === 'B')
+    );
+    expect(result.breakdown[0]).toMatchObject({
+      winnerPoints: 10,
+      secondPlacePoints: 5,
+      qualifierPoints: 3,
+      points: 18
     });
   });
 
@@ -99,6 +137,7 @@ describe('actual scoring state group qualification timing', () => {
     expect(standings).toHaveLength(48);
     expect(qualifiedThirds).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']);
     expect(standings.filter((standing) => standing.rank === 3 && !standing.qualified).map((standing) => standing.group)).toEqual(['I', 'J', 'K', 'L']);
+    expect(standings.find((standing) => standing.group === 'A' && standing.rank === 3)?.qualifierSource).toBe('mathematicalLock');
   });
 });
 

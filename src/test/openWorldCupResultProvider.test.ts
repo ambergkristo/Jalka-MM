@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildOpenWorldCupFixtureLookup, OpenWorldCupResultProvider, normalizeOpenWorldCupGame } from '../server/results/openWorldCupResultProvider.js';
+import {
+  buildOpenWorldCupFixtureLookup,
+  extractOpenWorldCupThirdPlaceQualifierSignals,
+  OpenWorldCupResultProvider,
+  normalizeOpenWorldCupGame
+} from '../server/results/openWorldCupResultProvider.js';
 import type { TrackedMatch } from '../server/results/resultTypes.js';
 
 const match: TrackedMatch = {
@@ -12,6 +17,42 @@ const match: TrackedMatch = {
 };
 
 describe('Open World Cup result provider', () => {
+  it('extracts confirmed third-place qualifier teams only from assigned R32 third-place slots', () => {
+    const signals = extractOpenWorldCupThirdPlaceQualifierSignals([
+      sampleGame('scheduled', 0, 0, false, 81, {
+        type: 'r32',
+        home_team_name_en: 'United States',
+        home_team_label: 'Winner Group D',
+        away_team_name_en: 'Bosnia and Herzegovina',
+        away_team_label: '3rd Group B/E/F/I/J',
+        away_team_id: 6
+      }),
+      sampleGame('scheduled', 0, 0, false, 73, {
+        type: 'r32',
+        home_team_name_en: 'South Africa',
+        home_team_label: 'Runner-up Group A',
+        away_team_name_en: 'Canada',
+        away_team_label: 'Runner-up Group B',
+        home_team_id: 2,
+        away_team_id: 5
+      }),
+      sampleGame('scheduled', 0, 0, false, 85, {
+        type: 'r32',
+        home_team_name_en: 'Switzerland',
+        home_team_label: 'Winner Group B',
+        away_team_label: '3rd Group E/F/G/I/J',
+        away_team_id: 0
+      })
+    ]);
+
+    expect(signals).toEqual([{
+      teamName: 'Bosnia and Herzegovina',
+      source: 'providerKnockoutSlot',
+      matchId: 81,
+      slotLabel: '3rd Group B/E/F/I/J'
+    }]);
+  });
+
   it('normalizes scheduled and final sample responses', async () => {
     const scheduled = await providerFor(sampleGame('scheduled')).fetchMatchUpdate(match, new Date('2026-06-11T18:30:00.000Z'));
     expect(normalizeOpenWorldCupGame(sampleGame('scheduled'))).toMatchObject({ rawStatus: 'SCHEDULED', homeScore: 0, awayScore: 0 });

@@ -3,27 +3,67 @@ import { isConfirmedFinalResult } from './finalizedResultState.js';
 import { MANUAL_UNKNOWN_SCORER_NAME } from './manualScorerCorrections.js';
 import { resolveScorerIdentity } from '../../domain/scorerIdentity.js';
 import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
+import { extractOpenWorldCupThirdPlaceQualifierSignals, fetchOpenWorldCupGames, type OpenWorldCupThirdPlaceQualifierSignal } from './openWorldCupResultProvider.js';
+import { loadResultProviderConfig } from './resultProviderConfig.js';
+
+export type QualifierSource = 'groupTop2' | 'providerKnockoutSlot' | 'mathematicalLock' | 'notConfirmed';
+
+export interface ThirdPlaceQualifierSignal {
+  teamName: string;
+  source: Exclude<QualifierSource, 'groupTop2' | 'notConfirmed'>;
+  matchId?: number;
+  slotLabel?: string;
+}
+
+export interface GroupQualifierAudit {
+  confirmedDirectQualifiers: Array<{ group: string; teams: string[] }>;
+  confirmedThirdPlaceQualifiers: Array<{
+    group: string;
+    team: string;
+    source: Exclude<QualifierSource, 'groupTop2' | 'notConfirmed'>;
+    matchId?: number;
+    slotLabel?: string;
+  }>;
+}
 
 export interface ActualScoringState {
   actualGroupStandings?: ActualGroupStanding[];
   actualKnockoutResults?: ActualKnockoutResults;
   actualTopScorers?: ActualTopScorer[];
+  qualifierAudit?: GroupQualifierAudit;
 }
 
-export async function buildActualScoringState(db: QueryableDatabase): Promise<ActualScoringState> {
+export async function buildActualScoringState(
+  db: QueryableDatabase,
+  options: {
+    confirmedThirdPlaceQualifierSignals?: ThirdPlaceQualifierSignal[];
+  } = {}
+): Promise<ActualScoringState> {
   const [actualGroupStandings, actualKnockoutResults, actualTopScorers] = await Promise.all([
-    buildActualGroupStandings(db),
+    buildActualGroupStandings(db, options),
     buildActualKnockoutResults(db),
     buildActualTopScorers(db)
   ]);
   return {
     actualGroupStandings,
     actualKnockoutResults,
-    actualTopScorers
+    actualTopScorers,
+    qualifierAudit: buildGroupQualifierAudit(actualGroupStandings)
   };
 }
 
-export async function buildActualGroupStandings(db: QueryableDatabase): Promise<ActualGroupStanding[]> {
+export async function buildConfiguredActualScoringState(db: QueryableDatabase, now = new Date()): Promise<ActualScoringState> {
+  const config = loadResultProviderConfig();
+  const confirmedThirdPlaceQualifierSignals = await loadOpenWorldCupThirdPlaceQualifierSignals(config.openWorldCup, now).catch(() => []);
+  return buildActualScoringState(db, { confirmedThirdPlaceQualifierSignals });
+}
+
+export async function buildActualGroupStandings(
+  db: QueryableDatabase,
+  options: {
+    confirmedThirdPlaceQualifierSignals?: ThirdPlaceQualifierSignal[];
+  } = {}
+): Promise<ActualGroupStanding[]> {
   const teams = await db.all(`
     SELECT id, name, name_et, group_id
     FROM teams
@@ -108,6 +148,10 @@ export async function buildActualGroupStandings(db: QueryableDatabase): Promise<
     ])
   );
 
+  const confirmedThirdPlaceQualifierByTeam = new Map(
+    (options.confirmedThirdPlaceQualifierSignals ?? []).map((signal) => [normalizeKey(signal.teamName), signal])
+  );
+
   const advancingThirdPlaceTeamIds = finalGroups.length === 12
     ? new Set(
       [...finalStandingsByGroup.entries()]
@@ -131,11 +175,20 @@ export async function buildActualGroupStandings(db: QueryableDatabase): Promise<
   for (const groupId of finalGroups) {
     const sorted = finalStandingsByGroup.get(groupId) ?? [];
     for (const [index, row] of sorted.entries()) {
+      const thirdPlaceSignal = index === 2 ? confirmedThirdPlaceQualifierByTeam.get(normalizeKey(row.teamName)) : undefined;
+      const mathematicallyQualified = advancingThirdPlaceTeamIds.has(row.teamId);
       rows.push({
         group: groupId,
         team: row.teamName,
         rank: index + 1,
-        qualified: index < 2 || advancingThirdPlaceTeamIds.has(row.teamId)
+        qualified: index < 2 || Boolean(thirdPlaceSignal) || mathematicallyQualified,
+        qualifierSource:
+          index < 2
+            ? 'groupTop2'
+            : thirdPlaceSignal?.source
+              ?? (mathematicallyQualified ? 'mathematicalLock' : 'notConfirmed'),
+        qualifierMatchId: thirdPlaceSignal?.matchId,
+        qualifierSlotLabel: thirdPlaceSignal?.slotLabel
       });
     }
   }
@@ -243,6 +296,16 @@ async function getKnockoutStageCoverage(db: QueryableDatabase): Promise<Map<'R32
     coverage.set(stage, entry);
   }
   return coverage;
+}
+
+async function loadOpenWorldCupThirdPlaceQualifierSignals(
+  config: { apiBaseUrl?: string; apiKey?: string },
+  now: Date
+): Promise<OpenWorldCupThirdPlaceQualifierSignal[]> {
+  if (!config.apiBaseUrl) return [];
+  void now;
+  const games = await fetchOpenWorldCupGames(config, fetch);
+  return extractOpenWorldCupThirdPlaceQualifierSignals(games);
 }
 
 async function getConfirmedStageWinners(db: QueryableDatabase, stage: 'R32' | 'R16' | 'QF' | 'SF'): Promise<string[]> {
@@ -378,4 +441,38 @@ function goalDifference(row: { goalsFor: number; goalsAgainst: number }): number
 function stringOrUndefined(value: unknown): string | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   return String(value);
+}
+
+function buildGroupQualifierAudit(standings: ActualGroupStanding[] | undefined): GroupQualifierAudit {
+  if (!standings?.length) {
+    return {
+      confirmedDirectQualifiers: [],
+      confirmedThirdPlaceQualifiers: []
+    };
+  }
+
+  const groups = [...new Set(standings.map((standing) => standing.group))].sort();
+  return {
+    confirmedDirectQualifiers: groups.map((group) => ({
+      group,
+      teams: standings
+        .filter((standing) => standing.group === group && standing.qualifierSource === 'groupTop2')
+        .sort((left, right) => left.rank - right.rank)
+        .map((standing) => standing.team)
+    })),
+    confirmedThirdPlaceQualifiers: standings
+      .filter((standing) => standing.rank === 3 && standing.qualified && standing.qualifierSource && standing.qualifierSource !== 'groupTop2' && standing.qualifierSource !== 'notConfirmed')
+      .map((standing) => ({
+        group: standing.group,
+        team: standing.team,
+        source: standing.qualifierSource as Exclude<QualifierSource, 'groupTop2' | 'notConfirmed'>,
+        matchId: standing.qualifierMatchId,
+        slotLabel: standing.qualifierSlotLabel
+      }))
+      .sort((left, right) => left.group.localeCompare(right.group, 'et'))
+  };
+}
+
+function normalizeKey(value: string): string {
+  return value.trim().toLocaleLowerCase('en');
 }

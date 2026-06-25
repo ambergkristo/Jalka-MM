@@ -12,7 +12,7 @@ import { backfillTopScorersFromConfirmedResults, countVisibleScorerFactGoals, re
 import type { ResultUpdate } from './resultTypes.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
-import { buildActualScoringState } from './scoringState.js';
+import { buildConfiguredActualScoringState } from './scoringState.js';
 import { repairPersistedLeaderboardSnapshot as repairPersistedLeaderboardSnapshotImpl } from './leaderboardRepair.js';
 import { buildLeaderboardScoringBreakdown } from './leaderboardScoring.js';
 
@@ -81,7 +81,7 @@ export async function getCurrentLeaderboard(leaderboardRepository: LeaderboardRe
   const metadata = await leaderboardRepository.getLeaderboardMetadata();
   const source = leaderboardRepository as LeaderboardRepository & { getFinalizedResults?: () => Promise<ResultUpdate[]> };
   const finalizedResults = typeof source.getFinalizedResults === 'function' ? await source.getFinalizedResults() : [];
-  const actualScoringState = finalizedResults.length > 0 ? await buildActualScoringState(db) : undefined;
+  const actualScoringState = finalizedResults.length > 0 ? await buildConfiguredActualScoringState(db, new Date()) : undefined;
   const reconciled = await repairPersistedLeaderboardSnapshotImpl({
     leaderboardRepository,
     persistedEntries: persisted,

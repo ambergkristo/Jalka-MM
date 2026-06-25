@@ -138,6 +138,10 @@ describe('leaderboard scoring breakdown', () => {
     });
 
     expect(breakdown.finalizedGroups).toEqual(['A']);
+    expect(breakdown.qualifierAudit).toEqual({
+      confirmedDirectQualifiers: [{ group: 'A', teams: ['Team A', 'Team B'] }],
+      confirmedThirdPlaceQualifiers: []
+    });
     expect(breakdown.persistedEntry).toMatchObject({ playerId: 'player-1', totalPoints: 0 });
     expect(breakdown.rebuiltEntry).toMatchObject({
       playerId: 'player-1',
