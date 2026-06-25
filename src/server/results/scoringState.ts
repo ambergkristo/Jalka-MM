@@ -5,8 +5,9 @@ import { resolveScorerIdentity } from '../../domain/scorerIdentity.js';
 import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
 import { extractOpenWorldCupThirdPlaceQualifierSignals, fetchOpenWorldCupGames, type OpenWorldCupThirdPlaceQualifierSignal } from './openWorldCupResultProvider.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
+import { loadOrganizerThirdPlaceQualifierSignals } from './thirdPlaceQualifierLocks.js';
 
-export type QualifierSource = 'groupTop2' | 'providerKnockoutSlot' | 'mathematicalLock' | 'notConfirmed';
+export type QualifierSource = 'groupTop2' | 'providerKnockoutSlot' | 'mathematicalLock' | 'organizerLock' | 'notConfirmed';
 
 export interface ThirdPlaceQualifierSignal {
   teamName: string;
@@ -54,7 +55,11 @@ export async function buildActualScoringState(
 
 export async function buildConfiguredActualScoringState(db: QueryableDatabase, now = new Date()): Promise<ActualScoringState> {
   const config = loadResultProviderConfig();
-  const confirmedThirdPlaceQualifierSignals = await loadOpenWorldCupThirdPlaceQualifierSignals(config.openWorldCup, now).catch(() => []);
+  const [providerSignals, organizerSignals] = await Promise.all([
+    loadOpenWorldCupThirdPlaceQualifierSignals(config.openWorldCup, now).catch(() => []),
+    loadOrganizerThirdPlaceQualifierSignals(db)
+  ]);
+  const confirmedThirdPlaceQualifierSignals = mergeThirdPlaceQualifierSignals(providerSignals, organizerSignals);
   return buildActualScoringState(db, { confirmedThirdPlaceQualifierSignals });
 }
 
@@ -475,4 +480,14 @@ function buildGroupQualifierAudit(standings: ActualGroupStanding[] | undefined):
 
 function normalizeKey(value: string): string {
   return value.trim().toLocaleLowerCase('en');
+}
+
+function mergeThirdPlaceQualifierSignals(
+  providerSignals: ThirdPlaceQualifierSignal[],
+  organizerSignals: ThirdPlaceQualifierSignal[]
+): ThirdPlaceQualifierSignal[] {
+  const merged = new Map<string, ThirdPlaceQualifierSignal>();
+  for (const signal of providerSignals) merged.set(normalizeKey(signal.teamName), signal);
+  for (const signal of organizerSignals) merged.set(normalizeKey(signal.teamName), signal);
+  return [...merged.values()];
 }

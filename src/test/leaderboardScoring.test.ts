@@ -11,7 +11,8 @@ vi.mock('../domain/predictionRepository.js', () => {
     { playerId: 'player-2', matchId: 1, homeScore: 0, awayScore: 0 }
   ];
   const groupPredictions = [
-    { playerId: 'player-1', group: 'A', first: 'Team A', second: 'Team B', third: 'Team C' }
+    { playerId: 'player-1', group: 'A', first: 'Team A', second: 'Team B', third: 'Team C' },
+    { playerId: 'player-1', group: 'B', first: 'Šveits', second: 'Kanada', third: 'Bosnia ja Hertsegoviina' }
   ];
 
   return {
@@ -169,5 +170,83 @@ describe('leaderboard scoring breakdown', () => {
       points: 6,
       scoreSource: 'confirmed'
     })]);
+  });
+
+  it('shows organizer-locked third-place qualifiers and awarded +3 rows in the scoring breakdown', async () => {
+    const resultsRepository: ResultsAgentRepository = {
+      async listTrackedMatches() { return []; },
+      async getMatchResult() { return undefined; },
+      async getProviderResultObservations() { return []; },
+      async saveResultUpdate() { return { finalResultChanged: false }; },
+      async getFinalizedResults() { return []; },
+      async getStatus() { throw new Error('not used'); },
+      async markPointsRecalculated() {},
+      async saveRunSummary() {}
+    };
+    const leaderboardRepository: LeaderboardRepository = {
+      async getLeaderboard() { return []; },
+      async replaceLeaderboard() {},
+      async getLeaderboardMetadata() {
+        return {
+          lastRebuildAt: '2026-06-25T09:00:00.000Z',
+          playersProcessed: 2,
+          matchesProcessed: 0,
+          changedEntries: 0,
+          warnings: []
+        };
+      }
+    };
+    const database: QueryableDatabase = {
+      provider: 'sqlite',
+      async run() {},
+      async all() { return []; },
+      async one() { return null; },
+      async exec() {},
+      async transaction<T>(callback: (tx: QueryableDatabase) => Promise<T>) { return callback(this); },
+      async close() {}
+    };
+
+    const breakdown = await buildLeaderboardScoringBreakdown({
+      database,
+      resultsRepository,
+      leaderboardRepository,
+      playerQuery: 'player-1',
+      now: new Date('2026-06-25T10:30:00.000Z'),
+      actualScoringState: {
+        actualGroupStandings: [
+          { group: 'B', team: 'Šveits', rank: 1, qualified: true, qualifierSource: 'groupTop2' },
+          { group: 'B', team: 'Kanada', rank: 2, qualified: true, qualifierSource: 'groupTop2' },
+          { group: 'B', team: 'Bosnia ja Hertsegoviina', rank: 3, qualified: true, qualifierSource: 'organizerLock' },
+          { group: 'B', team: 'Katar', rank: 4, qualified: false, qualifierSource: 'notConfirmed' }
+        ]
+      }
+    });
+
+    expect(breakdown.qualifierAudit.confirmedThirdPlaceQualifiers).toEqual([
+      {
+        group: 'B',
+        team: 'Bosnia ja Hertsegoviina',
+        source: 'organizerLock',
+        matchId: undefined,
+        slotLabel: undefined
+      }
+    ]);
+    expect(breakdown.thirdPlaceQualifierAwards).toEqual([
+      {
+        group: 'B',
+        team: 'Bosnia ja Hertsegoviina',
+        source: 'organizerLock',
+        points: 3
+      }
+    ]);
+    expect(breakdown.playerResult.groupBreakdown).toEqual([
+      {
+        group: 'B',
+        winnerPoints: 10,
+        secondPlacePoints: 5,
+        qualifierPoints: 3,
+        points: 18
+      }
+    ]);
   });
 });

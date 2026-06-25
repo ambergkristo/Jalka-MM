@@ -7,7 +7,7 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, listThirdPlaceQualifierLocksRuntime, queueResultAgentCatchUp, runResultsAgentCycle, upsertThirdPlaceQualifierLockRuntime } from './results/resultAgentRuntime.js';
 import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runFullSafeRebuild, runPublicStateRepairAction } from './results/publicStateHealth.js';
 import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
 import { collectProviderHealth } from './results/providerHealth.js';
@@ -80,6 +80,28 @@ createServer(async (request, response) => {
       const player = url.searchParams.get('player');
       if (!player) return json(response, 400, { error: 'player query parameter is required.' });
       return json(response, 200, await getLeaderboardScoringBreakdown(player));
+    }
+    if (request.method === 'GET' && url.pathname === '/api/operator/third-place-qualifier-locks') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      return json(response, 200, await listThirdPlaceQualifierLocksRuntime());
+    }
+    if (request.method === 'POST' && url.pathname === '/api/operator/third-place-qualifier-locks') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      const body = await readJsonBody(request) as { group?: string; teamId?: string; status?: 'qualified'; source?: 'organizerLock'; note?: string };
+      if (!body.group || !body.teamId) return json(response, 400, { error: 'group and teamId are required.' });
+      return json(response, 200, await upsertThirdPlaceQualifierLockRuntime({
+        group: body.group,
+        teamId: body.teamId,
+        status: body.status,
+        source: body.source,
+        note: body.note
+      }));
     }
     if (request.method === 'POST' && url.pathname === '/api/public-state/repair') {
       const permission = getManualResultPermission({

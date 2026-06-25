@@ -15,6 +15,7 @@ import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import { buildConfiguredActualScoringState } from './scoringState.js';
 import { repairPersistedLeaderboardSnapshot as repairPersistedLeaderboardSnapshotImpl } from './leaderboardRepair.js';
 import { buildLeaderboardScoringBreakdown } from './leaderboardScoring.js';
+import { listThirdPlaceQualifierLocks, upsertThirdPlaceQualifierLock, type ThirdPlaceQualifierLockInput } from './thirdPlaceQualifierLocks.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -178,4 +179,26 @@ export async function getLeaderboardScoringBreakdown(playerQuery: string, now = 
     playerQuery,
     now
   });
+}
+
+export async function listThirdPlaceQualifierLocksRuntime() {
+  return {
+    locks: await listThirdPlaceQualifierLocks(db)
+  };
+}
+
+export async function upsertThirdPlaceQualifierLockRuntime(input: ThirdPlaceQualifierLockInput, now = new Date()) {
+  const lock = await upsertThirdPlaceQualifierLock(db, input, now);
+  const rebuild = await repository.refreshDerivedTournamentState?.(now.toISOString());
+  return {
+    lock,
+    locks: await listThirdPlaceQualifierLocks(db),
+    leaderboardRebuild: rebuild ? {
+      recalculatedAt: rebuild.recalculatedAt,
+      playersProcessed: rebuild.playersProcessed,
+      matchesProcessed: rebuild.matchesProcessed,
+      changedEntries: rebuild.changedEntries,
+      warnings: rebuild.warnings
+    } : undefined
+  };
 }

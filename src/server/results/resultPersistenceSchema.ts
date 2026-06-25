@@ -152,6 +152,16 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
       last_repair_action_status TEXT,
       last_repair_action_error TEXT
     );
+    CREATE TABLE IF NOT EXISTS third_place_qualifier_locks (
+      group_id TEXT NOT NULL,
+      team_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      source TEXT NOT NULL,
+      note TEXT,
+      locked_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (group_id, team_id)
+    );
   `);
 
   await ensureColumn(db, 'match_results', 'minute', 'INTEGER');
@@ -200,6 +210,7 @@ export async function migrateResultPersistenceSchema(db: QueryableDatabase): Pro
   await ensureColumn(db, 'result_manual_corrections', 'penalty_winner_team_code', 'TEXT');
   await ensureColumn(db, 'result_manual_corrections', 'scorers_json', 'TEXT');
   await ensureColumn(db, 'result_agent_runs', 'warning_details_json', "TEXT NOT NULL DEFAULT '[]'");
+  await ensureColumn(db, 'third_place_qualifier_locks', 'note', 'TEXT');
 }
 
 async function ensureColumn(db: QueryableDatabase, table: string, column: string, definition: string): Promise<void> {
