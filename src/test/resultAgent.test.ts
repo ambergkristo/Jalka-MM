@@ -369,6 +369,29 @@ describe('leaderboard rebuild', () => {
     expect(result.entries[0]).toMatchObject({ rank: 1, points: 6, exactScores: 1, correctResults: 1 });
   });
 
+  it('uses confirmed scores instead of stale raw provider scores when rebuilding leaderboard points', async () => {
+    const result = await rebuildLeaderboardAfterFinalResult({
+      now: new Date('2026-06-15T18:00:00.000Z'),
+      finalizedResults: [
+        {
+          matchId: 4,
+          status: 'FINISHED',
+          publicStatus: 'CONFIRMED_FINAL',
+          homeScore: 0,
+          awayScore: 0,
+          confirmedHomeScore: 2,
+          confirmedAwayScore: 1,
+          isFinal: true,
+          lastCheckedAt: '2026-06-15T18:00:00.000Z',
+          confirmedAt: '2026-06-15T18:00:00.000Z',
+          provider: 'mock-result-provider'
+        }
+      ]
+    });
+
+    expect(result.entries[0]).toMatchObject({ rank: 1, matchPoints: 6, points: 6, exactScores: 1, correctResults: 1 });
+  });
+
   it('derives previous ranks from the immediately prior scoring snapshot for all leaderboard rows', async () => {
     const later = await rebuildLeaderboardAfterFinalResult({
       now: new Date('2026-06-15T20:00:00.000Z'),

@@ -7,7 +7,7 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, getCurrentLeaderboard, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, runResultsAgentCycle } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, queueResultAgentCatchUp, runResultsAgentCycle } from './results/resultAgentRuntime.js';
 import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runFullSafeRebuild, runPublicStateRepairAction } from './results/publicStateHealth.js';
 import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
 import { collectProviderHealth } from './results/providerHealth.js';
@@ -72,6 +72,15 @@ createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
     if (request.method === 'GET' && url.pathname === '/api/public-state/diagnostics') return json(response, 200, await collectPublicStateDiagnostics({ db }));
     if (request.method === 'GET' && url.pathname === '/api/provider-health') return json(response, 200, await collectProviderHealth({ db, resultAgentStatus: await getResultsAgentStatus() }));
+    if (request.method === 'GET' && url.pathname === '/api/operator/scoring-breakdown') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      const player = url.searchParams.get('player');
+      if (!player) return json(response, 400, { error: 'player query parameter is required.' });
+      return json(response, 200, await getLeaderboardScoringBreakdown(player));
+    }
     if (request.method === 'POST' && url.pathname === '/api/public-state/repair') {
       const permission = getManualResultPermission({
         providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])

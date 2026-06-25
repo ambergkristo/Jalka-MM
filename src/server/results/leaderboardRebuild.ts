@@ -2,6 +2,7 @@ import { rebuildLeaderboard } from '../../domain/pointsEngine.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
 import type { LeaderboardRebuildResult, ResultUpdate } from './resultTypes.js';
+import { toScoringMatchResult } from './leaderboardScoring.js';
 
 export async function rebuildLeaderboardAfterFinalResult(input: {
   finalizedResults: ResultUpdate[];
@@ -21,13 +22,8 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
     knockoutPredictions: predictionRepository.getKnockoutPredictions(),
     awardsPredictions: predictionRepository.getAwardsPredictions(),
     results: finalizedResults.flatMap((result) => {
-      if (typeof result.homeScore !== 'number' || typeof result.awayScore !== 'number') return [];
-      return [{
-        matchId: result.matchId,
-        homeScore: result.homeScore,
-        awayScore: result.awayScore,
-        isFinal: result.isFinal
-      }];
+      const scoringResult = toScoringMatchResult(result);
+      return scoringResult ? [scoringResult] : [];
     }),
     actualGroupStandings: input.actualGroupStandings,
     actualKnockoutResults: input.actualKnockoutResults,
@@ -45,13 +41,8 @@ export async function rebuildLeaderboardAfterFinalResult(input: {
         knockoutPredictions: predictionRepository.getKnockoutPredictions(),
         awardsPredictions: predictionRepository.getAwardsPredictions(),
         results: movementBaselineResults.flatMap((result) => {
-          if (typeof result.homeScore !== 'number' || typeof result.awayScore !== 'number') return [];
-          return [{
-            matchId: result.matchId,
-            homeScore: result.homeScore,
-            awayScore: result.awayScore,
-            isFinal: result.isFinal
-          }];
+          const scoringResult = toScoringMatchResult(result);
+          return scoringResult ? [scoringResult] : [];
         }),
         previousEntries,
         recalculatedAt,

@@ -14,6 +14,7 @@ import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import { buildActualScoringState } from './scoringState.js';
 import { repairPersistedLeaderboardSnapshot as repairPersistedLeaderboardSnapshotImpl } from './leaderboardRepair.js';
+import { buildLeaderboardScoringBreakdown } from './leaderboardScoring.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -167,4 +168,14 @@ export async function repairTopScorersFromConfirmedResults(now = new Date()) {
 
 export function getZeroedPublicLeaderboard(): LeaderboardEntry[] {
   return buildCanonicalPublicLeaderboardEntries();
+}
+
+export async function getLeaderboardScoringBreakdown(playerQuery: string, now = new Date()) {
+  return buildLeaderboardScoringBreakdown({
+    database: db,
+    resultsRepository: repository,
+    leaderboardRepository: repository,
+    playerQuery,
+    now
+  });
 }
