@@ -94,22 +94,48 @@ export async function buildActualGroupStandings(db: QueryableDatabase): Promise<
     .map(([groupId]) => groupId)
     .sort();
 
+  const finalStandingsByGroup = new Map(
+    finalGroups.map((groupId) => [
+      groupId,
+      [...standings.values()]
+        .filter((row) => row.groupId === groupId)
+        .sort((a, b) =>
+          b.points - a.points ||
+          goalDifference(b) - goalDifference(a) ||
+          b.goalsFor - a.goalsFor ||
+          a.teamName.localeCompare(b.teamName, 'et')
+        )
+    ])
+  );
+
+  const advancingThirdPlaceTeamIds = finalGroups.length === 12
+    ? new Set(
+      [...finalStandingsByGroup.entries()]
+        .flatMap(([groupId, groupRows]) => {
+          const thirdPlace = groupRows[2];
+          return thirdPlace ? [{ ...thirdPlace, groupId }] : [];
+        })
+        .sort((a, b) =>
+          b.points - a.points ||
+          goalDifference(b) - goalDifference(a) ||
+          b.goalsFor - a.goalsFor ||
+          a.groupId.localeCompare(b.groupId, 'et') ||
+          a.teamName.localeCompare(b.teamName, 'et')
+        )
+        .slice(0, 8)
+        .map((row) => row.teamId)
+    )
+    : new Set<string>();
+
   const rows: ActualGroupStanding[] = [];
   for (const groupId of finalGroups) {
-    const sorted = [...standings.values()]
-      .filter((row) => row.groupId === groupId)
-      .sort((a, b) =>
-        b.points - a.points ||
-        goalDifference(b) - goalDifference(a) ||
-        b.goalsFor - a.goalsFor ||
-        a.teamName.localeCompare(b.teamName, 'et')
-      );
+    const sorted = finalStandingsByGroup.get(groupId) ?? [];
     for (const [index, row] of sorted.entries()) {
       rows.push({
         group: groupId,
         team: row.teamName,
         rank: index + 1,
-        qualified: index < 2
+        qualified: index < 2 || advancingThirdPlaceTeamIds.has(row.teamId)
       });
     }
   }

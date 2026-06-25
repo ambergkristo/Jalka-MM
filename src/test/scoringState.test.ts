@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildActualKnockoutResults, buildActualScoringState, buildActualTopScorers } from '../server/results/scoringState.js';
+import type { QueryableDatabase } from '../server/databaseAdapter.js';
+import { buildActualGroupStandings, buildActualKnockoutResults, buildActualScoringState, buildActualTopScorers } from '../server/results/scoringState.js';
 
 describe('actual scoring state derivation', () => {
   it('derives confirmed knockout progression and tied top scorers', async () => {
@@ -28,7 +29,7 @@ describe('actual scoring state derivation', () => {
       champion: 'Champion Winner'
     });
     await expect(buildActualTopScorers(db)).resolves.toEqual([
-      { name: 'Kylian Mbapp\u00e9', team: 'France' },
+      { name: 'Kylian Mbappé', team: 'France' },
       { name: 'Lionel Messi', team: 'Argentina' }
     ]);
     await expect(buildActualScoringState(db)).resolves.toMatchObject({
@@ -36,10 +37,44 @@ describe('actual scoring state derivation', () => {
         champion: 'Champion Winner'
       }),
       actualTopScorers: [
-        { name: 'Kylian Mbapp\u00e9', team: 'France' },
+        { name: 'Kylian Mbappé', team: 'France' },
         { name: 'Lionel Messi', team: 'Argentina' }
       ]
     });
+  });
+});
+
+describe('actual scoring state group qualification timing', () => {
+  it('does not mark a third-place team as qualified before all 12 groups are finalized', async () => {
+    const groupA = createFinalGroup('A', 4);
+    const groupB = createPartialGroup('B');
+    const db = createScoringStateDb([...groupA.teams, ...groupB.teams], [...groupA.results, ...groupB.results]);
+
+    const standings = await buildActualGroupStandings(db);
+    const groupAThird = standings.find((standing) => standing.group === 'A' && standing.rank === 3);
+
+    expect(standings.filter((standing) => standing.group === 'A')).toHaveLength(4);
+    expect(groupAThird).toMatchObject({
+      team: 'Team A3',
+      qualified: false
+    });
+  });
+
+  it('marks exactly eight third-place teams as qualified once all groups are finalized', async () => {
+    const groups = 'ABCDEFGHIJKL'.split('').map((groupId, index) => createFinalGroup(groupId, 12 - index));
+    const db = createScoringStateDb(
+      groups.flatMap((group) => group.teams),
+      groups.flatMap((group) => group.results)
+    );
+
+    const standings = await buildActualGroupStandings(db);
+    const qualifiedThirds = standings
+      .filter((standing) => standing.rank === 3 && standing.qualified)
+      .map((standing) => standing.group);
+
+    expect(standings).toHaveLength(48);
+    expect(qualifiedThirds).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']);
+    expect(standings.filter((standing) => standing.rank === 3 && !standing.qualified).map((standing) => standing.group)).toEqual(['I', 'J', 'K', 'L']);
   });
 });
 
@@ -78,21 +113,6 @@ function createMockDatabase(input: {
           .map((team) => ({ id: team.id, name: team.name, name_et: team.name_et, group_id: team.group_id }));
       }
 
-      if (sql.includes('COUNT(*) AS total_matches') && sql.includes("m.stage = 'GROUP'")) {
-        const counts = new Map<string, { total: number; confirmed: number }>();
-        for (const match of input.matches.filter((match) => match.stage === 'GROUP' && match.group_id)) {
-          const current = counts.get(match.group_id!) ?? { total: 0, confirmed: 0 };
-          current.total += 1;
-          if (resultByMatch.get(match.id)) current.confirmed += 1;
-          counts.set(match.group_id!, current);
-        }
-        return [...counts.entries()].map(([group_id, count]) => ({
-          group_id,
-          total_matches: count.total,
-          confirmed_matches: count.confirmed
-        }));
-      }
-
       if (sql.includes('FROM match_results r') && sql.includes("AND m.stage = 'GROUP'")) {
         return input.matches
           .filter((match) => match.stage === 'GROUP')
@@ -109,23 +129,23 @@ function createMockDatabase(input: {
           });
       }
 
-      if (sql.includes("FROM matches m LEFT JOIN match_results r ON r.match_id = m.id") && sql.includes('GROUP BY m.stage')) {
-        const coverage = new Map<string, { total: number; confirmed: number }>();
-        for (const match of input.matches.filter((match) => ['R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL'].includes(match.stage))) {
-          const current = coverage.get(match.stage) ?? { total: 0, confirmed: 0 };
-          current.total += 1;
-          const result = resultByMatch.get(match.id);
-          if (result && result.publicStatus === 'CONFIRMED_FINAL' && result.isFinal) current.confirmed += 1;
-          coverage.set(match.stage, current);
-        }
-        return [...coverage.entries()].map(([stage, count]) => ({
-          stage,
-          total_matches: count.total,
-          confirmed_matches: count.confirmed
-        }));
+      if (sql.includes("WHERE m.stage IN ('R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL')")) {
+        return input.matches
+          .filter((match) => ['R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL'].includes(match.stage))
+          .map((match) => {
+            const result = resultByMatch.get(match.id);
+            return {
+              stage: match.stage,
+              id: match.id,
+              public_status: result?.publicStatus,
+              is_final: result?.isFinal ? 1 : 0,
+              confirmed_home_score: result?.isFinal ? result.homeScore : null,
+              confirmed_away_score: result?.isFinal ? result.awayScore : null
+            };
+          });
       }
 
-      if (sql.includes("AND m.stage = ?")) {
+      if (sql.includes('WHERE m.stage = ?')) {
         const stage = String(values[0]);
         return input.matches
           .filter((match) => match.stage === stage)
@@ -164,7 +184,27 @@ function createMockDatabase(input: {
     },
     async run() {},
     async exec() {},
-    async transaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
+    async transaction<T>(callback: (tx: QueryableDatabase) => Promise<T>): Promise<T> {
+      return callback(this as unknown as QueryableDatabase);
+    },
+    async close() {}
+  };
+}
+
+function createScoringStateDb(teams: Array<Record<string, unknown>>, results: Array<Record<string, unknown>>): QueryableDatabase {
+  return {
+    provider: 'sqlite',
+    async run() {},
+    async all(sql: string) {
+      if (sql.includes('FROM teams')) return teams;
+      if (sql.includes('FROM matches m')) return results;
+      return [];
+    },
+    async one() {
+      return null;
+    },
+    async exec() {},
+    async transaction<T>(callback: (tx: QueryableDatabase) => Promise<T>) {
       return callback(this);
     },
     async close() {}
@@ -173,7 +213,7 @@ function createMockDatabase(input: {
 
 function rowForKnockoutMatch(
   match: { id: number; home_team_id?: string | null; away_team_id?: string | null },
-  result: { homeScore: number; awayScore: number },
+  result: { homeScore: number; awayScore: number; publicStatus?: string; isFinal?: boolean },
   teams: Array<{ id: string; name: string; name_et: string; code: string; group_id?: string | null }>
 ) {
   return {
@@ -184,9 +224,65 @@ function rowForKnockoutMatch(
     away_team_code: teamCodeFromId(match.away_team_id, teams),
     home_team: teamNameFromId(match.home_team_id, teams),
     away_team: teamNameFromId(match.away_team_id, teams),
+    public_status: result.publicStatus,
+    is_final: result.isFinal ? 1 : 0,
+    confirmed_home_score: result.isFinal ? result.homeScore : null,
+    confirmed_away_score: result.isFinal ? result.awayScore : null,
     home_score: result.homeScore,
     away_score: result.awayScore,
     penalty_winner: undefined
+  };
+}
+
+function createFinalGroup(groupId: string, thirdPlaceGoalsFor: number) {
+  const teams = [1, 2, 3, 4].map((seed) => ({
+    id: `${groupId}${seed}`,
+    name: `Team ${groupId}${seed}`,
+    name_et: `Team ${groupId}${seed}`,
+    group_id: groupId
+  }));
+
+  const results = [
+    confirmedGroupResult(groupId, `${groupId}1`, `${groupId}2`, 1, 0),
+    confirmedGroupResult(groupId, `${groupId}1`, `${groupId}3`, 1, 0),
+    confirmedGroupResult(groupId, `${groupId}1`, `${groupId}4`, 1, 0),
+    confirmedGroupResult(groupId, `${groupId}2`, `${groupId}3`, 1, 0),
+    confirmedGroupResult(groupId, `${groupId}2`, `${groupId}4`, 1, 0),
+    confirmedGroupResult(groupId, `${groupId}3`, `${groupId}4`, thirdPlaceGoalsFor, 0)
+  ];
+
+  return { teams, results };
+}
+
+function createPartialGroup(groupId: string) {
+  const teams = [1, 2, 3, 4].map((seed) => ({
+    id: `${groupId}${seed}`,
+    name: `Team ${groupId}${seed}`,
+    name_et: `Team ${groupId}${seed}`,
+    group_id: groupId
+  }));
+
+  const results = [
+    confirmedGroupResult(groupId, `${groupId}1`, `${groupId}2`, 1, 0),
+    {
+      group_id: groupId,
+      home_team_id: `${groupId}1`,
+      away_team_id: `${groupId}3`,
+      confirmed_home_score: null,
+      confirmed_away_score: null
+    }
+  ];
+
+  return { teams, results };
+}
+
+function confirmedGroupResult(groupId: string, homeTeamId: string, awayTeamId: string, homeScore: number, awayScore: number) {
+  return {
+    group_id: groupId,
+    home_team_id: homeTeamId,
+    away_team_id: awayTeamId,
+    confirmed_home_score: homeScore,
+    confirmed_away_score: awayScore
   };
 }
 
@@ -206,9 +302,9 @@ function teamNameFromTeam(teamId: string | undefined, teamCode: string | undefin
 function baseTeams() {
   return [
     { id: 'A1', name: 'Mexico', name_et: 'Mehhiko', code: 'MEX', group_id: 'A' },
-    { id: 'A2', name: 'South Africa', name_et: 'Lõuna-Aafrika', code: 'RSA', group_id: 'A' },
-    { id: 'A3', name: 'Korea Republic', name_et: 'Lõuna-Korea', code: 'KOR', group_id: 'A' },
-    { id: 'A4', name: 'Czechia', name_et: 'Tšehhi', code: 'CZE', group_id: 'A' },
+    { id: 'A2', name: 'South Africa', name_et: 'Louna-Aafrika', code: 'RSA', group_id: 'A' },
+    { id: 'A3', name: 'Korea Republic', name_et: 'Louna-Korea', code: 'KOR', group_id: 'A' },
+    { id: 'A4', name: 'Czechia', name_et: 'Tsehhi', code: 'CZE', group_id: 'A' },
     { id: 'R32H', name: 'R32 Winner', name_et: 'R32 Winner', code: 'R32H' },
     { id: 'R32A', name: 'R32 Runner-up', name_et: 'R32 Runner-up', code: 'R32A' },
     { id: 'R16H', name: 'R16 Winner', name_et: 'R16 Winner', code: 'R16H' },

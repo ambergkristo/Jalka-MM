@@ -58,24 +58,87 @@ describe('official group and playoff match scoring', () => {
 });
 
 describe('official group bonus scoring', () => {
-  const standings: ActualGroupStanding[] = [
-    { group: 'A', team: 'Brazil', rank: 1, qualified: true },
-    { group: 'A', team: 'Croatia', rank: 2, qualified: true },
-    { group: 'A', team: 'Japan', rank: 3, qualified: true },
-    { group: 'A', team: 'Canada', rank: 4, qualified: false }
-  ];
+  it('awards winner and runner-up placement bonuses plus immediate 1st/2nd qualifier bonuses', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+      { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+      { group: 'A', team: 'Japan', rank: 3, qualified: false },
+      { group: 'A', team: 'Canada', rank: 4, qualified: false }
+    ];
 
-  it('awards winner, second-place, and additive qualifier points', () => {
     const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
     expect(calculateGroupBonusPoints(predictions, standings)).toMatchObject({
-      points: 24,
+      points: 21,
       warnings: []
     });
   });
 
-  it('awards qualifier points even when order is wrong', () => {
-    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Japan', second: 'Brazil', third: 'Croatia' }];
-    expect(calculateGroupBonusPoints(predictions, standings).points).toBe(9);
+  it('awards only qualifier points when the top two teams are correct but in the wrong order', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+      { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+      { group: 'A', team: 'Japan', rank: 3, qualified: false },
+      { group: 'A', team: 'Canada', rank: 4, qualified: false }
+    ];
+
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Croatia', second: 'Brazil', third: 'Japan' }];
+    expect(calculateGroupBonusPoints(predictions, standings).points).toBe(6);
+  });
+
+  it('does not award third-place qualifier points before all groups are finalized', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+      { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+      { group: 'A', team: 'Japan', rank: 3, qualified: false },
+      { group: 'A', team: 'Canada', rank: 4, qualified: false }
+    ];
+
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
+    const result = calculateGroupBonusPoints(predictions, standings);
+
+    expect(result.breakdown).toEqual([{
+      group: 'A',
+      winnerPoints: 10,
+      secondPlacePoints: 5,
+      qualifierPoints: 6,
+      points: 21
+    }]);
+  });
+
+  it('awards third-place qualifier bonus once all groups are finalized and the team is in the final top eight', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+      { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+      { group: 'A', team: 'Japan', rank: 3, qualified: true },
+      { group: 'A', team: 'Canada', rank: 4, qualified: false },
+      { group: 'B', team: 'France', rank: 1, qualified: true },
+      { group: 'B', team: 'Senegal', rank: 2, qualified: true },
+      { group: 'B', team: 'Ecuador', rank: 3, qualified: false },
+      { group: 'B', team: 'Iran', rank: 4, qualified: false }
+    ];
+
+    const qualifiedThirdPrediction: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
+    const nonQualifiedThirdPrediction: GroupPrediction[] = [{ playerId: 'p1', group: 'B', first: 'France', second: 'Senegal', third: 'Ecuador' }];
+
+    expect(calculateGroupBonusPoints(qualifiedThirdPrediction, standings).points).toBe(24);
+    expect(calculateGroupBonusPoints(nonQualifiedThirdPrediction, standings).points).toBe(21);
+  });
+
+  it('gives zero third-place qualifier bonus when the third-place team does not ultimately qualify', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'B', team: 'France', rank: 1, qualified: true },
+      { group: 'B', team: 'Senegal', rank: 2, qualified: true },
+      { group: 'B', team: 'Ecuador', rank: 3, qualified: false },
+      { group: 'B', team: 'Iran', rank: 4, qualified: false }
+    ];
+
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'B', first: 'Iran', second: 'Ecuador', third: 'Iran' }];
+    expect(calculateGroupBonusPoints(predictions, standings).breakdown[0]).toMatchObject({
+      winnerPoints: 0,
+      secondPlacePoints: 0,
+      qualifierPoints: 0,
+      points: 0
+    });
   });
 
   it('handles missing group standings safely', () => {
