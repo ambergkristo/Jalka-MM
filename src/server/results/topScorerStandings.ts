@@ -36,7 +36,6 @@ export async function backfillTopScorersFromConfirmedResults(
       r.confirmed_home_score,
       r.confirmed_away_score,
       r.status,
-      r.public_status,
       r.is_final,
       r.provider_fixture_id,
       r.last_checked_at,

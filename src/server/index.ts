@@ -42,17 +42,32 @@ createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/public-dashboard') {
       void queueResultAgentCatchUp(new Date());
       void queuePublicStateRepairIfStale({ db, now: new Date() });
-      return json(response, 200, await getPublicTournamentSnapshot(db));
+      try {
+        return json(response, 200, await getPublicTournamentSnapshot(db));
+      } catch (error) {
+        console.error('[api/public-dashboard] failed to build snapshot:', error);
+        return json(response, 500, { error: error instanceof Error ? error.message : 'Public dashboard snapshot failed' });
+      }
     }
     if (request.method === 'GET' && url.pathname === '/api/results') {
       void queueResultAgentCatchUp(new Date());
       void queuePublicStateRepairIfStale({ db, now: new Date() });
-      return json(response, 200, await getPublicResultsPayload(db));
+      try {
+        return json(response, 200, await getPublicResultsPayload(db));
+      } catch (error) {
+        console.error('[api/results] failed to build payload:', error);
+        return json(response, 500, { error: error instanceof Error ? error.message : 'Public results payload failed' });
+      }
     }
     if (request.method === 'GET' && url.pathname === '/api/tournament') {
       void queueResultAgentCatchUp(new Date());
       void queuePublicStateRepairIfStale({ db, now: new Date() });
-      return json(response, 200, await getPublicTournamentPayload(db));
+      try {
+        return json(response, 200, await getPublicTournamentPayload(db));
+      } catch (error) {
+        console.error('[api/tournament] failed to build payload:', error);
+        return json(response, 500, { error: error instanceof Error ? error.message : 'Public tournament payload failed' });
+      }
     }
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
     if (request.method === 'GET' && url.pathname === '/api/public-state/diagnostics') return json(response, 200, await collectPublicStateDiagnostics({ db }));

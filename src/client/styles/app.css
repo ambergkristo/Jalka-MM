@@ -1481,6 +1481,23 @@ td a {
   line-height: 1.5;
 }
 
+.public-data-notice {
+  border-color: rgba(239, 68, 68, .34);
+  background:
+    linear-gradient(180deg, rgba(239, 68, 68, .12), rgba(239, 68, 68, .06)),
+    rgba(255, 255, 255, .035);
+}
+
+.public-data-notice h2 {
+  margin: 4px 0 0;
+  color: var(--white);
+  font-size: 1rem;
+}
+
+.public-data-notice .empty-state {
+  margin: 8px 0 0;
+}
+
 .profile-empty-state {
   display: grid;
   gap: 12px;

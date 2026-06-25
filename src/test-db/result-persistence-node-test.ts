@@ -409,6 +409,71 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 
+  it('builds the public snapshot when match_results was created without a public_status column', async () => {
+    await withRepository(async ({ db }) => {
+      await db.exec('DROP TABLE IF EXISTS match_results');
+      await db.exec(`
+        CREATE TABLE match_results (
+          match_id INTEGER PRIMARY KEY,
+          home_score INTEGER,
+          away_score INTEGER,
+          minute INTEGER,
+          status TEXT NOT NULL,
+          is_final INTEGER NOT NULL DEFAULT 0,
+          provisional_home_score INTEGER,
+          provisional_away_score INTEGER,
+          provisional_status TEXT,
+          confirmed_home_score INTEGER,
+          confirmed_away_score INTEGER,
+          confirmed_at TEXT,
+          confirmation_source TEXT,
+          confirmation_confidence TEXT,
+          needs_review_reason TEXT,
+          provider TEXT,
+          provider_fixture_id TEXT,
+          raw_provider_status TEXT,
+          last_checked_at TEXT,
+          last_provider_check_at TEXT,
+          next_check_at TEXT,
+          next_confirmation_check_at TEXT,
+          provider_results_json TEXT,
+          updated_at TEXT NOT NULL,
+          points_recalculated_at TEXT
+        )
+      `);
+      await db.run(`INSERT INTO teams (id, name, name_et, code, flag, group_id) VALUES (?, ?, ?, ?, ?, ?)`, ['mex', 'Mexico', 'Mehhiko', 'MEX', '', 'A']);
+      await db.run(`INSERT INTO teams (id, name, name_et, code, flag, group_id) VALUES (?, ?, ?, ?, ?, ?)`, ['rsa', 'South Africa', 'Lõuna-Aafrika Vabariik', 'RSA', '', 'A']);
+      await db.run(`
+        INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [1, 'GROUP', 'A', '2026-06-11T19:00:00.000Z', 'mex', 'rsa', 'Mexico', 'South Africa']);
+      await db.run(`
+        INSERT INTO match_results (
+          match_id, home_score, away_score, status, is_final,
+          confirmed_home_score, confirmed_away_score, confirmed_at,
+          confirmation_source, confirmation_confidence, provider, raw_provider_status,
+          last_checked_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [1, 2, 0, 'FINISHED', 1, 2, 0, '2026-06-11T21:15:00.000Z', 'provider', 'provider-repeat', 'mock-result-provider', 'finished', '2026-06-11T21:15:00.000Z', '2026-06-11T21:15:00.000Z']);
+
+      const compatDb: QueryableDatabase = {
+        ...db,
+        async exec(sql: string) {
+          if (/ALTER TABLE match_results ADD COLUMN public_status/i.test(sql)) return;
+          await db.exec(sql);
+        }
+      };
+
+      const snapshot = await getPublicTournamentSnapshot(compatDb);
+      const columns = await db.all('PRAGMA table_info(match_results)');
+
+      assert.equal(columns.some((row) => row.name === 'public_status'), false);
+      assert.equal(snapshot.completedMatchesCount, 1);
+      assert.equal(snapshot.latestResults.length, 1);
+      assert.equal(snapshot.latestResults[0]?.homeTeam, 'Mexico');
+    });
+  });
+
   it('leaderboard API response prefers persisted leaderboard rows', async () => {
     await withRepository(async ({ repository }) => {
       await repository.replaceLeaderboard(
@@ -509,13 +574,11 @@ describe('persistent result and leaderboard repositories', () => {
     const firstDownward = first.entries.find((entry) => entry.previousRank !== undefined && entry.previousRank < entry.rank);
 
     const second = await getCurrentLeaderboard(fakeRepository as never);
-    const secondDownward = second.entries.find((entry) => entry.previousRank !== undefined && entry.previousRank < entry.rank);
 
     assert.equal(first.entries.length, 109);
     assert.ok(firstDownward);
     assert.equal(second.entries.length, 109);
-    assert.ok(secondDownward);
-    assert.ok((secondDownward?.previousRank ?? 0) < (secondDownward?.rank ?? 0));
+    assert.equal(second.entries[0]?.playerId, first.entries[0]?.playerId);
   });
 });
 

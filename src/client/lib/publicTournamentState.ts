@@ -39,6 +39,7 @@ export interface PublicDashboardSnapshotLike {
 
 export interface PublicTournamentState {
   snapshot?: PublicDashboardSnapshotLike;
+  snapshotError?: string;
   playedCount: number;
   totalMatches: number;
   heroMetrics: DashboardMetric[];

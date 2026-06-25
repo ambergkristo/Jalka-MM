@@ -3,6 +3,7 @@ import { HeroCard } from '../components/HeroCard.js';
 import { LeaderboardPreview } from '../components/LeaderboardPreview.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { NavigationCards } from '../components/NavigationCards.js';
+import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { ResultCard } from '../components/ResultCard.js';
 import { navigationCards } from '../data/navigation.js';
 import { usePublicTournamentState, buildCanonicalLiveMatchSection, buildCanonicalMatchSection } from '../lib/publicApi.js';
@@ -18,6 +19,7 @@ export function LandingDashboard() {
 
   return (
     <div className="landing-dashboard">
+      {tournamentState.snapshotError ? <PublicDataNotice message={tournamentState.snapshotError} /> : null}
       <HeroCard metrics={tournamentState.heroMetrics} />
 
       <Card title={liveSection.title} eyebrow={liveSection.eyebrow}>

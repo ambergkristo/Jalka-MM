@@ -14,6 +14,7 @@ import {
   rebuildPublicTournamentState
 } from './publicTournamentRebuild.js';
 import { classifyPublicMatchState } from './publicMatchState.js';
+import { derivePublicResultStatus } from './publicResultStatus.js';
 
 const METADATA_ID = 'public-state';
 const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers', 'resync-scorers-from-confirmed-results']);
@@ -647,7 +648,7 @@ async function calculateGroupStandings(db: QueryableDatabase): Promise<Array<{
     SELECT m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
-    WHERE r.public_status = 'CONFIRMED_FINAL' AND r.is_final = 1 AND m.stage = 'GROUP'
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
   `);
 
   for (const result of results) {
@@ -698,7 +699,11 @@ async function countLiveMatches(db: QueryableDatabase, now: Date): Promise<numbe
   const rows = await db.all(`
     SELECT
       m.kickoff_at,
-      r.public_status,
+      r.status,
+      r.provisional_status,
+      r.confirmation_confidence,
+      r.next_confirmation_check_at,
+      r.needs_review_reason,
       r.is_final,
       r.confirmed_home_score,
       r.confirmed_away_score
@@ -708,7 +713,7 @@ async function countLiveMatches(db: QueryableDatabase, now: Date): Promise<numbe
   `);
   return rows.filter((row) => classifyPublicMatchState({
     kickoffAt: String(row.kickoff_at),
-    publicStatus: String(row.public_status ?? 'SCHEDULED'),
+    publicStatus: derivePublicResultStatus(row),
     isConfirmedFinal: isConfirmedFinalResult(row),
     now
   }) === 'live').length;

@@ -1,7 +1,7 @@
 export const CONFIRMED_FINAL_RESULT_SQL = `
   (
-    (public_status = 'CONFIRMED_FINAL' AND is_final = 1)
-    OR (confirmed_home_score IS NOT NULL AND confirmed_away_score IS NOT NULL)
+    confirmed_home_score IS NOT NULL
+    AND confirmed_away_score IS NOT NULL
   )
 `;
 

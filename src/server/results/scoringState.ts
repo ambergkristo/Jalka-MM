@@ -1,5 +1,5 @@
 import type { QueryableDatabase } from '../databaseAdapter.js';
-import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
+import { isConfirmedFinalResult } from './finalizedResultState.js';
 import { MANUAL_UNKNOWN_SCORER_NAME } from './manualScorerCorrections.js';
 import { resolveScorerIdentity } from '../../domain/scorerIdentity.js';
 import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
@@ -60,41 +60,33 @@ export async function buildActualGroupStandings(db: QueryableDatabase): Promise<
   }
 
   const groupCoverage = new Map<string, { total: number; confirmed: number }>();
-  const coverageRows = await db.all(`
-    SELECT
-      m.group_id AS group_id,
-      COUNT(*) AS total_matches,
-      SUM(CASE WHEN ${CONFIRMED_FINAL_RESULT_SQL} THEN 1 ELSE 0 END) AS confirmed_matches
-    FROM matches m
-    WHERE m.stage = 'GROUP' AND m.group_id IS NOT NULL
-    GROUP BY m.group_id
-  `);
-  for (const row of coverageRows) {
-    const groupId = String(row.group_id);
-    groupCoverage.set(groupId, {
-      total: Number(row.total_matches ?? 0),
-      confirmed: Number(row.confirmed_matches ?? 0)
-    });
-  }
-
   const results = await db.all(`
     SELECT
       m.group_id,
       m.home_team_id,
       m.away_team_id,
-      r.confirmed_home_score,
-      r.confirmed_away_score
-    FROM match_results r
-    JOIN matches m ON m.id = r.match_id
-    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
+      r.*
+    FROM matches m
+    LEFT JOIN match_results r ON r.match_id = m.id
+    WHERE m.stage = 'GROUP' AND m.group_id IS NOT NULL
+    ORDER BY m.id
   `);
 
   for (const result of results) {
+    const groupId = String(result.group_id);
+    const coverage = groupCoverage.get(groupId) ?? { total: 0, confirmed: 0 };
+    coverage.total += 1;
+    if (isConfirmedFinalResult(result)) coverage.confirmed += 1;
+    groupCoverage.set(groupId, coverage);
+
+    if (!isConfirmedFinalResult(result)) continue;
     const home = standings.get(String(result.home_team_id));
     const away = standings.get(String(result.away_team_id));
     if (!home || !away) continue;
-    applyResult(home, Number(result.confirmed_home_score), Number(result.confirmed_away_score));
-    applyResult(away, Number(result.confirmed_away_score), Number(result.confirmed_home_score));
+    const homeScore = Number(result.confirmed_home_score ?? result.home_score ?? 0);
+    const awayScore = Number(result.confirmed_away_score ?? result.away_score ?? 0);
+    applyResult(home, homeScore, awayScore);
+    applyResult(away, awayScore, homeScore);
   }
 
   const finalGroups = [...groupCoverage.entries()]
@@ -199,19 +191,20 @@ async function getKnockoutStageCoverage(db: QueryableDatabase): Promise<Map<'R32
   const rows = await db.all(`
     SELECT
       m.stage,
-      COUNT(*) AS total_matches,
-      SUM(CASE WHEN ${CONFIRMED_FINAL_RESULT_SQL} THEN 1 ELSE 0 END) AS confirmed_matches
+      m.id,
+      r.*
     FROM matches m
     LEFT JOIN match_results r ON r.match_id = m.id
     WHERE m.stage IN ('R32', 'R16', 'QF', 'SF', 'THIRD_PLACE', 'FINAL')
-    GROUP BY m.stage
+    ORDER BY m.stage, m.id
   `);
   const coverage = new Map<'R32' | 'R16' | 'QF' | 'SF' | 'THIRD_PLACE' | 'FINAL', { total: number; confirmed: number }>();
   for (const row of rows) {
-    coverage.set(row.stage as 'R32' | 'R16' | 'QF' | 'SF' | 'THIRD_PLACE' | 'FINAL', {
-      total: Number(row.total_matches ?? 0),
-      confirmed: Number(row.confirmed_matches ?? 0)
-    });
+    const stage = row.stage as 'R32' | 'R16' | 'QF' | 'SF' | 'THIRD_PLACE' | 'FINAL';
+    const entry = coverage.get(stage) ?? { total: 0, confirmed: 0 };
+    entry.total += 1;
+    if (isConfirmedFinalResult(row)) entry.confirmed += 1;
+    coverage.set(stage, entry);
   }
   return coverage;
 }
@@ -226,8 +219,7 @@ async function getConfirmedStageWinners(db: QueryableDatabase, stage: 'R32' | 'R
       away.code AS away_team_code,
       COALESCE(home.name_et, home.name, m.home_slot) AS home_team,
       COALESCE(away.name_et, away.name, m.away_slot) AS away_team,
-      COALESCE(r.confirmed_home_score, r.home_score, 0) AS home_score,
-      COALESCE(r.confirmed_away_score, r.away_score, 0) AS away_score,
+      r.*,
       COALESCE(c.penalty_winner_team_id, c.penalty_winner_team_code) AS penalty_winner
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
@@ -243,11 +235,12 @@ async function getConfirmedStageWinners(db: QueryableDatabase, stage: 'R32' | 'R
       ) latest
         ON latest.match_id = c1.match_id AND latest.created_at = c1.created_at
     ) c ON c.match_id = m.id
-    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = ?
+    WHERE m.stage = ?
     ORDER BY m.id
   `, [stage]);
 
   return rows.flatMap((row) => {
+    if (!isConfirmedFinalResult(row)) return [];
     const winner = resolveWinner(row);
     return winner ? [winner] : [];
   });
@@ -263,8 +256,7 @@ async function getSingleKnockoutWinner(db: QueryableDatabase, stage: 'THIRD_PLAC
       away.code AS away_team_code,
       COALESCE(home.name_et, home.name, m.home_slot) AS home_team,
       COALESCE(away.name_et, away.name, m.away_slot) AS away_team,
-      COALESCE(r.confirmed_home_score, r.home_score, 0) AS home_score,
-      COALESCE(r.confirmed_away_score, r.away_score, 0) AS away_score,
+      r.*,
       COALESCE(c.penalty_winner_team_id, c.penalty_winner_team_code) AS penalty_winner
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
@@ -280,10 +272,11 @@ async function getSingleKnockoutWinner(db: QueryableDatabase, stage: 'THIRD_PLAC
       ) latest
         ON latest.match_id = c1.match_id AND latest.created_at = c1.created_at
     ) c ON c.match_id = m.id
-    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = ?
+    WHERE m.stage = ?
     ORDER BY m.id
     LIMIT 1
   `, [stage]);
+  if (!isConfirmedFinalResult(rows[0] ?? {})) return undefined;
   return resolveWinner(rows[0]);
 }
 

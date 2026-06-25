@@ -85,7 +85,7 @@ export async function runMatchday1DisagreementSimulation(db: QueryableDatabase):
 
   return {
     disagreementRun,
-    needsReviewCount: Number((await db.one("SELECT COUNT(*) AS count FROM match_results WHERE public_status = 'NEEDS_REVIEW'"))?.count ?? 0),
+    needsReviewCount: Number((await db.one("SELECT COUNT(*) AS count FROM match_results WHERE COALESCE(needs_review_reason, '') <> ''"))?.count ?? 0),
     leaderboardRows: (await repository.getLeaderboard()).length
   };
 }

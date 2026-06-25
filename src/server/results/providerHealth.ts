@@ -1,11 +1,12 @@
 import providerMatchMapSeed from '../../data/providerMatchMap.example.json' with { type: 'json' };
 import type { QueryableDatabase } from '../databaseAdapter.js';
-import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
+import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
 import type { ProviderMatchMapEntry } from './providerMatchMap.js';
 import type { ResultAgentStatus } from './resultTypes.js';
 import { MANUAL_UNKNOWN_SCORER_NAME } from './manualScorerCorrections.js';
+import { derivePublicResultStatus } from './publicResultStatus.js';
 
 const DEFAULT_POLLING_INTERVAL_SECONDS = 60;
 const PROCESS_STARTED_AT = new Date();
@@ -165,26 +166,44 @@ async function getProviderPollState(db: QueryableDatabase): Promise<{ lastSucces
 }
 
 async function getMatchHealth(db: QueryableDatabase, now: Date): Promise<ProviderHealthPayload['matchHealth']> {
-  const row = await db.one(`
+  const rows = await db.all(`
     SELECT
-      COUNT(*) AS total_matches,
-      SUM(CASE WHEN ${CONFIRMED_FINAL_RESULT_SQL} THEN 1 ELSE 0 END) AS confirmed_matches,
-      SUM(CASE WHEN COALESCE(r.public_status, 'SCHEDULED') IN ('LIVE', 'CONFIRMING', 'NEEDS_REVIEW') AND NOT COALESCE((${CONFIRMED_FINAL_RESULT_SQL}), false) THEN 1 ELSE 0 END) AS live_or_provisional_matches,
-      SUM(CASE WHEN m.kickoff_at > ? AND NOT COALESCE((${CONFIRMED_FINAL_RESULT_SQL}), false) THEN 1 ELSE 0 END) AS upcoming_matches,
-      SUM(CASE WHEN NOT COALESCE((${CONFIRMED_FINAL_RESULT_SQL}), false) AND (
-        COALESCE(r.public_status, 'SCHEDULED') = 'CONFIRMING'
-        OR r.next_confirmation_check_at IS NOT NULL
-        OR (m.kickoff_at <= ? AND COALESCE(r.public_status, 'SCHEDULED') <> 'LIVE')
-      ) THEN 1 ELSE 0 END) AS awaiting_confirmation_matches
+      m.kickoff_at,
+      r.status,
+      r.provisional_status,
+      r.confirmation_confidence,
+      r.next_confirmation_check_at,
+      r.needs_review_reason,
+      r.is_final,
+      r.confirmed_home_score,
+      r.confirmed_away_score
     FROM matches m
     LEFT JOIN match_results r ON r.match_id = m.id
-  `, [now.toISOString(), now.toISOString()]);
+  `);
+  const confirmed = rows.filter((row) => isConfirmedFinalResult(row));
+  const liveOrProvisional = rows.filter((row) => {
+    if (isConfirmedFinalResult(row)) return false;
+    const publicStatus = derivePublicResultStatus(row);
+    return publicStatus === 'LIVE' || publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW';
+  });
+  const upcoming = rows.filter((row) => {
+    if (isConfirmedFinalResult(row)) return false;
+    return Date.parse(String(row.kickoff_at)) > now.getTime();
+  });
+  const awaitingConfirmation = rows.filter((row) => {
+    if (isConfirmedFinalResult(row)) return false;
+    const publicStatus = derivePublicResultStatus(row);
+    return publicStatus === 'CONFIRMING' ||
+      publicStatus === 'NEEDS_REVIEW' ||
+      Boolean(row.next_confirmation_check_at) ||
+      (Date.parse(String(row.kickoff_at)) <= now.getTime() && publicStatus !== 'LIVE');
+  });
   return {
-    totalMatches: Number(row?.total_matches ?? 0),
-    confirmedMatches: Number(row?.confirmed_matches ?? 0),
-    liveOrProvisionalMatches: Number(row?.live_or_provisional_matches ?? 0),
-    upcomingMatches: Number(row?.upcoming_matches ?? 0),
-    awaitingConfirmationMatches: Number(row?.awaiting_confirmation_matches ?? 0)
+    totalMatches: rows.length,
+    confirmedMatches: confirmed.length,
+    liveOrProvisionalMatches: liveOrProvisional.length,
+    upcomingMatches: upcoming.length,
+    awaitingConfirmationMatches: awaitingConfirmation.length
   };
 }
 
@@ -195,7 +214,11 @@ async function getDelayedConfirmationWarnings(db: QueryableDatabase, now: Date):
       m.kickoff_at,
       COALESCE(home.name, m.home_slot) AS home_team,
       COALESCE(away.name, m.away_slot) AS away_team,
-      COALESCE(r.raw_provider_status, r.public_status, r.status, 'SCHEDULED') AS provider_state
+      COALESCE(r.raw_provider_status, r.status, 'SCHEDULED') AS provider_state,
+      r.provisional_status,
+      r.confirmation_confidence,
+      r.next_confirmation_check_at,
+      r.needs_review_reason
     FROM matches m
     LEFT JOIN match_results r ON r.match_id = m.id
     LEFT JOIN teams home ON home.id = m.home_team_id
@@ -215,7 +238,7 @@ async function getDelayedConfirmationWarnings(db: QueryableDatabase, now: Date):
       match: `${String(row.home_team)} vs ${String(row.away_team)}`,
       kickoffAt,
       minutesSinceKickoff,
-      currentProviderState: String(row.provider_state ?? 'SCHEDULED'),
+      currentProviderState: String(derivePublicResultStatus(row)),
       severity: minutesSinceKickoff > 180 ? 'critical' as const : 'delayed' as const
     }];
   });
@@ -282,10 +305,17 @@ async function getScorerMismatchDetails(db: QueryableDatabase): Promise<Provider
       COALESCE(away.name, m.away_slot) AS away_team,
       COALESCE(r.confirmed_home_score, r.home_score, 0) AS home_score,
       COALESCE(r.confirmed_away_score, r.away_score, 0) AS away_score,
+      r.confirmed_home_score,
+      r.confirmed_away_score,
+      r.is_final,
       COALESCE(facts.scorer_goals, 0) AS scorer_goals,
       r.provider_results_json,
       COALESCE(r.confirmation_source, r.provider, 'unknown') AS source,
-      COALESCE(r.public_status, r.status, 'unknown') AS status,
+      r.status,
+      r.provisional_status,
+      r.confirmation_confidence,
+      r.next_confirmation_check_at,
+      r.needs_review_reason,
       COALESCE(r.updated_at, r.confirmed_at, r.last_checked_at) AS last_updated_at
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
@@ -318,7 +348,7 @@ async function getScorerMismatchDetails(db: QueryableDatabase): Promise<Provider
       missingGoalsCount: Math.max(expectedGoalsCount - persistedScorerFactsCount, 0),
       providerScorerCount: providerScorerGoalsCount(row.provider_results_json),
       source: String(row.source ?? 'unknown'),
-      status: String(row.status ?? 'unknown'),
+      status: String(derivePublicResultStatus(row)),
       lastUpdatedAt: stringOrUndefined(row.last_updated_at)
     }];
   });
@@ -367,7 +397,7 @@ async function getProviderVerifierStatus(
   const disagreements = await db.one(`
     SELECT COUNT(*) AS count
     FROM match_results
-    WHERE public_status = 'NEEDS_REVIEW'
+    WHERE COALESCE(status, 'SCHEDULED') = 'FINISHED'
       AND COALESCE(needs_review_reason, '') LIKE '%disagree%'
   `);
   const disagreementCount = Number(disagreements?.count ?? 0);

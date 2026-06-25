@@ -8,6 +8,11 @@ import type { LeaderboardRowView } from './predictionViewModels.js';
 export interface PublicDashboardSnapshot extends PublicDashboardSnapshotLike {
 }
 
+export interface PublicDashboardLoadState {
+  snapshot?: PublicDashboardSnapshot;
+  error?: string;
+}
+
 interface PublicDashboardApiResponse {
   completedMatchesCount?: number;
   totalMatchesCount?: number;
@@ -26,8 +31,9 @@ interface PublicDashboardApiResponse {
   countyLeaderboard?: CountyLeaderboardRow[];
 }
 
-export function usePublicDashboardSnapshot(refreshIntervalMs = 60_000): PublicDashboardSnapshot | undefined {
+export function usePublicDashboardSnapshot(refreshIntervalMs = 60_000): PublicDashboardLoadState {
   const [snapshot, setSnapshot] = useState<PublicDashboardSnapshot | undefined>();
+  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     let cancelled = false;
@@ -35,11 +41,22 @@ export function usePublicDashboardSnapshot(refreshIntervalMs = 60_000): PublicDa
     const loadSnapshot = async () => {
       try {
         const response = await fetch('/api/public-dashboard', { cache: 'no-store', signal: controller.signal });
-        if (!response.ok) return;
+        if (!response.ok) {
+          const body = await response.text().catch(() => '');
+          const message = `Public dashboard fetch failed (${response.status} ${response.statusText || 'error'}${body ? `: ${body}` : ''})`;
+          console.error(message);
+          if (!cancelled) setError(message);
+          return;
+        }
         const data = await response.json() as PublicDashboardApiResponse;
-        if (!cancelled) setSnapshot(data);
-      } catch {
-        return undefined;
+        if (!cancelled) {
+          setSnapshot(data);
+          setError(undefined);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? `Public dashboard fetch failed: ${error.message}` : 'Public dashboard fetch failed.';
+        console.error(message, error);
+        if (!cancelled) setError(message);
       }
     };
 
@@ -55,11 +72,15 @@ export function usePublicDashboardSnapshot(refreshIntervalMs = 60_000): PublicDa
     };
   }, [refreshIntervalMs]);
 
-  return snapshot;
+  return { snapshot, error };
 }
 
 export function usePublicTournamentState(refreshIntervalMs = 60_000): PublicTournamentState {
-  return buildPublicTournamentState(usePublicDashboardSnapshot(refreshIntervalMs));
+  const { snapshot, error } = usePublicDashboardSnapshot(refreshIntervalMs);
+  return {
+    ...buildPublicTournamentState(snapshot),
+    snapshotError: error
+  };
 }
 
 export function usePersistedLeaderboardRows(fallback: LeaderboardRowView[]): LeaderboardRowView[] {

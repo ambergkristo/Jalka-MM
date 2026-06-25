@@ -11,6 +11,7 @@ import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } fro
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import { classifyPublicMatchState } from './publicMatchState.js';
+import { derivePublicResultStatus } from './publicResultStatus.js';
 
 export interface PublicDashboardSnapshot {
   completedMatchesCount: number;
@@ -324,7 +325,12 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
       m.kickoff_at,
       COALESCE(home.name, m.home_slot) AS home_team,
       COALESCE(away.name, m.away_slot) AS away_team,
-      r.public_status,
+      r.status,
+      r.provisional_status,
+      r.confirmation_confidence,
+      r.next_confirmation_check_at,
+      r.needs_review_reason,
+      r.raw_provider_status,
       r.is_final,
       r.home_score,
       r.away_score,
@@ -340,8 +346,8 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
   return rows.flatMap((row) => {
     const kickoffAt = String(row.kickoff_at);
     if (Number.isNaN(Date.parse(kickoffAt))) return [];
-    const publicStatus = String(row.public_status ?? 'SCHEDULED');
     if (isConfirmedFinalResult(row)) return [];
+    const publicStatus = derivePublicResultStatus(row);
     const state = classifyPublicMatchState({
       kickoffAt,
       publicStatus,

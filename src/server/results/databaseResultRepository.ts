@@ -74,68 +74,65 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
     await this.migrate();
     const previous = await this.getMatchResult(update.matchId);
     const updatedAt = update.lastCheckedAt;
+    const supportsPublicStatus = await hasColumn(this.db, 'match_results', 'public_status');
     await this.db.transaction(async (tx) => {
-      await upsert(
-        tx,
-        'match_results',
-        [
-          'match_id',
-          'home_score',
-          'away_score',
-          'minute',
-          'status',
-          'public_status',
-          'is_final',
-          'provisional_home_score',
-          'provisional_away_score',
-          'provisional_status',
-          'confirmed_home_score',
-          'confirmed_away_score',
-          'confirmed_at',
-          'confirmation_source',
-          'confirmation_confidence',
-          'needs_review_reason',
-          'provider',
-          'provider_fixture_id',
-          'raw_provider_status',
-          'last_checked_at',
-          'last_provider_check_at',
-          'next_check_at',
-          'next_confirmation_check_at',
-          'provider_results_json',
-          'updated_at',
-          'points_recalculated_at'
-        ],
-        [
-          update.matchId,
-          update.homeScore ?? null,
-          update.awayScore ?? null,
-          update.minute ?? null,
-          update.status,
-          update.publicStatus ?? (update.isFinal ? 'CONFIRMED_FINAL' : 'SCHEDULED'),
-          update.isFinal ? 1 : 0,
-          update.provisionalHomeScore ?? null,
-          update.provisionalAwayScore ?? null,
-          update.provisionalStatus ?? null,
-          update.confirmedHomeScore ?? null,
-          update.confirmedAwayScore ?? null,
-          update.confirmedAt ?? null,
-          update.confirmationSource ?? null,
-          update.confirmationConfidence ?? null,
-          update.needsReviewReason ?? null,
-          update.provider,
-          update.providerMatchId ?? null,
-          update.rawProviderStatus ?? null,
-          update.lastCheckedAt,
-          update.lastProviderCheckAt ?? update.lastCheckedAt,
-          update.nextCheckAt ?? null,
-          update.nextConfirmationCheckAt ?? null,
-          update.providerResults ? JSON.stringify(update.providerResults) : null,
-          updatedAt,
-          null
-        ],
-        ['match_id']
-      );
+      const matchResultColumns = [
+        'match_id',
+        'home_score',
+        'away_score',
+        'minute',
+        'status',
+        ...(supportsPublicStatus ? ['public_status'] : []),
+        'is_final',
+        'provisional_home_score',
+        'provisional_away_score',
+        'provisional_status',
+        'confirmed_home_score',
+        'confirmed_away_score',
+        'confirmed_at',
+        'confirmation_source',
+        'confirmation_confidence',
+        'needs_review_reason',
+        'provider',
+        'provider_fixture_id',
+        'raw_provider_status',
+        'last_checked_at',
+        'last_provider_check_at',
+        'next_check_at',
+        'next_confirmation_check_at',
+        'provider_results_json',
+        'updated_at',
+        'points_recalculated_at'
+      ];
+      const matchResultValues = [
+        update.matchId,
+        update.homeScore ?? null,
+        update.awayScore ?? null,
+        update.minute ?? null,
+        update.status,
+        ...(supportsPublicStatus ? [update.publicStatus ?? (update.isFinal ? 'CONFIRMED_FINAL' : 'SCHEDULED')] : []),
+        update.isFinal ? 1 : 0,
+        update.provisionalHomeScore ?? null,
+        update.provisionalAwayScore ?? null,
+        update.provisionalStatus ?? null,
+        update.confirmedHomeScore ?? null,
+        update.confirmedAwayScore ?? null,
+        update.confirmedAt ?? null,
+        update.confirmationSource ?? null,
+        update.confirmationConfidence ?? null,
+        update.needsReviewReason ?? null,
+        update.provider,
+        update.providerMatchId ?? null,
+        update.rawProviderStatus ?? null,
+        update.lastCheckedAt,
+        update.lastProviderCheckAt ?? update.lastCheckedAt,
+        update.nextCheckAt ?? null,
+        update.nextConfirmationCheckAt ?? null,
+        update.providerResults ? JSON.stringify(update.providerResults) : null,
+        updatedAt,
+        null
+      ];
+      await upsert(tx, 'match_results', matchResultColumns, matchResultValues, ['match_id']);
       await tx.run(
         `INSERT INTO result_updates (
           id, match_id, source, status, home_score, away_score, minute, is_final, last_checked_at, next_check_at,
@@ -426,6 +423,18 @@ function nullableNumber(value: unknown): number | undefined {
 
 function toBoolean(value: unknown): boolean {
   return value === true || value === 1 || value === '1';
+}
+
+async function hasColumn(db: QueryableDatabase, table: string, column: string): Promise<boolean> {
+  if (db.provider === 'sqlite') {
+    const rows = await db.all(`PRAGMA table_info(${table})`);
+    return rows.some((row) => row.name === column);
+  }
+  const row = await db.one(
+    'SELECT 1 AS exists FROM information_schema.columns WHERE table_name = ? AND column_name = ?',
+    [table, column]
+  );
+  return Boolean(row);
 }
 
 function parseWarnings(value: unknown): string[] {

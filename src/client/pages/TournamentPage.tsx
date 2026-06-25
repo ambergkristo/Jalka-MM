@@ -2,6 +2,7 @@ import { Card } from '../components/Card.js';
 import { CountyLeaderboardTable } from '../components/CountyLeaderboardTable.js';
 import { GroupStandingsGrid } from '../components/GroupStandingsGrid.js';
 import { PageHeader } from '../components/PageHeader.js';
+import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { TopScorersTable } from '../components/TopScorersTable.js';
 import { TournamentStatsCards } from '../components/TournamentStatsCards.js';
 import { TrueBracket } from '../components/TrueBracket.js';
@@ -17,6 +18,7 @@ export function TournamentPage() {
         title="MM 2026 turniiri ülevaade"
         description="Alagrupid, play-off, väravalööjad, statistika ja mängude edenemine."
       />
+      {tournamentState.snapshotError ? <PublicDataNotice message={tournamentState.snapshotError} /> : null}
 
       <Card title="Alagrupitabelid" eyebrow="Alagrupid A-L" className="tournament-section">
         <GroupStandingsGrid groups={tournamentState.groupStandings} />

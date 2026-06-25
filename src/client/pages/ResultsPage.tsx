@@ -1,6 +1,7 @@
 import { Card } from '../components/Card.js';
 import { MatchCard } from '../components/MatchCard.js';
 import { PageHeader } from '../components/PageHeader.js';
+import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { ResultCard } from '../components/ResultCard.js';
 import { buildCanonicalLiveMatchSection, buildCanonicalMatchSection, usePublicTournamentState } from '../lib/publicApi.js';
 
@@ -14,6 +15,7 @@ export function ResultsPage() {
   return (
     <>
       <PageHeader eyebrow="Tulemused" title="Mängud ja tulemused" description="Tänased mängud, värsked tulemused ja turniiri ajakava." />
+      {tournamentState.snapshotError ? <PublicDataNotice message={tournamentState.snapshotError} /> : null}
       <section className="dashboard-grid">
         <Card title={liveSection.title} eyebrow={liveSection.eyebrow}>
           {liveSection.matches.length > 0 ? (

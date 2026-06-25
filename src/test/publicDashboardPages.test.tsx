@@ -133,7 +133,7 @@ describe('public dashboard pages', () => {
     expect(results).toContain('Hetkel ei ole käimasolevaid mänge.');
     expect(results).toContain('Lõppenud mänge veel ei ole.');
     expect(leaderboard).toContain('Leia mängija');
-    expect(leaderboard).toContain('109 mängijat');
+    expect(leaderboard).toContain('109 mälumängijat');
     expect(leaderboard).toContain('0%');
     expect(landing).toContain('Mängijad');
     expect(landing).toContain('Väravalööjad');
@@ -205,5 +205,22 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Punkte');
     expect(player).toContain('<b>2 v');
+  });
+
+  it('shows an explicit error notice when the public snapshot fetch fails', () => {
+    activeState = {
+      ...buildPublicTournamentState(undefined, new Date('2026-06-06T12:00:00.000Z')),
+      snapshotError: 'Public dashboard fetch failed (500 Internal Server Error)'
+    };
+
+    const landing = renderToStaticMarkup(<LandingDashboard />);
+    const results = renderToStaticMarkup(<ResultsPage />);
+    const leaderboard = renderToStaticMarkup(<LeaderboardPage />);
+    const tournament = renderToStaticMarkup(<TournamentPage />);
+
+    expect(landing).toContain('Avalik seis pole ajakohane');
+    expect(results).toContain('Avalik seis pole ajakohane');
+    expect(leaderboard).toContain('Avalik seis pole ajakohane');
+    expect(tournament).toContain('Avalik seis pole ajakohane');
   });
 });
