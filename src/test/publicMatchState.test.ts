@@ -2,27 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { classifyPublicMatchState } from '../server/results/publicMatchState.js';
 
 describe('public match state classifier', () => {
-  it('does not infer live from kickoff time once provider status stays scheduled', () => {
+  it('keeps already started scheduled matches out of the today list', () => {
     expect(classifyPublicMatchState({
       kickoffAt: '2026-06-21T19:00:00.000Z',
       publicStatus: 'SCHEDULED',
       now: new Date('2026-06-21T20:13:16.000Z')
-    })).toBe('today');
+    })).toBe('stale');
   });
 
-  it('keeps stale scheduled 21.06 matches out of live after the expected match window', () => {
+  it('keeps stale scheduled 21.06 matches out of both live and today', () => {
     expect(classifyPublicMatchState({
       kickoffAt: '2026-06-21T16:00:00.000Z',
       publicStatus: 'SCHEDULED',
       now: new Date('2026-06-21T20:13:16.000Z')
-    })).toBe('today');
+    })).toBe('stale');
   });
 
   it('uses Europe/Tallinn dates for today grouping', () => {
     expect(classifyPublicMatchState({
-      kickoffAt: '2026-06-20T21:30:00.000Z',
+      kickoffAt: '2026-06-20T23:30:00.000Z',
       publicStatus: 'SCHEDULED',
-      now: new Date('2026-06-21T08:00:00.000Z')
+      now: new Date('2026-06-20T22:30:00.000Z')
     })).toBe('today');
 
     expect(classifyPublicMatchState({
@@ -45,5 +45,13 @@ describe('public match state classifier', () => {
       isConfirmedFinal: true,
       now: new Date('2026-06-21T20:13:16.000Z')
     })).toBe('finished');
+  });
+
+  it('keeps confirming final-score matches out of today matches', () => {
+    expect(classifyPublicMatchState({
+      kickoffAt: '2026-06-21T19:00:00.000Z',
+      publicStatus: 'CONFIRMING',
+      now: new Date('2026-06-21T20:13:16.000Z')
+    })).toBe('stale');
   });
 });

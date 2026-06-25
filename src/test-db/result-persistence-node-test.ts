@@ -409,6 +409,81 @@ describe('persistent result and leaderboard repositories', () => {
     });
   });
 
+  it('keeps finalized and confirming final-score matches out of today matches while preserving scheduled matches later today', async () => {
+    await withRepository(async ({ db, repository }) => {
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [21, 'GROUP', 'H', '2026-06-21T10:00:00.000Z', null, null, 'Home 21', 'Away 21']
+      );
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [22, 'GROUP', 'H', '2026-06-21T13:00:00.000Z', null, null, 'Home 22', 'Away 22']
+      );
+      await db.run(
+        `INSERT INTO matches (id, stage, group_id, kickoff_at, home_team_id, away_team_id, home_slot, away_slot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [23, 'GROUP', 'H', '2026-06-21T18:00:00.000Z', null, null, 'Home 23', 'Away 23']
+      );
+
+      await repository.saveResultUpdate({
+        matchId: 21,
+        status: 'FINISHED',
+        publicStatus: 'CONFIRMED_FINAL',
+        homeScore: 3,
+        awayScore: 0,
+        confirmedHomeScore: 3,
+        confirmedAwayScore: 0,
+        confirmedAt: '2026-06-21T11:55:00.000Z',
+        confirmationSource: 'mock-result-provider',
+        confirmationConfidence: 'provider-repeat',
+        minute: 90,
+        isFinal: true,
+        lastCheckedAt: '2026-06-21T11:55:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'finished'
+      });
+      await repository.saveResultUpdate({
+        matchId: 22,
+        status: 'FINISHED',
+        publicStatus: 'CONFIRMING',
+        homeScore: 2,
+        awayScore: 1,
+        provisionalHomeScore: 2,
+        provisionalAwayScore: 1,
+        provisionalStatus: 'FINISHED',
+        minute: 90,
+        isFinal: false,
+        lastCheckedAt: '2026-06-21T14:55:00.000Z',
+        nextConfirmationCheckAt: '2026-06-21T15:05:00.000Z',
+        nextCheckAt: '2026-06-21T15:05:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'finished'
+      });
+      await repository.saveResultUpdate({
+        matchId: 23,
+        status: 'SCHEDULED',
+        publicStatus: 'SCHEDULED',
+        isFinal: false,
+        lastCheckedAt: '2026-06-21T14:55:00.000Z',
+        provider: 'mock-result-provider',
+        rawProviderStatus: 'scheduled'
+      });
+
+      const snapshot = await getPublicTournamentSnapshot(db, new Date('2026-06-21T15:00:00.000Z'));
+      const todayIds = snapshot.todayMatches.map((match) => match.id);
+      const latestIds = snapshot.latestResults.map((match) => match.id);
+
+      assert.equal(todayIds.includes('21'), false);
+      assert.equal(todayIds.includes('22'), false);
+      assert.equal(todayIds.includes('23'), true);
+      assert.equal(latestIds.includes('21'), true);
+      assert.equal(snapshot.latestResults.find((match) => match.id === '21')?.homeScore, 3);
+      assert.deepEqual(todayIds.filter((id) => latestIds.includes(id)), []);
+    });
+  });
+
   it('builds the public snapshot when match_results was created without a public_status column', async () => {
     await withRepository(async ({ db }) => {
       await db.exec('DROP TABLE IF EXISTS match_results');

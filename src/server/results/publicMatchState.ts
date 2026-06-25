@@ -1,5 +1,3 @@
-import { EXPECTED_FULL_TIME_AFTER_KICKOFF_MS } from './matchScheduler.js';
-
 export type PublicMatchState = 'live' | 'today' | 'upcoming' | 'finished' | 'stale';
 
 export function classifyPublicMatchState(input: {
@@ -14,15 +12,12 @@ export function classifyPublicMatchState(input: {
 
   const publicStatus = String(input.publicStatus ?? 'SCHEDULED').toUpperCase();
   if (publicStatus === 'LIVE') return 'live';
+  if (publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW' || publicStatus === 'CONFIRMED_FINAL') return 'stale';
 
   const nowMs = input.now.getTime();
   const isTallinnToday = sameTallinnDate(input.kickoffAt, input.now);
-  if (isTallinnToday) return 'today';
+  if (isTallinnToday && kickoffMs > nowMs) return 'today';
   if (kickoffMs > nowMs) return 'upcoming';
-  if (publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW') return 'stale';
-
-  const elapsedSinceKickoff = nowMs - kickoffMs;
-  if (elapsedSinceKickoff <= EXPECTED_FULL_TIME_AFTER_KICKOFF_MS && publicStatus === 'SCHEDULED') return 'stale';
   return 'stale';
 }
 
