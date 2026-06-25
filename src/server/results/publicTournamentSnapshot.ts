@@ -12,6 +12,8 @@ import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import { classifyPublicMatchState } from './publicMatchState.js';
 import { derivePublicResultStatus } from './publicResultStatus.js';
+import { getPredictionLeagueInsights } from './predictionLeagueInsights.js';
+import type { PredictionLeagueInsights } from '../../domain/predictionLeagueInsights.js';
 
 export interface PublicDashboardSnapshot {
   generatedAt: string;
@@ -29,6 +31,7 @@ export interface PublicDashboardSnapshot {
   tournamentSummary: Array<{ label: string; value: string; detail: string; tone: 'gold' | 'blue' | 'green' | 'red' }>;
   tournamentStats: Array<{ label: string; value: string; detail: string }>;
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+  predictionLeagueInsights: PredictionLeagueInsights;
   leaderboard: LeaderboardEntry[];
   countyLeaderboard: CountyLeaderboardRow[];
 }
@@ -113,6 +116,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
     players: predictionRepository.getPlayers(),
     leaderboardEntries: leaderboard.entries
   });
+  const predictionLeagueInsights = await getPredictionLeagueInsights(db, leaderboard.entries, now);
   const totalMatches = Number((await db.one('SELECT COUNT(*) AS count FROM matches'))?.count ?? 104);
   const completed = resultSummary.completedMatchesCount;
   const goals = resultSummary.totalGoals;
@@ -161,7 +165,8 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
       { stage: 'Veerandfinaalid', completed: 0, total: 4 },
       { stage: 'Poolfinaalid', completed: 0, total: 2 },
       { stage: 'Finaalid', completed: 0, total: 2 }
-    ]
+    ],
+    predictionLeagueInsights
   };
 }
 
@@ -198,6 +203,7 @@ export async function getPublicTournamentPayload(db: QueryableDatabase, now = ne
   tournamentSummary: PublicDashboardSnapshot['tournamentSummary'];
   tournamentStats: PublicDashboardSnapshot['tournamentStats'];
   tournamentProgressByStage: PublicDashboardSnapshot['tournamentProgressByStage'];
+  predictionLeagueInsights: PublicDashboardSnapshot['predictionLeagueInsights'];
   countyLeaderboard: CountyLeaderboardRow[];
 }> {
   const snapshot = await getPublicTournamentSnapshot(db, now);
@@ -213,6 +219,7 @@ export async function getPublicTournamentPayload(db: QueryableDatabase, now = ne
     tournamentSummary: snapshot.tournamentSummary,
     tournamentStats: snapshot.tournamentStats,
     tournamentProgressByStage: snapshot.tournamentProgressByStage,
+    predictionLeagueInsights: snapshot.predictionLeagueInsights,
     countyLeaderboard: snapshot.countyLeaderboard
   };
 }

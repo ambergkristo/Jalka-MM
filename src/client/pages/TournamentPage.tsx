@@ -2,9 +2,9 @@ import { Card } from '../components/Card.js';
 import { CountyLeaderboardTable } from '../components/CountyLeaderboardTable.js';
 import { GroupStandingsGrid } from '../components/GroupStandingsGrid.js';
 import { PageHeader } from '../components/PageHeader.js';
+import { PredictionLeagueInsights } from '../components/PredictionLeagueInsights.js';
 import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { TopScorersTable } from '../components/TopScorersTable.js';
-import { TournamentStatsCards } from '../components/TournamentStatsCards.js';
 import { TrueBracket } from '../components/TrueBracket.js';
 import { usePublicTournamentState } from '../lib/publicApi.js';
 
@@ -33,9 +33,7 @@ export function TournamentPage() {
           <TopScorersTable scorers={tournamentState.topScorers} />
         </Card>
 
-        <Card title="Turniiri statistika" eyebrow="Numbrid" className="tournament-section">
-          <TournamentStatsCards stats={tournamentState.tournamentStats} />
-        </Card>
+        <PredictionLeagueInsights insights={tournamentState.predictionLeagueInsights} />
       </section>
 
       <Card title="Maakondade edetabel" eyebrow="Piirkondade punktid" className="tournament-section">

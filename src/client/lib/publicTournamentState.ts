@@ -1,11 +1,12 @@
 import matchesJson from '../../data/worldcup2026/matches.json' with { type: 'json' };
 import type { DashboardMetric, DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
 import { getPublicMatchSection, type MatchSection } from '../data/publicDashboard.js';
-import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../data/publicTournamentFallback.js';
+import { initialGroupStandings, initialPlayoffBracket, initialPredictionLeagueInsights, initialTournamentStats } from '../data/publicTournamentFallback.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
 import { buildCountyLeaderboard, type CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import type { PredictionLeagueInsights } from '../../domain/predictionLeagueInsights.js';
 import { calculateRankMovement } from './leaderboardMovement.js';
 import { type LeaderboardRowView } from './predictionViewModels.js';
 
@@ -35,6 +36,7 @@ export interface PublicDashboardSnapshotLike {
   tournamentSummary: TournamentSummaryMetric[];
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+  predictionLeagueInsights?: PredictionLeagueInsights;
   leaderboard: PublicLeaderboardEntry[];
   countyLeaderboard?: CountyLeaderboardRow[];
 }
@@ -61,6 +63,7 @@ export interface PublicTournamentState {
   tournamentSummary: TournamentSummaryMetric[];
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+  predictionLeagueInsights: PredictionLeagueInsights;
   countyLeaderboard: CountyLeaderboardRow[];
 }
 
@@ -100,6 +103,7 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
     { label: 'Võistkonnad', value: '48', detail: '24 otsepääsu on mängus', tone: 'red' }
   ];
   const tournamentStats = snapshot?.tournamentStats ?? initialTournamentStats;
+  const predictionLeagueInsights = snapshot?.predictionLeagueInsights ?? initialPredictionLeagueInsights;
   const tournamentProgressByStage = snapshot?.tournamentProgressByStage ?? [
     { stage: 'Alagrupid', completed: 0, total: 72 },
     { stage: '1/16-finaalid', completed: 0, total: 16 },
@@ -130,7 +134,8 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
     playoffBracket,
     tournamentSummary,
     tournamentStats,
-    tournamentProgressByStage
+    tournamentProgressByStage,
+    predictionLeagueInsights
   };
 }
 

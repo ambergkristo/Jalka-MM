@@ -151,6 +151,8 @@ describe('public dashboard pages', () => {
     expect(landing).toContain('Väravalööjad');
     expect(landing).toContain('Maakonnad');
     expect(tournament).toContain('Alagrupitabelid');
+    expect(tournament).toContain('Ennustusliiga statistika');
+    expect(tournament).toContain('Rekordid');
     expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Väravalööjate info ei ole veel saadaval.');
     expect(player).toContain('Kristo Amberg');
@@ -214,6 +216,8 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Lõuna-Aafrika');
     expect(tournament).toContain('Väravalööjad');
     expect(tournament).toContain('Maakondade edetabel');
+    expect(tournament).toContain('Ennustusliiga statistika');
+    expect(tournament).toContain('Rekordid');
     expect(tournament).toContain('Punkte');
     expect(player).toContain('<b>2 v');
   });

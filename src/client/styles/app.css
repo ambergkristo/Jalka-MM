@@ -1566,6 +1566,117 @@ td a {
   line-height: 1;
 }
 
+.prediction-insights-stack,
+.prediction-insights-section {
+  display: grid;
+  gap: 12px;
+}
+
+.prediction-insights-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.prediction-insight-card {
+  display: grid;
+  gap: 8px;
+  min-height: 148px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .03)),
+    rgba(255, 255, 255, .035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+.prediction-insight-card.blue {
+  border-left: 4px solid #4f7bff;
+  background:
+    linear-gradient(180deg, rgba(79, 123, 255, .20), rgba(79, 123, 255, .06)),
+    rgba(255, 255, 255, .035);
+}
+
+.prediction-insight-card.green {
+  border-left: 4px solid #27c281;
+  background:
+    linear-gradient(180deg, rgba(39, 194, 129, .20), rgba(39, 194, 129, .06)),
+    rgba(255, 255, 255, .035);
+}
+
+.prediction-insight-card.red {
+  border-left: 4px solid #ff6b7d;
+  background:
+    linear-gradient(180deg, rgba(255, 107, 125, .20), rgba(255, 107, 125, .06)),
+    rgba(255, 255, 255, .035);
+}
+
+.prediction-insight-card.gold {
+  border-left: 4px solid #f4be57;
+  background:
+    linear-gradient(180deg, rgba(244, 190, 87, .22), rgba(244, 190, 87, .06)),
+    rgba(255, 255, 255, .035);
+}
+
+.prediction-insight-card.purple {
+  border-left: 4px solid #b36dff;
+  background:
+    linear-gradient(180deg, rgba(179, 109, 255, .22), rgba(179, 109, 255, .06)),
+    rgba(255, 255, 255, .035);
+}
+
+.prediction-insight-card.unavailable {
+  opacity: .86;
+}
+
+.prediction-insight-card__top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.prediction-insight-card__top strong,
+.prediction-insight-card__subject,
+.prediction-insight-card small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.prediction-insight-card__top strong {
+  color: var(--white);
+  font-size: .92rem;
+  line-height: 1.25;
+}
+
+.prediction-insight-card__badge {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(10, 20, 37, .42);
+  color: var(--white);
+  font-size: .84rem;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.prediction-insight-card__subject,
+.prediction-insight-card small {
+  color: rgba(255, 255, 255, .76);
+  font-size: .76rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.prediction-insight-card b {
+  color: var(--white);
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
 .stage-progress-list {
   display: grid;
   gap: 9px;
@@ -2915,6 +3026,9 @@ td a {
   .tournament-stats-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+  .prediction-insights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .group-standings-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2959,6 +3073,9 @@ td a {
   }
   .leaderboard-preview-grid {
     grid-template-columns: minmax(0, 1.25fr) minmax(0, .9fr) minmax(0, .9fr);
+  }
+  .prediction-insights-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .knockout-progression {
     grid-template-columns: repeat(5, minmax(0, 1fr));

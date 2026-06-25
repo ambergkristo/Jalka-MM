@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
 import type { CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
+import type { PredictionLeagueInsights } from '../../domain/predictionLeagueInsights.js';
 import { buildLeaderboardRows, buildPublicTournamentState, type PublicDashboardSnapshotLike, type PublicTournamentState } from './publicTournamentState.js';
 import type { LeaderboardRowView } from './predictionViewModels.js';
 
@@ -29,6 +30,7 @@ interface PublicDashboardApiResponse {
   tournamentSummary: TournamentSummaryMetric[];
   tournamentStats: TournamentStat[];
   tournamentProgressByStage: Array<{ stage: string; completed: number; total: number }>;
+  predictionLeagueInsights?: PredictionLeagueInsights;
   leaderboard: PublicDashboardSnapshotLike['leaderboard'];
   countyLeaderboard?: CountyLeaderboardRow[];
 }
