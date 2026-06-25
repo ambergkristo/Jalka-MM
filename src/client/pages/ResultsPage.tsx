@@ -3,12 +3,18 @@ import { MatchCard } from '../components/MatchCard.js';
 import { PageHeader } from '../components/PageHeader.js';
 import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { ResultCard } from '../components/ResultCard.js';
-import { buildCanonicalLiveMatchSection, buildCanonicalMatchSection, usePublicTournamentState } from '../lib/publicApi.js';
+import { usePublicTournamentState } from '../lib/publicApi.js';
 
 export function ResultsPage() {
   const tournamentState = usePublicTournamentState(30_000);
-  const liveSection = buildCanonicalLiveMatchSection(tournamentState.snapshot, 6);
-  const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 6);
+  const liveSection = {
+    ...tournamentState.liveSection,
+    matches: tournamentState.liveSection.matches.slice(0, 6)
+  };
+  const matchSection = {
+    ...tournamentState.matchSection,
+    matches: tournamentState.matchSection.matches.slice(0, 6)
+  };
   const upcoming = tournamentState.upcomingMatches.slice(0, 6);
   const latestResults = tournamentState.latestResults;
 
@@ -23,7 +29,7 @@ export function ResultsPage() {
               {liveSection.matches.map((match) => <MatchCard match={match} key={match.id} />)}
             </div>
           ) : (
-            <p className="empty-state">Hetkel ei ole käimasolevaid mänge.</p>
+            <p className="empty-state">Hetkel otsemänge ei toimu</p>
           )}
         </Card>
         <Card title={matchSection.title} eyebrow={matchSection.eyebrow}>

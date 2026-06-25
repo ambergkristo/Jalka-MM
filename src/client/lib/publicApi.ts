@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { DashboardMatch, DashboardResult, GroupLeader, GroupStanding, TournamentStat, TournamentSummaryMetric, TournamentTopScorer } from '../data/mock.js';
 import type { BracketTree } from '../../domain/publicBracket.js';
 import type { CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
-import { buildLeaderboardRows, buildPublicTournamentState, selectLiveMatchSection, selectPublicMatchSection, type PublicDashboardSnapshotLike, type PublicTournamentState } from './publicTournamentState.js';
+import { buildLeaderboardRows, buildPublicTournamentState, type PublicDashboardSnapshotLike, type PublicTournamentState } from './publicTournamentState.js';
 import type { LeaderboardRowView } from './predictionViewModels.js';
 
 export interface PublicDashboardSnapshot extends PublicDashboardSnapshotLike {
@@ -14,11 +14,13 @@ export interface PublicDashboardLoadState {
 }
 
 interface PublicDashboardApiResponse {
+  generatedAt?: string;
   completedMatchesCount?: number;
   totalMatchesCount?: number;
   liveMatches: DashboardMatch[];
   todayMatches: DashboardMatch[];
   upcomingMatches: DashboardMatch[];
+  nextMatch?: DashboardMatch;
   latestResults: DashboardResult[];
   groupStandings: GroupStanding[];
   groupLeaders: GroupLeader[];
@@ -91,14 +93,6 @@ export function usePersistedLeaderboardRows(fallback: LeaderboardRowView[]): Lea
 export function usePublicLeaderboardRow(playerId: string, fallback?: LeaderboardRowView): LeaderboardRowView | undefined {
   const rows = usePublicTournamentState().leaderboardRows;
   return rows.find((row) => row.playerId === playerId) ?? fallback;
-}
-
-export function buildCanonicalMatchSection(snapshot: PublicDashboardSnapshot | undefined, now = new Date(), limit = 3) {
-  return selectPublicMatchSection(snapshot, now, limit);
-}
-
-export function buildCanonicalLiveMatchSection(snapshot: PublicDashboardSnapshot | undefined, limit = 3) {
-  return selectLiveMatchSection(snapshot, limit);
 }
 
 export function buildCanonicalLeaderboardRows(snapshot: PublicDashboardSnapshot | undefined): LeaderboardRowView[] {

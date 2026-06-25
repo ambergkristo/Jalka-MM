@@ -13,17 +13,17 @@ export function classifyPublicMatchState(input: {
   if (input.isConfirmedFinal) return 'finished';
 
   const publicStatus = String(input.publicStatus ?? 'SCHEDULED').toUpperCase();
-  if (publicStatus === 'LIVE' || publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW') return 'live';
+  if (publicStatus === 'LIVE') return 'live';
 
   const nowMs = input.now.getTime();
   const isTallinnToday = sameTallinnDate(input.kickoffAt, input.now);
-  if (kickoffMs <= nowMs) {
-    const elapsedSinceKickoff = nowMs - kickoffMs;
-    if (elapsedSinceKickoff <= EXPECTED_FULL_TIME_AFTER_KICKOFF_MS) return 'live';
-    return isTallinnToday ? 'today' : 'stale';
-  }
+  if (isTallinnToday) return 'today';
+  if (kickoffMs > nowMs) return 'upcoming';
+  if (publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW') return 'stale';
 
-  return isTallinnToday ? 'today' : 'upcoming';
+  const elapsedSinceKickoff = nowMs - kickoffMs;
+  if (elapsedSinceKickoff <= EXPECTED_FULL_TIME_AFTER_KICKOFF_MS && publicStatus === 'SCHEDULED') return 'stale';
+  return 'stale';
 }
 
 export function sameTallinnDate(value: string, now: Date): boolean {

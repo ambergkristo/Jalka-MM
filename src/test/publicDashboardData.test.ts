@@ -6,6 +6,9 @@ import type { LeaderboardEntry } from '../domain/predictionRepository.js';
 
 function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): PublicDashboardSnapshotLike {
   return {
+    generatedAt: '2026-06-12T12:00:00.000Z',
+    completedMatchesCount: 2,
+    totalMatchesCount: 104,
     liveMatches: [],
     todayMatches: [
       {
@@ -32,7 +35,7 @@ function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): P
         id: '3',
         homeTeam: 'Germany',
         awayTeam: 'Colombia',
-        kickoffTime: '12.06.2026 17:00',
+        kickoffTime: '13.06.2026 17:00',
         stage: 'Alagrupp E',
         status: 'scheduled',
         venue: ''
@@ -41,15 +44,24 @@ function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): P
         id: '4',
         homeTeam: 'Argentina',
         awayTeam: 'Korea Republic',
-        kickoffTime: '12.06.2026 20:00',
+        kickoffTime: '13.06.2026 20:00',
         stage: 'Alagrupp F',
         status: 'scheduled',
         venue: ''
       }
     ],
+    nextMatch: {
+      id: '1',
+      homeTeam: 'Mexico',
+      awayTeam: 'South Africa',
+      kickoffTime: '12.06.2026 10:00',
+      stage: 'Alagrupp A',
+      status: 'scheduled',
+      venue: ''
+    },
     latestResults: [
       {
-        id: '1',
+        id: '10',
         homeTeam: 'Mexico',
         awayTeam: 'South Africa',
         homeScore: 2,
@@ -59,7 +71,7 @@ function createSnapshot(overrides: Partial<PublicDashboardSnapshotLike> = {}): P
         finishedAt: '12.06.2026 10:00'
       },
       {
-        id: '2',
+        id: '11',
         homeTeam: 'Korea Republic',
         awayTeam: 'Czechia',
         homeScore: 2,
@@ -118,6 +130,7 @@ function leaderboardRow(input: Partial<LeaderboardEntry> & Pick<LeaderboardEntry
 describe('public tournament state', () => {
   it('returns zeroed public state when no confirmed results exist', () => {
     const state = buildPublicTournamentState({
+      generatedAt: '2026-06-06T12:00:00.000Z',
       liveMatches: [],
       todayMatches: [
         {
@@ -131,6 +144,15 @@ describe('public tournament state', () => {
         }
       ],
       upcomingMatches: [],
+      nextMatch: {
+        id: '1',
+        homeTeam: 'Mexico',
+        awayTeam: 'South Africa',
+        kickoffTime: '12.06.2026 10:00',
+        stage: 'Alagrupp A',
+        status: 'scheduled',
+        venue: ''
+      },
       latestResults: [],
       groupStandings: initialGroupStandings,
       groupLeaders: initialGroupStandings.map((group) => ({ group: group.group })),
@@ -158,26 +180,25 @@ describe('public tournament state', () => {
     expect(state.latestResults).toEqual([]);
     expect(state.leaderboardRows).toHaveLength(109);
     expect(state.leaderboardRows.every((row) => row.points === 0 && row.exactScores === 0 && row.correctResults === 0 && row.hitRate === '0%')).toBe(true);
-
-    const matchSection = selectPublicMatchSection(state.snapshot, new Date('2026-06-06T12:00:00.000Z'), 3);
-    expect(matchSection.matches.length).toBeGreaterThan(0);
-    expect(matchSection.matches[0]).toMatchObject({
+    expect(state.matchSection.matches[0]).toMatchObject({
       homeTeam: 'Mexico',
       awayTeam: 'South Africa',
       stage: 'Alagrupp A'
     });
   });
 
-  it('passes through confirmed results, upcoming fixtures, standings, and leaderboard rows', () => {
+  it('passes through confirmed results, canonical sections, standings, and leaderboard rows', () => {
     const snapshot = createSnapshot();
     const state = buildPublicTournamentState(snapshot, new Date('2026-06-12T12:00:00.000Z'));
-    const matchSection = selectPublicMatchSection(snapshot, new Date('2026-06-12T12:00:00.000Z'), 3);
 
+    expect(state.generatedAt).toBe(snapshot.generatedAt);
     expect(state.playedCount).toBe(2);
     expect(state.latestResults).toHaveLength(2);
     expect(state.liveMatches).toHaveLength(0);
     expect(state.todayMatches).toHaveLength(2);
     expect(state.upcomingMatches).toHaveLength(2);
+    expect(state.matchSection.title).toBe('Tänased mängud');
+    expect(state.matchSection.matches.map((match) => match.id)).toEqual(['1', '2']);
     expect(state.leaderboardRows).toHaveLength(109);
     expect(state.leaderboardRows.find((row) => row.playerId === 'kristo-amberg')).toMatchObject({
       playerId: 'kristo-amberg',
@@ -188,14 +209,11 @@ describe('public tournament state', () => {
     expect(state.groupStandings).toBe(initialGroupStandings);
     expect(state.playoffBracket).toBe(initialPlayoffBracket);
     expect(state.tournamentStats).toBe(initialTournamentStats);
-    expect(matchSection.title).toBe('Tänased mängud');
-    expect(matchSection.matches.map((match) => match.id)).toEqual(['1', '2']);
   });
 
   it('uses canonical completed match count for the played KPI instead of latest results length', () => {
     const snapshot = createSnapshot({
       completedMatchesCount: 16,
-      totalMatchesCount: 104,
       latestResults: createSnapshot().latestResults.slice(0, 1)
     });
 
@@ -266,7 +284,7 @@ describe('public tournament state', () => {
     expect(state.leaderboardRows[2].points).toBe(0);
   });
 
-  it('selects live matches before today and upcoming matches after confirmation', () => {
+  it('live widget only shows provider-live matches and carries provisional score', () => {
     const liveSnapshot = createSnapshot({
       liveMatches: [
         {
@@ -279,63 +297,107 @@ describe('public tournament state', () => {
           stage: 'Alagrupp C',
           status: 'live',
           venue: ''
-        },
-        {
-          id: '9',
-          homeTeam: 'Brazil',
-          awayTeam: 'Croatia',
-          kickoffTime: '12.06.2026 21:00',
-          stage: 'Alagrupp D',
-          status: 'live',
-          venue: ''
         }
       ],
-      todayMatches: [],
-      latestResults: [],
-      upcomingMatches: []
-    });
-
-    const liveSection = selectLiveMatchSection(liveSnapshot, 3);
-    expect(liveSection.title).toBe('Otsemängud');
-    expect(liveSection.matches).toHaveLength(2);
-    expect(liveSection.matches.every((match) => match.status === 'live')).toBe(true);
-    expect(liveSection.matches[0]).toMatchObject({
-      id: '8',
-      homeScore: 1,
-      awayScore: 0
-    });
-    expect(buildPublicTournamentState(liveSnapshot).latestResults).toEqual([]);
-
-    const upcomingSnapshot = createSnapshot({
-      liveMatches: [],
       todayMatches: [
         {
           id: '9',
-          homeTeam: 'Germany',
-          awayTeam: 'Colombia',
-          kickoffTime: '12.06.2026 17:00',
-          stage: 'Alagrupp E',
+          homeTeam: 'Mexico',
+          awayTeam: 'South Africa',
+          kickoffTime: '12.06.2026 10:00',
+          stage: 'Alagrupp A',
           status: 'scheduled',
           venue: ''
         }
       ],
-      latestResults: [],
+      upcomingMatches: [],
+      latestResults: []
+    });
+
+    const liveSection = selectLiveMatchSection(liveSnapshot, 3);
+    const state = buildPublicTournamentState(liveSnapshot, new Date('2026-06-12T18:30:00.000Z'));
+
+    expect(liveSection.title).toBe('Otsemängud');
+    expect(liveSection.matches).toHaveLength(1);
+    expect(liveSection.matches[0]).toMatchObject({
+      id: '8',
+      homeScore: 1,
+      awayScore: 0,
+      status: 'live'
+    });
+    expect(state.liveSection.matches.map((match) => match.id)).toEqual(['8']);
+  });
+
+  it('live widget becomes empty when there are no live matches', () => {
+    const liveSection = selectLiveMatchSection(createSnapshot({ liveMatches: [] }), 3);
+    expect(liveSection.matches).toEqual([]);
+  });
+
+  it('next match always comes from the canonical next-match field, not live or display order', () => {
+    const snapshot = createSnapshot({
+      liveMatches: [
+        {
+          id: '99',
+          homeTeam: 'Spain',
+          awayTeam: 'Saudi Arabia',
+          homeScore: 2,
+          awayScore: 0,
+          kickoffTime: '21.06.2026 19:00',
+          stage: 'Alagrupp H',
+          status: 'live',
+          venue: ''
+        }
+      ],
+      nextMatch: {
+        id: '100',
+        homeTeam: 'Belgium',
+        awayTeam: 'Iran',
+        kickoffTime: '21.06.2026 22:00',
+        stage: 'Alagrupp L',
+        status: 'scheduled',
+        venue: ''
+      }
+    });
+
+    const state = buildPublicTournamentState(snapshot, new Date('2026-06-21T19:30:00.000Z'));
+
+    expect(state.nextMatch).toMatchObject({
+      id: '100',
+      homeTeam: 'Belgium',
+      awayTeam: 'Iran'
+    });
+    expect(state.heroMetrics.find((metric) => metric.label === 'Järgmine')?.detail).toBe('Belgium vs Iran');
+  });
+
+  it('today section only includes today fixtures from the canonical snapshot', () => {
+    const snapshot = createSnapshot({
+      todayMatches: [
+        {
+          id: '21',
+          homeTeam: 'Spain',
+          awayTeam: 'Saudi Arabia',
+          kickoffTime: '21.06.2026 19:00',
+          stage: 'Alagrupp H',
+          status: 'scheduled',
+          venue: ''
+        }
+      ],
       upcomingMatches: [
         {
-          id: '10',
-          homeTeam: 'Argentina',
-          awayTeam: 'Korea Republic',
-          kickoffTime: '14.06.2026 20:00',
-          stage: 'Alagrupp F',
+          id: '22',
+          homeTeam: 'Belgium',
+          awayTeam: 'Iran',
+          kickoffTime: '22.06.2026 22:00',
+          stage: 'Alagrupp L',
           status: 'scheduled',
           venue: ''
         }
       ]
     });
 
-    const section = selectPublicMatchSection(upcomingSnapshot, new Date('2026-06-12T12:00:00.000Z'), 3);
+    const section = selectPublicMatchSection(snapshot, new Date('2026-06-21T12:00:00.000Z'), 3);
+
     expect(section.title).toBe('Tänased mängud');
-    expect(section.matches).toHaveLength(1);
-    expect(section.matches[0].status).toBe('scheduled');
+    expect(section.matches.map((match) => match.id)).toEqual(['21']);
   });
 });

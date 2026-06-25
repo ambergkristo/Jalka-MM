@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildPublicTournamentState, type PublicDashboardSnapshotLike } from '../client/lib/publicTournamentState.js';
-import { initialGroupStandings, initialPlayoffBracket, initialTournamentStats } from '../client/data/publicTournamentFallback.js';
+import { initialPlayoffBracket, initialTournamentStats } from '../client/data/publicTournamentFallback.js';
 
 let activeState = buildPublicTournamentState(undefined, new Date('2026-06-06T12:00:00.000Z'));
 
@@ -21,6 +21,9 @@ import { TournamentPage } from '../client/pages/TournamentPage.js';
 
 function createConfirmedSnapshot(): PublicDashboardSnapshotLike {
   return {
+    generatedAt: '2026-06-12T12:00:00.000Z',
+    completedMatchesCount: 2,
+    totalMatchesCount: 104,
     liveMatches: [],
     todayMatches: [
       {
@@ -53,6 +56,15 @@ function createConfirmedSnapshot(): PublicDashboardSnapshotLike {
         venue: ''
       }
     ],
+    nextMatch: {
+      id: '3',
+      homeTeam: 'Germany',
+      awayTeam: 'Colombia',
+      kickoffTime: '12.06.2026 17:00',
+      stage: 'Alagrupp E',
+      status: 'scheduled',
+      venue: ''
+    },
     latestResults: [
       {
         id: '1',
@@ -128,9 +140,9 @@ describe('public dashboard pages', () => {
     const player = renderToStaticMarkup(<PlayerDetailPage playerId="kristo-amberg" />);
 
     expect(landing).toContain('Kinnitatud tulemusi veel ei ole');
-    expect(landing).toContain('Hetkel ei ole käimasolevaid mänge.');
+    expect(landing).toContain('Hetkel otsemänge ei toimu');
     expect(landing).toContain('Lõppenud mänge veel ei ole.');
-    expect(results).toContain('Hetkel ei ole käimasolevaid mänge.');
+    expect(results).toContain('Hetkel otsemänge ei toimu');
     expect(results).toContain('Lõppenud mänge veel ei ole.');
     expect(leaderboard).toContain('Leia mängija');
     expect(leaderboard).toContain('109 mälumängijat');
@@ -161,7 +173,6 @@ describe('public dashboard pages', () => {
           venue: ''
         }
       ],
-      todayMatches: [],
       latestResults: []
     }, new Date('2026-06-14T18:30:00.000Z'));
 
@@ -185,7 +196,7 @@ describe('public dashboard pages', () => {
     const player = renderToStaticMarkup(<PlayerDetailPage playerId="kristo-amberg" />);
 
     expect(landing).toContain('2 / 104');
-    expect(landing).toContain('Hetkel ei ole käimasolevaid mänge.');
+    expect(landing).toContain('Hetkel otsemänge ei toimu');
     expect(landing).toContain('Mehhiko');
     expect(landing).toContain('Lõuna-Aafrika');
     expect(landing).toContain('Lõuna-Korea');

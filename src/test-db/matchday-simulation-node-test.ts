@@ -7,7 +7,7 @@ import { createDatabase, type QueryableDatabase } from '../server/databaseAdapte
 import { DatabaseResultRepository } from '../server/results/databaseResultRepository.js';
 import { getCurrentLeaderboard } from '../server/results/resultAgentRuntime.js';
 import { resetSimulationState, runMatchday1DisagreementSimulation, runMatchday1Simulation, simulatedTopScorers, MATCHDAY1_CONFIRM_AT, MATCHDAY1_PROVISIONAL_AT } from '../server/results/matchdaySimulation.js';
-import { getPublicTournamentPayload, getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
+import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from '../server/results/publicTournamentSnapshot.js';
 import { runResultUpdateCycle } from '../server/results/resultAgent.js';
 import { SimulationResultProvider } from '../server/results/simulationResultProvider.js';
 import type { BracketTree } from '../domain/publicBracket.js';
@@ -89,6 +89,27 @@ describe('matchday 1 simulation with persistent storage', () => {
       });
       assert.equal(repeated.checkedMatches, 0);
       assert.equal((await repository.getLeaderboard()).length, 109);
+    });
+  });
+
+  it('results and tournament payloads reuse the same canonical snapshot state', async () => {
+    await withSimulationDb(async (db) => {
+      await runMatchday1Simulation(db);
+      const now = new Date('2026-06-12T12:00:00.000Z');
+      const snapshot = await getPublicTournamentSnapshot(db, now);
+      const resultsPayload = await getPublicResultsPayload(db, now);
+      const tournamentPayload = await getPublicTournamentPayload(db, now);
+
+      assert.equal(resultsPayload.generatedAt, snapshot.generatedAt);
+      assert.equal(tournamentPayload.generatedAt, snapshot.generatedAt);
+      assert.equal(resultsPayload.completedMatchesCount, snapshot.completedMatchesCount);
+      assert.equal(tournamentPayload.completedMatchesCount, snapshot.completedMatchesCount);
+      assert.deepEqual(resultsPayload.liveMatches, snapshot.liveMatches);
+      assert.deepEqual(resultsPayload.todayMatches, snapshot.todayMatches);
+      assert.deepEqual(resultsPayload.nextMatch, snapshot.nextMatch);
+      assert.deepEqual(tournamentPayload.liveMatches, snapshot.liveMatches);
+      assert.deepEqual(tournamentPayload.todayMatches, snapshot.todayMatches);
+      assert.deepEqual(tournamentPayload.nextMatch, snapshot.nextMatch);
     });
   });
 

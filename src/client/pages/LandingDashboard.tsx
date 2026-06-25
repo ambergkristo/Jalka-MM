@@ -6,12 +6,18 @@ import { NavigationCards } from '../components/NavigationCards.js';
 import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { ResultCard } from '../components/ResultCard.js';
 import { navigationCards } from '../data/navigation.js';
-import { usePublicTournamentState, buildCanonicalLiveMatchSection, buildCanonicalMatchSection } from '../lib/publicApi.js';
+import { usePublicTournamentState } from '../lib/publicApi.js';
 
 export function LandingDashboard() {
   const tournamentState = usePublicTournamentState(30_000);
-  const liveSection = buildCanonicalLiveMatchSection(tournamentState.snapshot, 3);
-  const matchSection = buildCanonicalMatchSection(tournamentState.snapshot, new Date(), 3);
+  const liveSection = {
+    ...tournamentState.liveSection,
+    matches: tournamentState.liveSection.matches.slice(0, 3)
+  };
+  const matchSection = {
+    ...tournamentState.matchSection,
+    matches: tournamentState.matchSection.matches.slice(0, 3)
+  };
   const latestResults = tournamentState.latestResults;
   const leaderboardPreview = tournamentState.leaderboardRows.slice(0, 5);
   const topScorersPreview = tournamentState.topScorers.slice(0, 3);
@@ -28,7 +34,7 @@ export function LandingDashboard() {
             {liveSection.matches.map((match) => <MatchCard match={match} key={match.id} />)}
           </div>
         ) : (
-          <p className="empty-state">Hetkel ei ole käimasolevaid mänge.</p>
+          <p className="empty-state">Hetkel otsemänge ei toimu</p>
         )}
       </Card>
 

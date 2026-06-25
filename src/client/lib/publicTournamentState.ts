@@ -20,11 +20,13 @@ export interface PublicLeaderboardEntry {
 }
 
 export interface PublicDashboardSnapshotLike {
+  generatedAt?: string;
   completedMatchesCount?: number;
   totalMatchesCount?: number;
   liveMatches: DashboardMatch[];
   todayMatches: DashboardMatch[];
   upcomingMatches: DashboardMatch[];
+  nextMatch?: DashboardMatch;
   latestResults: DashboardResult[];
   groupStandings: GroupStanding[];
   groupLeaders: GroupLeader[];
@@ -40,11 +42,15 @@ export interface PublicDashboardSnapshotLike {
 export interface PublicTournamentState {
   snapshot?: PublicDashboardSnapshotLike;
   snapshotError?: string;
+  generatedAt?: string;
   playedCount: number;
   totalMatches: number;
+  nextMatch?: DashboardMatch;
   heroMetrics: DashboardMetric[];
   liveMatches: DashboardMatch[];
+  liveSection: MatchSection;
   todayMatches: DashboardMatch[];
+  matchSection: MatchSection;
   latestResults: DashboardResult[];
   upcomingMatches: DashboardMatch[];
   leaderboardRows: LeaderboardRowView[];
@@ -61,11 +67,15 @@ export interface PublicTournamentState {
 const totalMatches = (matchesJson as { id: number }[]).length;
 
 export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLike, now = new Date()): PublicTournamentState {
+  const fallbackMatchSection = getPublicMatchSection(now);
+  const fallbackTodayMatches = fallbackMatchSection.title === 'Tänased mängud' ? fallbackMatchSection.matches : [];
+  const fallbackUpcomingMatches = fallbackMatchSection.title === 'Tänased mängud' ? [] : fallbackMatchSection.matches;
   const playedCount = snapshot?.completedMatchesCount ?? snapshot?.latestResults.length ?? 0;
   const canonicalTotalMatches = snapshot?.totalMatchesCount ?? totalMatches;
   const liveMatches = snapshot?.liveMatches ?? [];
-  const todayMatches = snapshot?.todayMatches ?? [];
-  const upcomingMatches = snapshot?.upcomingMatches ?? getPublicMatchSection(now).matches;
+  const todayMatches = snapshot?.todayMatches ?? fallbackTodayMatches;
+  const upcomingMatches = snapshot?.upcomingMatches ?? fallbackUpcomingMatches;
+  const nextMatch = snapshot?.nextMatch ?? todayMatches[0] ?? upcomingMatches[0];
   const latestResults = snapshot?.latestResults ?? [];
   const groupStandings = snapshot?.groupStandings ?? initialGroupStandings;
   const groupLeaders = snapshot?.groupLeaders ?? groupStandings.map((group) => {
@@ -101,11 +111,15 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
 
   return {
     snapshot,
+    generatedAt: snapshot?.generatedAt,
     playedCount,
     totalMatches: canonicalTotalMatches,
-    heroMetrics: buildHeroMetrics(playedCount, canonicalTotalMatches, liveMatches, todayMatches, upcomingMatches, now),
+    nextMatch,
+    heroMetrics: buildHeroMetrics(playedCount, canonicalTotalMatches, nextMatch, now),
     liveMatches,
+    liveSection: buildLiveMatchSection(liveMatches),
     todayMatches,
+    matchSection: snapshot ? buildCanonicalMatchSection(todayMatches, upcomingMatches) : fallbackMatchSection,
     latestResults,
     upcomingMatches,
     leaderboardRows: buildLeaderboardRows(snapshot),
@@ -121,34 +135,12 @@ export function buildPublicTournamentState(snapshot?: PublicDashboardSnapshotLik
 }
 
 export function selectLiveMatchSection(snapshot: PublicDashboardSnapshotLike | undefined, limit = 3): MatchSection {
-  if (!snapshot || snapshot.liveMatches.length === 0) {
-    return {
-      eyebrow: 'Otse',
-      title: 'Otsemängud',
-      matches: []
-    };
-  }
-  return {
-    eyebrow: 'Otse',
-    title: 'Otsemängud',
-    matches: snapshot.liveMatches.slice(0, limit)
-  };
+  return buildLiveMatchSection(snapshot?.liveMatches ?? [], limit);
 }
 
 export function selectPublicMatchSection(snapshot: PublicDashboardSnapshotLike | undefined, now = new Date(), limit = 3): MatchSection {
   if (!snapshot) return getPublicMatchSection(now);
-  if (snapshot.todayMatches.length > 0) {
-    return {
-      eyebrow: 'Täna',
-      title: 'Tänased mängud',
-      matches: snapshot.todayMatches.slice(0, limit)
-    };
-  }
-  return {
-    eyebrow: 'Ajakava',
-    title: 'Tulevad mängud',
-    matches: snapshot.upcomingMatches.slice(0, limit)
-  };
+  return buildCanonicalMatchSection(snapshot.todayMatches, snapshot.upcomingMatches, limit);
 }
 
 export function buildLeaderboardRows(snapshot?: PublicDashboardSnapshotLike): LeaderboardRowView[] {
@@ -159,12 +151,9 @@ export function buildLeaderboardRows(snapshot?: PublicDashboardSnapshotLike): Le
 function buildHeroMetrics(
   playedCount: number,
   totalMatchesCount: number,
-  liveMatches: DashboardMatch[],
-  todayMatches: DashboardMatch[],
-  upcomingMatches: DashboardMatch[],
+  nextMatch: DashboardMatch | undefined,
   now: Date
 ): DashboardMetric[] {
-  const nextMatch = liveMatches[0] ?? todayMatches[0] ?? upcomingMatches[0];
   return [
     { label: 'Turniiri algus', value: '11.06', detail: 'Esimene mäng 11. juunil 2026' },
     {
@@ -178,6 +167,29 @@ function buildHeroMetrics(
       detail: nextMatch ? `${nextMatch.homeTeam} vs ${nextMatch.awayTeam}` : `Ajakava algab ${formatFallbackDate(now)}`
     }
   ];
+}
+
+function buildLiveMatchSection(liveMatches: DashboardMatch[], limit = 3): MatchSection {
+  return {
+    eyebrow: 'Otse',
+    title: 'Otsemängud',
+    matches: liveMatches.slice(0, limit)
+  };
+}
+
+function buildCanonicalMatchSection(todayMatches: DashboardMatch[], upcomingMatches: DashboardMatch[], limit = 3): MatchSection {
+  if (todayMatches.length > 0) {
+    return {
+      eyebrow: 'Täna',
+      title: 'Tänased mängud',
+      matches: todayMatches.slice(0, limit)
+    };
+  }
+  return {
+    eyebrow: 'Ajakava',
+    title: 'Tulevad mängud',
+    matches: upcomingMatches.slice(0, limit)
+  };
 }
 
 function toLeaderboardRow(entry: PublicLeaderboardEntry): LeaderboardRowView {

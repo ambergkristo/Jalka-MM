@@ -14,11 +14,13 @@ import { classifyPublicMatchState } from './publicMatchState.js';
 import { derivePublicResultStatus } from './publicResultStatus.js';
 
 export interface PublicDashboardSnapshot {
+  generatedAt: string;
   completedMatchesCount: number;
   totalMatchesCount: number;
   liveMatches: PublicMatchCard[];
   todayMatches: PublicMatchCard[];
   upcomingMatches: PublicMatchCard[];
+  nextMatch?: PublicMatchCard;
   latestResults: PublicResultCard[];
   groupStandings: PublicGroupStanding[];
   groupLeaders: Array<{ group: string; team?: string; points?: number; record?: string }>;
@@ -94,14 +96,14 @@ interface StandingRow {
   points: number;
 }
 
-export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promise<PublicDashboardSnapshot> {
+export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = new Date()): Promise<PublicDashboardSnapshot> {
   await migrateResultPersistenceSchema(db);
-  const now = new Date();
   await touchPublicDashboardRead({ db, now });
-  const matches = await getPublicMatches(db);
+  const matches = await getPublicMatches(db, now);
   const liveMatches = matches.filter((match) => match.state === 'live').map(toMatchCard);
   const todayMatches = matches.filter((match) => match.state === 'today').map(toMatchCard);
   const upcomingMatches = matches.filter((match) => match.state === 'upcoming').map(toMatchCard);
+  const nextMatch = findNextMatch(matches, now);
   const latestResults = await getConfirmedLatestResults(db);
   const resultSummary = await getConfirmedResultSummary(db);
   const groupStandings = await getPublicGroupStandings(db);
@@ -125,11 +127,13 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   });
 
   return {
+    generatedAt: now.toISOString(),
     completedMatchesCount: completed,
     totalMatchesCount: totalMatches,
     liveMatches,
     todayMatches,
     upcomingMatches,
+    nextMatch,
     latestResults,
     groupStandings,
     groupLeaders,
@@ -161,18 +165,33 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase): Promis
   };
 }
 
-export async function getPublicResultsPayload(db: QueryableDatabase): Promise<{
+export async function getPublicResultsPayload(db: QueryableDatabase, now = new Date()): Promise<{
+  generatedAt: string;
+  completedMatchesCount: number;
+  liveMatches: PublicMatchCard[];
+  todayMatches: PublicMatchCard[];
+  nextMatch?: PublicMatchCard;
   upcomingMatches: PublicMatchCard[];
   confirmedResults: PublicResultCard[];
 }> {
-  const snapshot = await getPublicTournamentSnapshot(db);
+  const snapshot = await getPublicTournamentSnapshot(db, now);
   return {
+    generatedAt: snapshot.generatedAt,
+    completedMatchesCount: snapshot.completedMatchesCount,
+    liveMatches: snapshot.liveMatches,
+    todayMatches: snapshot.todayMatches,
+    nextMatch: snapshot.nextMatch,
     upcomingMatches: snapshot.upcomingMatches,
     confirmedResults: snapshot.latestResults
   };
 }
 
-export async function getPublicTournamentPayload(db: QueryableDatabase): Promise<{
+export async function getPublicTournamentPayload(db: QueryableDatabase, now = new Date()): Promise<{
+  generatedAt: string;
+  completedMatchesCount: number;
+  liveMatches: PublicMatchCard[];
+  todayMatches: PublicMatchCard[];
+  nextMatch?: PublicMatchCard;
   groupStandings: PublicGroupStanding[];
   topScorers: PublicTopScorer[];
   playoffBracket: BracketTree;
@@ -181,8 +200,13 @@ export async function getPublicTournamentPayload(db: QueryableDatabase): Promise
   tournamentProgressByStage: PublicDashboardSnapshot['tournamentProgressByStage'];
   countyLeaderboard: CountyLeaderboardRow[];
 }> {
-  const snapshot = await getPublicTournamentSnapshot(db);
+  const snapshot = await getPublicTournamentSnapshot(db, now);
   return {
+    generatedAt: snapshot.generatedAt,
+    completedMatchesCount: snapshot.completedMatchesCount,
+    liveMatches: snapshot.liveMatches,
+    todayMatches: snapshot.todayMatches,
+    nextMatch: snapshot.nextMatch,
     groupStandings: snapshot.groupStandings,
     topScorers: snapshot.topScorers,
     playoffBracket: snapshot.playoffBracket,
@@ -301,13 +325,13 @@ async function getConfirmedResultSummary(db: QueryableDatabase): Promise<{ compl
   };
 }
 
-async function getUpcomingMatches(db: QueryableDatabase): Promise<PublicMatchCard[]> {
-  return (await getPublicMatches(db))
+async function getUpcomingMatches(db: QueryableDatabase, now = new Date()): Promise<PublicMatchCard[]> {
+  return (await getPublicMatches(db, now))
     .filter((match) => match.state === 'upcoming')
     .map(toMatchCard);
 }
 
-async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
+async function getPublicMatches(db: QueryableDatabase, now: Date): Promise<Array<{
   id: number;
   groupId?: string;
   kickoffAt: string;
@@ -342,7 +366,6 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
     LEFT JOIN teams away ON away.id = m.away_team_id
     ORDER BY m.kickoff_at, m.id
   `);
-  const now = new Date();
   return rows.flatMap((row) => {
     const kickoffAt = String(row.kickoff_at);
     if (Number.isNaN(Date.parse(kickoffAt))) return [];
@@ -369,6 +392,24 @@ async function getPublicMatches(db: QueryableDatabase): Promise<Array<{
       state
     }];
   });
+}
+
+function findNextMatch(matches: Array<{
+  id: number;
+  groupId?: string;
+  kickoffAt: string;
+  homeTeam: string;
+  awayTeam: string;
+  publicStatus: string;
+  homeScore?: number;
+  awayScore?: number;
+  state: 'live' | 'today' | 'upcoming';
+}>, now: Date): PublicMatchCard | undefined {
+  const nextMatch = matches.find((match) =>
+    match.publicStatus === 'SCHEDULED' &&
+    Date.parse(match.kickoffAt) > now.getTime()
+  );
+  return nextMatch ? toMatchCard(nextMatch) : undefined;
 }
 
 function toMatchCard(match: {
