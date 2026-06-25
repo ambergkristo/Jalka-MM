@@ -42,6 +42,30 @@ describe('actual scoring state derivation', () => {
       ]
     });
   });
+
+  it('does not expose tournament top scorers before the final and third-place matches are confirmed', async () => {
+    const db = createMockDatabase({
+      teams: baseTeams(),
+      matches: baseMatches(),
+      results: [
+        { matchId: 1, homeScore: 2, awayScore: 1, publicStatus: 'CONFIRMED_FINAL', isFinal: true },
+        { matchId: 2, homeScore: 0, awayScore: 2, publicStatus: 'CONFIRMED_FINAL', isFinal: true },
+        { matchId: 3, homeScore: 1, awayScore: 0, publicStatus: 'CONFIRMED_FINAL', isFinal: true },
+        { matchId: 4, homeScore: 2, awayScore: 0, publicStatus: 'CONFIRMED_FINAL', isFinal: true },
+        { matchId: 5, homeScore: 3, awayScore: 1, publicStatus: 'CONFIRMED_FINAL', isFinal: true },
+        { matchId: 6, homeScore: 2, awayScore: 1, publicStatus: 'CONFIRMED_FINAL', isFinal: true }
+      ],
+      scorerFacts: [
+        { id: 's1', matchId: 1, playerName: 'Lionel Messi', teamCode: 'ARG', goals: 2 },
+        { id: 's2', matchId: 2, playerName: 'Kylian Mbappe', teamCode: 'FRA', goals: 2 }
+      ]
+    });
+
+    await expect(buildActualTopScorers(db)).resolves.toEqual([]);
+    await expect(buildActualScoringState(db)).resolves.toMatchObject({
+      actualTopScorers: []
+    });
+  });
 });
 
 describe('actual scoring state group qualification timing', () => {

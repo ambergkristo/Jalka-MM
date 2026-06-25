@@ -275,3 +275,11 @@
 
 - Production currently reports aggregate scorer mismatch only: 121 confirmed goals vs 110 scorer fact goals, missing 11; exact match drilldown requires this deploy.
 - Mobile overflow check passed at 320px, 375px, and 430px with `documentElement.scrollWidth === clientWidth`.
+
+# Sprint 34 - Top Scorer Bonus Timing Correction
+
+- [x] Gate top scorer bonus until the tournament top scorer is final.
+- [x] Keep group A/B/C bonuses and third-place timing unchanged.
+- [x] Add regressions for unfinished-tournament scorer state and stale persisted +50 repair.
+- [x] Run targeted tests plus build.
+- [ ] Commit, push to `origin/main`, and verify `HEAD == origin/main`.

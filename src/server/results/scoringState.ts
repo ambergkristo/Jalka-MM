@@ -173,6 +173,16 @@ export async function buildActualKnockoutResults(db: QueryableDatabase): Promise
 }
 
 export async function buildActualTopScorers(db: QueryableDatabase): Promise<ActualTopScorer[]> {
+  const stageCoverage = await getKnockoutStageCoverage(db);
+  const finalCoverage = stageCoverage.get('FINAL');
+  const thirdPlaceCoverage = stageCoverage.get('THIRD_PLACE');
+  const tournamentComplete =
+    finalCoverage?.total === 1 &&
+    finalCoverage.confirmed === finalCoverage.total &&
+    thirdPlaceCoverage?.total === 1 &&
+    thirdPlaceCoverage.confirmed === thirdPlaceCoverage.total;
+  if (!tournamentComplete) return [];
+
   const rows = await db.all(`
     SELECT
       facts.player_id,
