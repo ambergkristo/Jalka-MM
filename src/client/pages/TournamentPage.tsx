@@ -5,6 +5,7 @@ import { PageHeader } from '../components/PageHeader.js';
 import { PredictionLeagueInsights } from '../components/PredictionLeagueInsights.js';
 import { PublicDataNotice } from '../components/PublicDataNotice.js';
 import { TopScorersTable } from '../components/TopScorersTable.js';
+import { TournamentStatsCards } from '../components/TournamentStatsCards.js';
 import { TrueBracket } from '../components/TrueBracket.js';
 import { usePublicTournamentState } from '../lib/publicApi.js';
 
@@ -35,6 +36,10 @@ export function TournamentPage() {
 
         <PredictionLeagueInsights insights={tournamentState.predictionLeagueInsights} />
       </section>
+
+      <Card title="Turniiri statistika" eyebrow="Numbrid" className="tournament-section">
+        <TournamentStatsCards stats={tournamentState.tournamentStats} />
+      </Card>
 
       <Card title="Maakondade edetabel" eyebrow="Piirkondade punktid" className="tournament-section">
         <CountyLeaderboardTable rows={tournamentState.countyLeaderboard} />

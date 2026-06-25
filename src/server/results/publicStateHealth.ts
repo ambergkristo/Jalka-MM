@@ -930,7 +930,7 @@ function deriveOperatorStatus(
   staleReasons: string[],
   metadata: PublicStateMetadataRow
 ): 'OK' | 'Needs sync' | 'Running' | 'Failed' {
-  if (metadata.last_repair_action_status === 'failed') return 'Failed';
+  void metadata;
   if (resultAgentStatus.providerReachable === false) return 'Failed';
   if (staleReasons.length > 0) return 'Needs sync';
   return 'OK';

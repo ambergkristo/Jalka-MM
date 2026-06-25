@@ -88,6 +88,29 @@ describe('public state health', () => {
     });
   });
 
+  it('does not keep operator status failed when current diagnostics are healthy', async () => {
+    await withSimulationDb(async (db) => {
+      await seedConfirmedResult(db);
+      await db.run(
+        `INSERT INTO public_state_metadata (
+          id, last_repair_action, last_repair_action_at, last_repair_action_status, last_repair_action_error
+        ) VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          last_repair_action = excluded.last_repair_action,
+          last_repair_action_at = excluded.last_repair_action_at,
+          last_repair_action_status = excluded.last_repair_action_status,
+          last_repair_action_error = excluded.last_repair_action_error`,
+        ['current', 'rebuild-public-dashboard', '2026-06-13T07:01:00.000Z', 'failed', 'old failure']
+      );
+
+      const diagnostics = await collectPublicStateDiagnostics({ db, resultAgentStatus: MOCK_RESULT_AGENT_STATUS });
+
+      assert.equal(diagnostics.staleState, false);
+      assert.equal(diagnostics.resultAgentStatus.providerReachable, true);
+      assert.equal(diagnostics.operatorStatus, 'OK');
+    });
+  });
+
   it('re-syncs scorers from confirmed provider results and populates public standings', async () => {
     await withSimulationDb(async (db) => {
       await seedProviderConfirmedResult(db);

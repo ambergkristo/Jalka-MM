@@ -153,8 +153,11 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Alagrupitabelid');
     expect(tournament).toContain('Ennustusliiga statistika');
     expect(tournament).toContain('Rekordid');
+    expect(tournament).toContain('Turniiri statistika');
     expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Väravalööjate info ei ole veel saadaval.');
+    expect(tournament).not.toContain('Biggest rise today');
+    expect(tournament).not.toContain('Highest single matchday score');
     expect(player).toContain('Kristo Amberg');
     expect(player).not.toContain('@');
   });
@@ -218,6 +221,10 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Maakondade edetabel');
     expect(tournament).toContain('Ennustusliiga statistika');
     expect(tournament).toContain('Rekordid');
+    expect(tournament).toContain('Turniiri statistika');
+    expect(tournament).toContain('Liider');
+    expect(tournament).toContain('Parim tabavus');
+    expect(tournament).not.toContain('Biggest fall today');
     expect(tournament).toContain('Punkte');
     expect(player).toContain('<b>2 v');
   });
