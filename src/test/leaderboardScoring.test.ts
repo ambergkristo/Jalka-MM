@@ -142,17 +142,17 @@ describe('leaderboard scoring breakdown', () => {
     expect(breakdown.rebuiltEntry).toMatchObject({
       playerId: 'player-1',
       matchPoints: 6,
-      groupBonusPoints: 21,
+      groupBonusPoints: 15,
       playoffBonusPoints: 0,
       topScorerBonusPoints: 0,
-      totalPoints: 27
+      totalPoints: 21
     });
     expect(breakdown.playerResult.groupBreakdown).toEqual([{
       group: 'A',
       winnerPoints: 10,
       secondPlacePoints: 5,
-      qualifierPoints: 6,
-      points: 21
+      qualifierPoints: 0,
+      points: 15
     }]);
     expect(breakdown.matches).toEqual([expect.objectContaining({
       matchId: 1,

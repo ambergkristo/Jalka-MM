@@ -41,9 +41,15 @@ After official group standings are available:
 
 - Correct group winner: 10 points per team.
 - Correct group second place: 5 points per team.
-- Correct group qualifier: 3 points per correctly qualifying team.
+- Correct group qualifier in the wrong position: 3 points per correctly qualifying team.
 
-Qualifier points are additive. A player can receive position points and qualifier points for the same team.
+Qualifier points do not stack on top of an exact placement bonus for the same team.
+
+Examples:
+
+- Predicted `1st Brazil, 2nd Croatia`, actual `1st Brazil, 2nd Croatia`: `10 + 5 = 15`.
+- Predicted `1st Croatia, 2nd Brazil`, actual `1st Brazil, 2nd Croatia`: `3 + 3 = 6`.
+- Predicted `1st Brazil, 2nd Japan`, actual `1st Brazil, 2nd Croatia`: `10`.
 
 Qualifiers currently support:
 

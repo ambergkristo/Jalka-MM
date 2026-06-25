@@ -10,7 +10,7 @@ import {
   type ActualKnockoutResults,
   type MatchResultForScoring
 } from '../domain/pointsEngine.js';
-import type { AwardsPrediction, GroupPrediction, KnockoutPrediction, Player, PlayerMatchPrediction } from '../domain/predictionRepository.js';
+import { predictionRepository, type AwardsPrediction, type GroupPrediction, type KnockoutPrediction, type Player, type PlayerMatchPrediction } from '../domain/predictionRepository.js';
 
 const finalHomeWin: MatchResultForScoring = { matchId: 1, homeScore: 2, awayScore: 1, isFinal: true };
 
@@ -58,7 +58,7 @@ describe('official group and playoff match scoring', () => {
 });
 
 describe('official group bonus scoring', () => {
-  it('awards winner and runner-up placement bonuses plus immediate 1st/2nd qualifier bonuses', () => {
+  it('awards only placement bonuses when winner and runner-up are both exactly correct', () => {
     const standings: ActualGroupStanding[] = [
       { group: 'A', team: 'Brazil', rank: 1, qualified: true },
       { group: 'A', team: 'Croatia', rank: 2, qualified: true },
@@ -68,7 +68,7 @@ describe('official group bonus scoring', () => {
 
     const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
     expect(calculateGroupBonusPoints(predictions, standings)).toMatchObject({
-      points: 21,
+      points: 15,
       warnings: []
     });
   });
@@ -85,6 +85,44 @@ describe('official group bonus scoring', () => {
     expect(calculateGroupBonusPoints(predictions, standings).points).toBe(6);
   });
 
+  it('awards only the winner bonus when the winner is correct but the runner-up is wrong', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+      { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+      { group: 'A', team: 'Japan', rank: 3, qualified: false },
+      { group: 'A', team: 'Canada', rank: 4, qualified: false }
+    ];
+
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Canada', third: 'Japan' }];
+    const result = calculateGroupBonusPoints(predictions, standings);
+
+    expect(result.breakdown).toEqual([{
+      group: 'A',
+      winnerPoints: 10,
+      secondPlacePoints: 0,
+      qualifierPoints: 0,
+      points: 10
+    }]);
+  });
+
+  it('awards only a qualifier bonus when a direct qualifier is predicted in the wrong position', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Brazil', rank: 1, qualified: true },
+      { group: 'A', team: 'Croatia', rank: 2, qualified: true },
+      { group: 'A', team: 'Japan', rank: 3, qualified: false },
+      { group: 'A', team: 'Canada', rank: 4, qualified: false }
+    ];
+
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Canada', second: 'Brazil', third: 'Japan' }];
+    expect(calculateGroupBonusPoints(predictions, standings).breakdown).toEqual([{
+      group: 'A',
+      winnerPoints: 0,
+      secondPlacePoints: 0,
+      qualifierPoints: 3,
+      points: 3
+    }]);
+  });
+
   it('does not award third-place qualifier points before all groups are finalized', () => {
     const standings: ActualGroupStanding[] = [
       { group: 'A', team: 'Brazil', rank: 1, qualified: true },
@@ -93,15 +131,13 @@ describe('official group bonus scoring', () => {
       { group: 'A', team: 'Canada', rank: 4, qualified: false }
     ];
 
-    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
-    const result = calculateGroupBonusPoints(predictions, standings);
-
-    expect(result.breakdown).toEqual([{
+    const predictions: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Canada', second: 'Croatia', third: 'Japan' }];
+    expect(calculateGroupBonusPoints(predictions, standings).breakdown).toEqual([{
       group: 'A',
-      winnerPoints: 10,
+      winnerPoints: 0,
       secondPlacePoints: 5,
-      qualifierPoints: 6,
-      points: 21
+      qualifierPoints: 0,
+      points: 5
     }]);
   });
 
@@ -120,8 +156,8 @@ describe('official group bonus scoring', () => {
     const qualifiedThirdPrediction: GroupPrediction[] = [{ playerId: 'p1', group: 'A', first: 'Brazil', second: 'Croatia', third: 'Japan' }];
     const nonQualifiedThirdPrediction: GroupPrediction[] = [{ playerId: 'p1', group: 'B', first: 'France', second: 'Senegal', third: 'Ecuador' }];
 
-    expect(calculateGroupBonusPoints(qualifiedThirdPrediction, standings).points).toBe(24);
-    expect(calculateGroupBonusPoints(nonQualifiedThirdPrediction, standings).points).toBe(21);
+    expect(calculateGroupBonusPoints(qualifiedThirdPrediction, standings).points).toBe(18);
+    expect(calculateGroupBonusPoints(nonQualifiedThirdPrediction, standings).points).toBe(15);
   });
 
   it('gives zero third-place qualifier bonus when the third-place team does not ultimately qualify', () => {
@@ -147,6 +183,35 @@ describe('official group bonus scoring', () => {
       points: 0,
       warnings: ['Group bonus skipped: actual group standings are not available.']
     });
+  });
+
+  it('keeps Jürgen Perov-Jung on 40 group bonus points for finalized groups A-C', () => {
+    const jurgenGroups = predictionRepository
+      .getGroupPredictions('jurgen-perov-jung')
+      .filter((prediction) => ['A', 'B', 'C'].includes(prediction.group));
+    const standings: ActualGroupStanding[] = [
+      { group: 'A', team: 'Mehhiko', rank: 1, qualified: true },
+      { group: 'A', team: 'Lõuna-Aafrika', rank: 2, qualified: true },
+      { group: 'A', team: 'Lõuna-Korea', rank: 3, qualified: false },
+      { group: 'A', team: 'Tšehhi', rank: 4, qualified: false },
+      { group: 'B', team: 'Šveits', rank: 1, qualified: true },
+      { group: 'B', team: 'Kanada', rank: 2, qualified: true },
+      { group: 'B', team: 'Bosnia ja Hertsegoviina', rank: 3, qualified: false },
+      { group: 'B', team: 'Katar', rank: 4, qualified: false },
+      { group: 'C', team: 'Brasiilia', rank: 1, qualified: true },
+      { group: 'C', team: 'Maroko', rank: 2, qualified: true },
+      { group: 'C', team: 'Šotimaa', rank: 3, qualified: false },
+      { group: 'C', team: 'Haiti', rank: 4, qualified: false }
+    ];
+
+    const result = calculateGroupBonusPoints(jurgenGroups, standings);
+
+    expect(result.points).toBe(40);
+    expect(result.breakdown).toEqual([
+      { group: 'A', winnerPoints: 10, secondPlacePoints: 0, qualifierPoints: 0, points: 10 },
+      { group: 'B', winnerPoints: 10, secondPlacePoints: 5, qualifierPoints: 0, points: 15 },
+      { group: 'C', winnerPoints: 10, secondPlacePoints: 5, qualifierPoints: 0, points: 15 }
+    ]);
   });
 });
 
@@ -322,10 +387,10 @@ describe('player totals and leaderboard rebuild', () => {
     expect(leaderboard.entries[0]).toMatchObject({
       playerId: 'p1',
       matchPoints: 6,
-      groupBonusPoints: 24,
+      groupBonusPoints: 18,
       playoffBonusPoints: 230,
       topScorerBonusPoints: 50,
-      totalPoints: 310
+      totalPoints: 304
     });
     expect(leaderboard.entries[1]).toMatchObject({ playerId: 'p2', totalPoints: 0 });
   });

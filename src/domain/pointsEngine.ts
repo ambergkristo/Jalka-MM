@@ -125,13 +125,23 @@ export function calculateGroupBonusPoints(
 
     const actualWinner = standings.find((standing) => standing.rank === 1)?.team;
     const actualSecond = standings.find((standing) => standing.rank === 2)?.team;
+    const winnerPoints = actualWinner && sameTeam(prediction.first, actualWinner) ? 10 : 0;
+    const secondPlacePoints = actualSecond && sameTeam(prediction.second, actualSecond) ? 5 : 0;
     const actualQualifiers = new Set(
       standings.filter((standing) => standing.qualified === true || standing.rank <= 2).map((standing) => normalizeName(standing.team))
     );
-    const predictedQualifiers = unique([prediction.first, prediction.second, prediction.third].filter(Boolean).map(normalizeName));
-    const qualifierPoints = predictedQualifiers.filter((team) => actualQualifiers.has(team)).length * 3;
-    const winnerPoints = actualWinner && sameTeam(prediction.first, actualWinner) ? 10 : 0;
-    const secondPlacePoints = actualSecond && sameTeam(prediction.second, actualSecond) ? 5 : 0;
+    const qualifierAwardedTeams = new Set<string>();
+    const qualifierPoints = [
+      { predictedTeam: prediction.first, exactPlacement: actualWinner ? sameTeam(prediction.first, actualWinner) : false },
+      { predictedTeam: prediction.second, exactPlacement: actualSecond ? sameTeam(prediction.second, actualSecond) : false },
+      { predictedTeam: prediction.third, exactPlacement: false }
+    ].reduce((sum, row) => {
+      if (!row.predictedTeam) return sum;
+      const normalizedTeam = normalizeName(row.predictedTeam);
+      if (!actualQualifiers.has(normalizedTeam) || row.exactPlacement || qualifierAwardedTeams.has(normalizedTeam)) return sum;
+      qualifierAwardedTeams.add(normalizedTeam);
+      return sum + 3;
+    }, 0);
 
     breakdown.push({
       group: prediction.group,
