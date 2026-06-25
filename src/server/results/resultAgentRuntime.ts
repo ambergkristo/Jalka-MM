@@ -15,7 +15,7 @@ import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import { buildConfiguredActualScoringState } from './scoringState.js';
 import { repairPersistedLeaderboardSnapshot as repairPersistedLeaderboardSnapshotImpl } from './leaderboardRepair.js';
 import { buildLeaderboardScoringBreakdown } from './leaderboardScoring.js';
-import { listThirdPlaceQualifierLocks, upsertThirdPlaceQualifierLock, type ThirdPlaceQualifierLockInput } from './thirdPlaceQualifierLocks.js';
+import { deleteThirdPlaceQualifierLockForGroup, listThirdPlaceQualifierLocks, upsertThirdPlaceQualifierLock, type ThirdPlaceQualifierLockInput } from './thirdPlaceQualifierLocks.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
@@ -192,6 +192,24 @@ export async function upsertThirdPlaceQualifierLockRuntime(input: ThirdPlaceQual
   const rebuild = await repository.refreshDerivedTournamentState?.(now.toISOString());
   return {
     lock,
+    locks: await listThirdPlaceQualifierLocks(db),
+    leaderboardRebuild: rebuild ? {
+      recalculatedAt: rebuild.recalculatedAt,
+      playersProcessed: rebuild.playersProcessed,
+      matchesProcessed: rebuild.matchesProcessed,
+      changedEntries: rebuild.changedEntries,
+      warnings: rebuild.warnings
+    } : undefined
+  };
+}
+
+export async function deleteThirdPlaceQualifierLockRuntime(group: string, now = new Date()) {
+  const existingLocks = await listThirdPlaceQualifierLocks(db);
+  const removedLock = existingLocks.find((lock) => lock.group === group);
+  await deleteThirdPlaceQualifierLockForGroup(db, group);
+  const rebuild = await repository.refreshDerivedTournamentState?.(now.toISOString());
+  return {
+    removedLock,
     locks: await listThirdPlaceQualifierLocks(db),
     leaderboardRebuild: rebuild ? {
       recalculatedAt: rebuild.recalculatedAt,

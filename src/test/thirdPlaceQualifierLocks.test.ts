@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildActualGroupStandings } from '../server/results/scoringState.js';
-import { listThirdPlaceQualifierLocks, loadOrganizerThirdPlaceQualifierSignals, upsertThirdPlaceQualifierLock } from '../server/results/thirdPlaceQualifierLocks.js';
+import { deleteThirdPlaceQualifierLockForGroup, listThirdPlaceQualifierLocks, loadOrganizerThirdPlaceQualifierSignals, upsertThirdPlaceQualifierLock } from '../server/results/thirdPlaceQualifierLocks.js';
 import { calculateGroupBonusPoints, rebuildLeaderboard } from '../domain/pointsEngine.js';
 import type { QueryableDatabase } from '../server/databaseAdapter.js';
 import type { GroupPrediction } from '../domain/predictionRepository.js';
@@ -157,6 +157,26 @@ describe('third-place qualifier organizer locks', () => {
       note: 'Locked by organizer'
     });
   });
+
+  it('removes a confirmed organizer lock by group', async () => {
+    const db = createTestDb();
+    await seedFinalGroup(db, 'B', [
+      ['B1', 'B2', 1, 0],
+      ['B1', 'B3', 1, 0],
+      ['B1', 'B4', 1, 0],
+      ['B2', 'B3', 1, 0],
+      ['B2', 'B4', 1, 0],
+      ['B3', 'B4', 1, 0]
+    ]);
+
+    await upsertThirdPlaceQualifierLock(db, { group: 'B', teamId: 'B3' }, new Date('2026-06-25T20:00:00.000Z'));
+    expect(await listThirdPlaceQualifierLocks(db)).toHaveLength(1);
+
+    await deleteThirdPlaceQualifierLockForGroup(db, 'B');
+
+    expect(await listThirdPlaceQualifierLocks(db)).toEqual([]);
+    expect(await loadOrganizerThirdPlaceQualifierSignals(db)).toEqual([]);
+  });
 });
 
 function createTestDb(): QueryableDatabase {
@@ -212,6 +232,11 @@ function createTestDb(): QueryableDatabase {
             updated_at: updatedAt
           });
         }
+        return;
+      }
+      if (sql.includes('DELETE FROM third_place_qualifier_locks')) {
+        const [groupId] = values as [string];
+        state.locks = state.locks.filter((row) => row.group_id !== groupId);
       }
     },
     async all(sql, values = []) {

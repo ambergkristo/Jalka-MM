@@ -224,6 +224,7 @@ interface ThirdPlaceQualifierLocksResponse {
 
 interface ThirdPlaceQualifierLockResponse {
   lock?: ThirdPlaceQualifierLock;
+  removedLock?: ThirdPlaceQualifierLock;
   locks?: ThirdPlaceQualifierLock[];
   leaderboardRebuild?: {
     recalculatedAt?: string;
@@ -278,7 +279,6 @@ export function OperatorPage() {
   const [providerHealth, setProviderHealth] = useState<ProviderHealth | undefined>();
   const [thirdPlaceQualifierLocks, setThirdPlaceQualifierLocks] = useState<ThirdPlaceQualifierLock[]>([]);
   const [selectedQualifierGroup, setSelectedQualifierGroup] = useState<string>('A');
-  const [selectedQualifierTeamId, setSelectedQualifierTeamId] = useState<string>('');
   const [qualifierLockState, setQualifierLockState] = useState<'idle' | 'submitting'>('idle');
   const [repairState, setRepairState] = useState<{ action?: OperatorAction; status: 'idle' | 'running' | 'ok' | 'failed'; message?: string }>({ status: 'idle' });
   const [refreshIndex, setRefreshIndex] = useState(0);
@@ -344,8 +344,9 @@ export function OperatorPage() {
   );
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? matches[0];
   const selectedMatchTeamOptions = selectedMatch ? [selectedMatch.homeTeam, selectedMatch.awayTeam].filter(Boolean) as SeedTeam[] : [];
-  const selectedQualifierTeam = thirdPlaceQualifierGroupState.availableTeams.find((team) => team.id === selectedQualifierTeamId);
-  const qualifierAlreadyLocked = isThirdPlaceQualifierLockDuplicate(thirdPlaceQualifierLocks, selectedQualifierGroup, selectedQualifierTeamId);
+  const selectedQualifierTeam = thirdPlaceQualifierGroupState.currentThirdPlaceTeam;
+  const selectedQualifierLock = findThirdPlaceQualifierLockForGroup(thirdPlaceQualifierLocks, selectedQualifierGroup);
+  const qualifierAlreadyLocked = Boolean(selectedQualifierLock);
   const statusLabel = classifyOperatorStatus(diagnostics, repairState.status);
   const statusTone = statusToneForLabel(statusLabel);
   const submitLabel = selectedMatch?.isConfirmed ? 'Salvesta parandus' : 'Kinnita tulemus';
@@ -358,15 +359,6 @@ export function OperatorPage() {
     setNotes('');
     setScorers([EMPTY_SCORER_ROW]);
   }, [selectedMatchId, selectedMatch?.confirmedHomeScore, selectedMatch?.confirmedAwayScore]);
-
-  useEffect(() => {
-    const nextTeamId = thirdPlaceQualifierGroupState.currentThirdPlaceTeam?.id
-      ?? thirdPlaceQualifierGroupState.availableTeams[0]?.id
-      ?? '';
-    if (!selectedQualifierTeamId || !thirdPlaceQualifierGroupState.availableTeams.some((team) => team.id === selectedQualifierTeamId)) {
-      setSelectedQualifierTeamId(nextTeamId);
-    }
-  }, [selectedQualifierGroup, selectedQualifierTeamId, thirdPlaceQualifierGroupState]);
 
   async function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -460,11 +452,11 @@ export function OperatorPage() {
       return;
     }
     if (!selectedQualifierTeam) {
-      setFeedback({ tone: 'danger', message: 'Vali samast alagrupist võistkond.' });
+      setFeedback({ tone: 'danger', message: 'Selle alagrupi 3. koha võistkonda ei ole veel võimalik kinnitada.' });
       return;
     }
     if (qualifierAlreadyLocked) {
-      setFeedback({ tone: 'gold', message: 'See võistkond on juba kinnitatud.' });
+      setFeedback({ tone: 'gold', message: 'Selle alagrupi 3. koht on juba kinnitatud.' });
       return;
     }
     const confirmed = window.confirm(`Kas kinnitad, et ${selectedQualifierTeam.nameEt ?? selectedQualifierTeam.name} on 3. koha edasipääsejana matemaatiliselt kindel?`);
@@ -487,11 +479,68 @@ export function OperatorPage() {
       }
 
       setThirdPlaceQualifierLocks(response.body?.locks ?? thirdPlaceQualifierLocks);
-      setFeedback({ tone: 'good', message: thirdPlaceQualifierSuccessMessage(selectedQualifierTeam.nameEt ?? selectedQualifierTeam.name) });
+      setFeedback({
+        tone: 'good',
+        message: thirdPlaceQualifierSuccessMessage(
+          selectedQualifierTeam.nameEt ?? selectedQualifierTeam.name,
+          response.body?.leaderboardRebuild?.changedEntries
+        )
+      });
       setRefreshIndex((value) => value + 1);
     } catch (error) {
       const message = error instanceof Error ? error.message : '3. koha edasipääsejat ei saanud kinnitada.';
       setFeedback({ tone: 'danger', message: classifyError(message) === 'Tulemust ei saanud salvestada.' ? '3. koha edasipääsejat ei saanud kinnitada.' : classifyError(message) });
+    } finally {
+      setQualifierLockState('idle');
+    }
+  }
+
+  async function removeThirdPlaceQualifierLock(group: string) {
+    if (!storedSecret) {
+      setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+      return;
+    }
+    const lock = findThirdPlaceQualifierLockForGroup(thirdPlaceQualifierLocks, group);
+    if (!lock) {
+      setFeedback({ tone: 'gold', message: 'Selle alagrupi kinnitust ei leitud.' });
+      return;
+    }
+    const confirmed = window.confirm(`Kas eemaldad alagrupi ${group} 3. koha kinnituse võistkonnale ${lock.team}?`);
+    if (!confirmed) return;
+
+    setQualifierLockState('submitting');
+    try {
+      const response = await deleteThirdPlaceQualifierLock({
+        secret: storedSecret,
+        group
+      });
+      if (response.authFailed) {
+        clearStoredSecret();
+        setStoredSecret('');
+        setFeedback({ tone: 'danger', message: 'Vale operaatori kood.' });
+        return;
+      }
+      if (!response.ok) {
+        throw new Error(response.body?.error ?? '3. koha edasipääsu kinnitust ei saanud eemaldada.');
+      }
+
+      setThirdPlaceQualifierLocks(response.body?.locks ?? []);
+      setFeedback({
+        tone: 'good',
+        message: thirdPlaceQualifierRemovalMessage(
+          lock.team,
+          response.body?.leaderboardRebuild?.changedEntries
+        )
+      });
+      setRefreshIndex((value) => value + 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '3. koha edasipääsu kinnitust ei saanud eemaldada.';
+      setFeedback({
+        tone: 'danger',
+        message: classifyError(message) === 'Tulemust ei saanud salvestada.'
+          ? '3. koha edasipääsu kinnitust ei saanud eemaldada.'
+          : classifyError(message)
+      });
     } finally {
       setQualifierLockState('idle');
     }
@@ -734,39 +783,25 @@ export function OperatorPage() {
 
         <Card title="3. koha edasipääsejad" eyebrow="Scoring tools" className="operator-panel">
           <div className="operator-form">
-            <p className="operator-copy">Kinnita siin ainult need 3. koha võistkonnad, kelle edasipääs on korraldaja hinnangul 100% kindel.</p>
+            <p className="operator-copy">Kinnita ainult need alagrupi 3. koha võistkonnad, kelle edasipääs on matemaatiliselt kindel või kelle korraldaja on ametlikult kinnitanud.</p>
 
             <div className="operator-score-grid">
               <label className="operator-field">
                 <span>Alagrupp</span>
-                <select value={selectedQualifierGroup} onChange={(event) => setSelectedQualifierGroup(event.target.value)}>
+                <select
+                  aria-label="3. koha alagrupp"
+                  value={selectedQualifierGroup}
+                  onChange={(event) => setSelectedQualifierGroup(event.target.value)}
+                >
                   {GROUP_OPTIONS.map((group) => (
                     <option key={group} value={group}>{group}</option>
                   ))}
                 </select>
               </label>
-              <label className="operator-field">
-                <span>Võistkond</span>
-                <select value={selectedQualifierTeamId} onChange={(event) => setSelectedQualifierTeamId(event.target.value)}>
-                  {thirdPlaceQualifierGroupState.availableTeams.length > 0 ? thirdPlaceQualifierGroupState.availableTeams.map((team) => (
-                    <option key={team.id} value={team.id}>{team.nameEt ?? team.name}</option>
-                  )) : <option value="">Selles alagrupis andmeid veel pole</option>}
-                </select>
-              </label>
-              <div className="operator-field">
-                <span>Hetke 3. koht</span>
-                <div className="operator-qualifier-team">
-                  {thirdPlaceQualifierGroupState.currentThirdPlaceTeam ? (
-                    <TeamBadge team={thirdPlaceQualifierGroupState.currentThirdPlaceTeam} />
-                  ) : (
-                    <strong>3. koht pole veel teada</strong>
-                  )}
-                </div>
-              </div>
             </div>
 
             {thirdPlaceQualifierGroupState.standings.length > 0 ? (
-              <div className="operator-group-standings-list">
+              <div className="operator-group-standings-list" aria-label="Alagrupi seis">
                 {thirdPlaceQualifierGroupState.standings.map((row) => (
                   <div className={`operator-group-standing-row ${row.isCurrentThirdPlace ? 'third-place' : ''}`} key={`${selectedQualifierGroup}-${row.rank}-${row.teamName}`}>
                     <div className="operator-group-standing-team">
@@ -784,30 +819,65 @@ export function OperatorPage() {
               <p className="operator-copy">Selle alagrupi tabel ei ole veel saadaval.</p>
             )}
 
-            {qualifierAlreadyLocked ? <p className="operator-copy warning">See võistkond on juba kinnitatud.</p> : null}
-
-            <button
-              type="button"
-              className="button-link operator-action-button"
-              onClick={() => void confirmThirdPlaceQualifier()}
-              disabled={qualifierLockState === 'submitting' || qualifierAlreadyLocked || !selectedQualifierTeamId}
-            >
-              {qualifierLockState === 'submitting' ? 'Kinnitan...' : 'Kinnita 3. koha edasipääs'}
-            </button>
+            <section className="operator-qualifier-confirm-card">
+              <span className="operator-qualifier-confirm-label">Praegune 3. koht</span>
+              <div className="operator-qualifier-team">
+                {selectedQualifierTeam ? (
+                  <TeamBadge team={selectedQualifierTeam} />
+                ) : (
+                  <strong>3. koha võistkonda pole veel teada</strong>
+                )}
+              </div>
+              {qualifierAlreadyLocked ? (
+                <div className="operator-qualifier-actions">
+                  <p className="operator-copy warning">Selle alagrupi 3. koht on juba kinnitatud.</p>
+                  <button
+                    type="button"
+                    className="button-link operator-action-button"
+                    onClick={() => void removeThirdPlaceQualifierLock(selectedQualifierGroup)}
+                    disabled={qualifierLockState === 'submitting'}
+                  >
+                    {qualifierLockState === 'submitting' ? 'Eemaldan...' : 'Eemalda kinnitus'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="button-link operator-action-button"
+                  onClick={() => void confirmThirdPlaceQualifier()}
+                  disabled={qualifierLockState === 'submitting' || !selectedQualifierTeam}
+                >
+                  {qualifierLockState === 'submitting' ? 'Kinnitan...' : 'Kinnita 3. koha edasipääsejaks'}
+                </button>
+              )}
+            </section>
 
             <section className="operator-health-section">
-              <div className="operator-health-title">Kinnitatud lukud</div>
+              <div className="operator-health-title">Kinnitatud 3. koha edasipääsejad</div>
               {thirdPlaceQualifierLocks.length > 0 ? (
                 <div className="operator-mismatch-list">
                   {thirdPlaceQualifierLocks.map((lock) => (
-                    <div className="operator-mismatch-row" key={`${lock.group}-${lock.teamId}`}>
-                      <strong>{lock.group} - {lock.team}</strong>
-                      <span>{lock.source} - {lock.note ?? 'Märkust pole'} - {formatTimestamp(lock.updatedAt)}</span>
+                    <div className="operator-mismatch-row operator-lock-row" key={`${lock.group}-${lock.teamId}`}>
+                      <div className="operator-lock-copy">
+                        <strong>{lock.group} - {lock.team}</strong>
+                        <span>Kinnitatud: {formatTimestamp(lock.updatedAt)}</span>
+                        <span>Allikas: {lock.source}</span>
+                        <span>Staatus: {lock.status}</span>
+                        <span>{lock.note ?? 'Märkust pole'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="button-link operator-inline-action"
+                        onClick={() => void removeThirdPlaceQualifierLock(lock.group)}
+                        disabled={qualifierLockState === 'submitting'}
+                      >
+                        Eemalda
+                      </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="operator-warning-empty">Ühtegi 3. koha lukku ei ole veel lisatud.</p>
+                <p className="operator-warning-empty">Ühtegi 3. koha kinnitust ei ole veel lisatud.</p>
               )}
             </section>
           </div>
@@ -1010,9 +1080,13 @@ function seedTeamForStandingName(teamName: string): SeedTeam | undefined {
   return teamByName.get(normalizeLookup(teamName));
 }
 
+function findThirdPlaceQualifierLockForGroup(locks: ThirdPlaceQualifierLock[], group: string): ThirdPlaceQualifierLock | undefined {
+  return locks.find((lock) => lock.group === group);
+}
+
 function isThirdPlaceQualifierLockDuplicate(locks: ThirdPlaceQualifierLock[], group: string, teamId: string | undefined): boolean {
-  if (!teamId) return false;
-  return locks.some((lock) => lock.group === group && lock.teamId === teamId);
+  void teamId;
+  return Boolean(findThirdPlaceQualifierLockForGroup(locks, group));
 }
 
 function buildThirdPlaceQualifierLockPayload(group: string, teamId: string) {
@@ -1025,8 +1099,14 @@ function buildThirdPlaceQualifierLockPayload(group: string, teamId: string) {
   };
 }
 
-function thirdPlaceQualifierSuccessMessage(teamName: string): string {
-  return `${teamName} kinnitatud 3. koha edasipääsejana. Punktid arvutati ümber.`;
+function thirdPlaceQualifierSuccessMessage(teamName: string, affectedPlayers?: number): string {
+  const suffix = Number.isFinite(affectedPlayers) ? ` Mõjutatud mängijaid: ${affectedPlayers ?? 0}.` : '';
+  return `${teamName} kinnitati 3. koha edasipääsejaks. Leaderboard arvutati ümber.${suffix}`;
+}
+
+function thirdPlaceQualifierRemovalMessage(teamName: string, affectedPlayers?: number): string {
+  const suffix = Number.isFinite(affectedPlayers) ? ` Mõjutatud mängijaid: ${affectedPlayers ?? 0}.` : '';
+  return `${teamName} 3. koha kinnitus eemaldati. Leaderboard arvutati ümber.${suffix}`;
 }
 
 function buildPublicMatchState(snapshot?: PublicDashboardSnapshot): Map<string, { publicStatus: string; confirmedHomeScore?: number; confirmedAwayScore?: number }> {
@@ -1174,6 +1254,30 @@ async function postThirdPlaceQualifierLock(input: {
       'x-results-agent-secret': input.secret
     },
     body: JSON.stringify(input.payload)
+  });
+  const body = await safeJson(response) as ThirdPlaceQualifierLockResponse | undefined;
+  if (response.status === 401 || response.status === 403) {
+    return { ok: false, status: response.status, body, authFailed: true };
+  }
+  return {
+    ok: response.ok,
+    status: response.status,
+    body,
+    authFailed: false
+  };
+}
+
+async function deleteThirdPlaceQualifierLock(input: {
+  secret: string;
+  group: string;
+  fetchImpl?: typeof fetch;
+}): Promise<{ ok: boolean; status: number; body?: ThirdPlaceQualifierLockResponse; authFailed: boolean }> {
+  const fetchFn = input.fetchImpl ?? fetch;
+  const response = await fetchFn(`/api/operator/third-place-qualifier-locks?group=${encodeURIComponent(input.group)}`, {
+    method: 'DELETE',
+    headers: {
+      'x-results-agent-secret': input.secret
+    }
   });
   const body = await safeJson(response) as ThirdPlaceQualifierLockResponse | undefined;
   if (response.status === 401 || response.status === 403) {
@@ -1354,7 +1458,9 @@ export {
   buildScorersPayload,
   clearStoredSecret,
   classifyError,
+  deleteThirdPlaceQualifierLock,
   filterOperatorMatches,
+  findThirdPlaceQualifierLockForGroup,
   GROUP_OPTIONS,
   isThirdPlaceQualifierLockDuplicate,
   parseScore,
@@ -1364,6 +1470,7 @@ export {
   postThirdPlaceQualifierLock,
   readStoredSecret,
   removeScorerRow,
+  thirdPlaceQualifierRemovalMessage,
   thirdPlaceQualifierSuccessMessage,
   stageLabel
 };

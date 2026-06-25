@@ -10,7 +10,9 @@ import {
   buildScorersPayload,
   clearStoredSecret,
   classifyError,
+  deleteThirdPlaceQualifierLock,
   filterOperatorMatches,
+  findThirdPlaceQualifierLockForGroup,
   GROUP_OPTIONS,
   isThirdPlaceQualifierLockDuplicate,
   parseScore,
@@ -20,6 +22,7 @@ import {
   postThirdPlaceQualifierLock,
   readStoredSecret,
   removeScorerRow,
+  thirdPlaceQualifierRemovalMessage,
   thirdPlaceQualifierSuccessMessage
 } from '../client/pages/OperatorPage.js';
 
@@ -64,7 +67,10 @@ describe('operator page', () => {
     const markup = renderToStaticMarkup(<OperatorPage />);
 
     expect(markup).toContain('3. koha edasipääsejad');
-    expect(markup).toContain('Kinnita 3. koha edasipääs');
+    expect(markup).toContain('Praegune 3. koht');
+    expect(markup).toContain('Kinnita 3. koha edasipääsejaks');
+    expect(markup).toContain('aria-label="3. koha alagrupp"');
+    expect(markup).not.toContain('aria-label="3. koha võistkond"');
     for (const group of GROUP_OPTIONS) {
       expect(markup).toContain(`value="${group}"`);
     }
@@ -273,10 +279,43 @@ describe('operator page', () => {
   });
 
   it('detects duplicate third-place locks and builds the success message', () => {
-    expect(isThirdPlaceQualifierLockDuplicate([
+    const locks = [
       { group: 'B', teamId: 'BIH', team: 'Bosnia ja Hertsegoviina', status: 'qualified', source: 'organizerLock', updatedAt: '2026-06-25T20:00:00.000Z', lockedAt: '2026-06-25T20:00:00.000Z' }
-    ], 'B', 'BIH')).toBe(true);
-    expect(thirdPlaceQualifierSuccessMessage('Bosnia ja Hertsegoviina')).toBe('Bosnia ja Hertsegoviina kinnitatud 3. koha edasipääsejana. Punktid arvutati ümber.');
+    ];
+    expect(isThirdPlaceQualifierLockDuplicate(locks, 'B', 'BIH')).toBe(true);
+    expect(isThirdPlaceQualifierLockDuplicate(locks, 'B', 'CAN')).toBe(true);
+    expect(findThirdPlaceQualifierLockForGroup(locks, 'B')).toMatchObject({ teamId: 'BIH' });
+    expect(thirdPlaceQualifierSuccessMessage('Bosnia ja Hertsegoviina')).toBe('Bosnia ja Hertsegoviina kinnitati 3. koha edasipääsejaks. Leaderboard arvutati ümber.');
+    expect(thirdPlaceQualifierRemovalMessage('Bosnia ja Hertsegoviina', 4)).toBe('Bosnia ja Hertsegoviina 3. koha kinnitus eemaldati. Leaderboard arvutati ümber. Mõjutatud mängijaid: 4.');
+  });
+
+  it('removes a third-place qualifier lock through the protected endpoint', async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return {
+          removedLock: { group: 'B', teamId: 'BIH', team: 'Bosnia ja Hertsegoviina', source: 'organizerLock', status: 'qualified', updatedAt: '2026-06-25T20:00:00.000Z' },
+          locks: [],
+          leaderboardRebuild: { changedEntries: 7 }
+        };
+      }
+    } as Response));
+
+    const response = await deleteThirdPlaceQualifierLock({
+      secret: 'top-secret',
+      group: 'B',
+      fetchImpl
+    });
+
+    expect(fetchImpl).toHaveBeenCalledWith('/api/operator/third-place-qualifier-locks?group=B', {
+      method: 'DELETE',
+      headers: {
+        'x-results-agent-secret': 'top-secret'
+      }
+    });
+    expect(response.ok).toBe(true);
+    expect(response.body?.leaderboardRebuild).toMatchObject({ changedEntries: 7 });
   });
 
   it('clears the saved secret when logging out', () => {

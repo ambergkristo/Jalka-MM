@@ -2688,6 +2688,10 @@ td a {
   align-self: stretch;
 }
 
+.operator-inline-action {
+  width: 100%;
+}
+
 .operator-locked {
   display: grid;
   gap: 10px;
@@ -2834,6 +2838,29 @@ td a {
   color: var(--white);
 }
 
+.operator-qualifier-confirm-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(212, 175, 55, .22);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at top right, rgba(212, 175, 55, .12), transparent 34%),
+    rgba(255, 255, 255, .04);
+}
+
+.operator-qualifier-confirm-label {
+  color: var(--muted);
+  font-size: .76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.operator-qualifier-actions {
+  display: grid;
+  gap: 10px;
+}
+
 .operator-qualifier-team strong {
   color: var(--white);
   font-size: .9rem;
@@ -2877,6 +2904,29 @@ td a {
   color: var(--muted);
   font-size: .78rem;
   font-weight: 850;
+}
+
+.operator-lock-row {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.operator-lock-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .operator-lock-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .operator-inline-action {
+    width: auto;
+  }
 }
 
 .operator-match-summary {

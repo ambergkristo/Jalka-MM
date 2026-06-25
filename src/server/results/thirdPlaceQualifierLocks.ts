@@ -82,6 +82,14 @@ export async function listThirdPlaceQualifierLocks(db: QueryableDatabase): Promi
   return rows.map(mapThirdPlaceQualifierLock);
 }
 
+export async function deleteThirdPlaceQualifierLockForGroup(db: QueryableDatabase, group: string): Promise<void> {
+  await migrateResultPersistenceSchema(db);
+  await db.run(`
+    DELETE FROM third_place_qualifier_locks
+    WHERE group_id = ?
+  `, [normalizeGroup(group)]);
+}
+
 export async function loadOrganizerThirdPlaceQualifierSignals(db: QueryableDatabase): Promise<ThirdPlaceQualifierSignal[]> {
   const locks = await listThirdPlaceQualifierLocks(db);
   return locks
