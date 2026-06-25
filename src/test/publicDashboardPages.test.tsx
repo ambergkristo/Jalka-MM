@@ -191,6 +191,45 @@ describe('public dashboard pages', () => {
     expect(results).toContain('Lõppenud mänge veel ei ole.');
   });
 
+  it('renders every simultaneous live match card on the landing dashboard', () => {
+    activeState = buildPublicTournamentState({
+      ...createConfirmedSnapshot(),
+      liveMatches: [
+        {
+          id: '41',
+          homeTeam: 'Ecuador',
+          awayTeam: 'Germany',
+          homeScore: 1,
+          awayScore: 1,
+          kickoffTime: '25.06.2026 22:00',
+          stage: 'Alagrupp E',
+          status: 'live',
+          venue: ''
+        },
+        {
+          id: '42',
+          homeTeam: 'Curaçao',
+          awayTeam: 'Côte d’Ivoire',
+          homeScore: 0,
+          awayScore: 2,
+          kickoffTime: '25.06.2026 22:00',
+          stage: 'Alagrupp E',
+          status: 'live',
+          venue: ''
+        }
+      ],
+      latestResults: []
+    }, new Date('2026-06-25T20:04:00.000Z'));
+
+    const landing = renderToStaticMarkup(<LandingDashboard />);
+
+    expect(landing).toContain('Ecuador');
+    expect(landing).toContain('Germany');
+    expect(landing).toContain('Curaçao');
+    expect(landing).toContain('Elevandiluurannik');
+    expect((landing.match(/OTSE/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  });
+
   it('renders confirmed canonical public state consistently across pages', () => {
     activeState = buildPublicTournamentState(createConfirmedSnapshot(), new Date('2026-06-12T12:00:00.000Z'));
 

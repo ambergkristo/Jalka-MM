@@ -26,14 +26,15 @@ export interface PublicResultStatusLike {
 export function derivePublicResultStatus(row: PublicResultStatusLike): PublicResultStatus {
   if (isConfirmedFinalResult(row)) return 'CONFIRMED_FINAL';
 
-  const status = String(row.status ?? '').toUpperCase();
-  const provisionalStatus = String(row.provisionalStatus ?? row.provisional_status ?? '').toUpperCase();
-  const publicStatus = String(row.publicStatus ?? row.public_status ?? '').toUpperCase();
+  const status = normalizeProviderStatusToken(row.status);
+  const provisionalStatus = normalizeProviderStatusToken(row.provisionalStatus ?? row.provisional_status);
+  const publicStatus = normalizeProviderStatusToken(row.publicStatus ?? row.public_status);
+  const rawProviderStatus = normalizeProviderStatusToken(row.rawProviderStatus ?? row.raw_provider_status);
   const confirmationConfidence = String(row.confirmationConfidence ?? row.confirmation_confidence ?? '').toUpperCase();
   const needsReviewReason = String(row.needsReviewReason ?? row.needs_review_reason ?? '').trim();
   const nextConfirmationCheckAt = String(row.nextConfirmationCheckAt ?? row.next_confirmation_check_at ?? '').trim();
 
-  if (status === 'LIVE' || provisionalStatus === 'LIVE' || publicStatus === 'LIVE') return 'LIVE';
+  if ([status, provisionalStatus, publicStatus, rawProviderStatus].some(isActiveProviderStatus)) return 'LIVE';
   if (needsReviewReason || publicStatus === 'NEEDS_REVIEW') return 'NEEDS_REVIEW';
   if (
     status === 'FINISHED' ||
@@ -45,4 +46,31 @@ export function derivePublicResultStatus(row: PublicResultStatusLike): PublicRes
     return 'CONFIRMING';
   }
   return 'SCHEDULED';
+}
+
+function normalizeProviderStatusToken(value: unknown): string {
+  return String(value ?? '').trim().toUpperCase().replace(/[-\s]/g, '_');
+}
+
+function isActiveProviderStatus(value: string): boolean {
+  return [
+    'LIVE',
+    'IN_PLAY',
+    'FIRST_HALF',
+    'SECOND_HALF',
+    '1H',
+    '2H',
+    'HT',
+    'HALF_TIME',
+    'HALFTIME',
+    'PAUSED',
+    'ET',
+    'EXTRA_TIME',
+    'PEN',
+    'PENALTIES',
+    'PENALTY_SHOOTOUT',
+    'PENALTY_IN_PROGRESS',
+    'SUSPENDED',
+    'INTERRUPTED'
+  ].includes(value);
 }

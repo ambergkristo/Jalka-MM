@@ -328,6 +328,45 @@ describe('public tournament state', () => {
     expect(state.liveSection.matches.map((match) => match.id)).toEqual(['8']);
   });
 
+  it('keeps multiple simultaneous live matches in the live section without deduping by group or kickoff', () => {
+    const simultaneousLiveSnapshot = createSnapshot({
+      liveMatches: [
+        {
+          id: '41',
+          homeTeam: 'Ecuador',
+          awayTeam: 'Germany',
+          homeScore: 1,
+          awayScore: 1,
+          kickoffTime: '25.06.2026 22:00',
+          stage: 'Alagrupp E',
+          status: 'live',
+          venue: ''
+        },
+        {
+          id: '42',
+          homeTeam: 'Curaçao',
+          awayTeam: 'Côte d’Ivoire',
+          homeScore: 0,
+          awayScore: 2,
+          kickoffTime: '25.06.2026 22:00',
+          stage: 'Alagrupp E',
+          status: 'live',
+          venue: ''
+        }
+      ],
+      todayMatches: [],
+      upcomingMatches: [],
+      latestResults: []
+    });
+
+    const liveSection = selectLiveMatchSection(simultaneousLiveSnapshot, 3);
+    const state = buildPublicTournamentState(simultaneousLiveSnapshot, new Date('2026-06-25T20:04:00.000Z'));
+
+    expect(liveSection.matches.map((match) => match.id)).toEqual(['41', '42']);
+    expect(state.liveMatches.map((match) => match.id)).toEqual(['41', '42']);
+    expect(state.liveSection.matches.map((match) => match.id)).toEqual(['41', '42']);
+  });
+
   it('live widget becomes empty when there are no live matches', () => {
     const liveSection = selectLiveMatchSection(createSnapshot({ liveMatches: [] }), 3);
     expect(liveSection.matches).toEqual([]);
