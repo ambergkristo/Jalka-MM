@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+﻿import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { MatchCard } from '../client/components/MatchCard.js';
 import type { DashboardMatch } from '../client/data/mock.js';
@@ -8,7 +8,7 @@ function match(overrides: Partial<DashboardMatch> = {}): DashboardMatch {
     id: '73',
     homeTeam: 'Mexico',
     awayTeam: 'Japan',
-    kickoffTime: '30.06 · 22:00',
+    kickoffTime: '30.06 22:00',
     stage: 'R32',
     status: 'scheduled',
     venue: 'Estadio Azteca',
@@ -53,3 +53,4 @@ describe('match card', () => {
     expect(markup).toContain('<strong>0</strong>');
   });
 });
+

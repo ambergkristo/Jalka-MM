@@ -47,7 +47,7 @@ export interface PublicMatchCard {
   awayScore?: number;
   kickoffTime: string;
   stage: string;
-  status: 'scheduled' | 'live' | 'confirming';
+  status: 'scheduled' | 'live' | 'confirming' | 'final';
   venue: string;
 }
 
@@ -515,7 +515,7 @@ function toPlayoffMatchCard(match: {
     }),
     kickoffTime: match.kickoffAt ? formatTallinnDateTime(match.kickoffAt) : 'TBC',
     stage: stageLabel(match.stage),
-    status: match.status === 'live' ? 'live' : match.status === 'finished' ? 'confirming' : 'scheduled',
+    status: match.status === 'live' ? 'live' : match.status === 'finished' ? 'final' : 'scheduled',
     venue: match.venue ?? ''
   };
 }
@@ -810,7 +810,7 @@ function formatDecimal(value: number): string {
   return value.toLocaleString('et-EE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatTallinnDateTime(value: string): string {
+export function formatTallinnDateTime(value: string): string {
   const date = new Intl.DateTimeFormat('et-EE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value)).replace(/\.$/, '');
   const time = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value));
   return `${date} ${time}`;

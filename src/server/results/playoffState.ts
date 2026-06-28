@@ -50,6 +50,7 @@ interface ProviderGame {
   id?: number | string;
   type?: string;
   finished?: boolean | string | null;
+  time_elapsed?: number | string | null;
   status?: string;
   state?: string;
   local_date?: string;
@@ -184,9 +185,9 @@ function resolvePlayoffTeam(
 }
 
 function classifyPlayoffStatus(game: ProviderGame | undefined, kickoffAt: string | undefined, now: Date): CanonicalPlayoffFixture['status'] {
-  if (isFinishedToken(game?.finished) || isFinishedValue(game?.status) || isFinishedValue(game?.state)) return 'finished';
-  if (isLiveValue(game?.status) || isLiveValue(game?.state)) return 'live';
-  if (kickoffAt && Date.parse(kickoffAt) <= now.getTime() && Date.parse(kickoffAt) + 4 * 60 * 60 * 1000 > now.getTime()) return 'live';
+  const normalized = normalizePlayoffStatus(game);
+  if (normalized === 'finished') return 'finished';
+  if (normalized === 'live') return 'live';
   return 'scheduled';
 }
 
@@ -208,12 +209,10 @@ function readCandidateFixtureFile(): CandidateFixtureFile {
 
 function parseProviderKickoff(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  const [datePart, timePart] = value.split(' ');
-  if (!datePart || !timePart) return undefined;
-  const [month, day, year] = datePart.split('/').map(Number);
-  const [hour, minute] = timePart.split(':').map(Number);
-  if ([year, month, day, hour, minute].some((part) => !Number.isFinite(part))) return undefined;
-  return new Date(Date.UTC(year, month - 1, day, hour, minute)).toISOString();
+  const normalized = value.trim();
+  if (!hasExplicitTimezone(normalized)) return undefined;
+  const parsed = Date.parse(normalized);
+  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : undefined;
 }
 
 function isPlaceholderName(value: string): boolean {
@@ -237,6 +236,23 @@ function isFinishedValue(value: string | undefined): boolean {
 function isLiveValue(value: string | undefined): boolean {
   const normalized = String(value ?? '').trim().toLowerCase();
   return normalized === 'live' || normalized === 'in_play' || normalized === '1h' || normalized === '2h' || normalized === 'ht';
+}
+
+function normalizePlayoffStatus(game: ProviderGame | undefined): 'live' | 'finished' | 'scheduled' {
+  const raw = String(game?.status ?? game?.state ?? '').trim().toLowerCase();
+  const elapsed = String(game?.time_elapsed ?? '').trim().toLowerCase();
+  const finished = String(game?.finished ?? '').trim().toLowerCase();
+  if (isFinishedToken(game?.finished) || isFinishedValue(game?.status) || isFinishedValue(game?.state) || isFinishedValue(elapsed) || finished === 'true') {
+    return 'finished';
+  }
+  if (isLiveValue(game?.status) || isLiveValue(game?.state) || isLiveValue(elapsed) || raw === 'in_progress' || raw === 'in play') {
+    return 'live';
+  }
+  return 'scheduled';
+}
+
+function hasExplicitTimezone(value: string): boolean {
+  return /(?:z|[+-]\d{2}:\d{2})$/i.test(value);
 }
 
 function numberOrUndefined(value: unknown): number | undefined {

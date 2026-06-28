@@ -84,7 +84,7 @@ function sameTallinnDate(kickoffAt: string, now: Date): boolean {
   return formatter.format(new Date(kickoffAt)) === formatter.format(now);
 }
 
-function formatTallinnKickoff(kickoffAt: string): string {
+export function formatTallinnKickoff(kickoffAt: string): string {
   if (!hasValidKickoff(kickoffAt)) return 'TBC';
   const date = new Intl.DateTimeFormat('et-EE', {
     timeZone: 'Europe/Tallinn',

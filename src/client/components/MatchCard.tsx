@@ -3,7 +3,7 @@ import { teamFromName } from '../lib/teamLookup.js';
 import { TeamBadge } from './TeamBadge.js';
 
 export function MatchCard({ match }: { match: DashboardMatch }) {
-  const isLive = match.status === 'live' || match.status === 'confirming';
+  const isLive = match.status === 'live';
   const hasScore = isLive && match.homeScore !== undefined && match.awayScore !== undefined;
   const kickoff = splitKickoff(match.kickoffTime);
 
