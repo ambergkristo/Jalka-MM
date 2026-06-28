@@ -190,7 +190,7 @@ function buildCanonicalMatchSection(todayMatches: DashboardMatch[], upcomingMatc
     return {
       eyebrow: 'Play-off',
       title: 'Tulevased playoff mängud',
-      matches: upcomingMatches.slice(0, limit)
+      matches: upcomingMatches
     };
   }
   if (todayMatches.length > 0) {

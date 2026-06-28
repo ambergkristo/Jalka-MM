@@ -91,7 +91,7 @@ export async function buildCanonicalPlayoffState(options: BuildCanonicalPlayoffS
     groupStageComplete,
     confirmedGroupStageMatches,
     r32FixturesKnownCount: fixtures.filter((fixture) => fixture.stage === 'R32' && fixture.homeTeamId && fixture.awayTeamId).length,
-    upcomingPlayoffFixturesCount: fixtures.filter((fixture) => fixture.status === 'scheduled' && fixture.kickoffAt).length
+    upcomingPlayoffFixturesCount: fixtures.filter((fixture) => fixture.status === 'scheduled').length
   };
 }
 

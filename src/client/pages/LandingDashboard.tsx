@@ -14,10 +14,7 @@ export function LandingDashboard() {
     ...tournamentState.liveSection,
     matches: tournamentState.liveSection.matches.slice(0, 3)
   };
-  const matchSection = {
-    ...tournamentState.matchSection,
-    matches: tournamentState.matchSection.matches.slice(0, 3)
-  };
+  const matchSection = tournamentState.matchSection;
   const latestResults = tournamentState.latestResults;
   const leaderboardPreview = tournamentState.leaderboardRows.slice(0, 5);
   const topScorersPreview = tournamentState.topScorers.slice(0, 3);

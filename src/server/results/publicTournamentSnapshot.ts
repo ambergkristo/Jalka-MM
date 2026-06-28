@@ -1,4 +1,4 @@
-import type { QueryableDatabase } from '../databaseAdapter.js';
+﻿import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import type { ResultUpdate } from './resultTypes.js';
 import { buildPublicPlayoffBracketTree, type BracketTree } from '../../domain/publicBracket.js';
@@ -133,7 +133,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
     ? []
     : matches.filter((match) => match.state === 'today').map(toMatchCard);
   const upcomingMatches = playoffState.groupStageComplete
-    ? playoffState.fixtures.filter((fixture) => fixture.status === 'scheduled' && fixture.kickoffAt).map(toPlayoffMatchCard)
+    ? playoffState.fixtures.filter((fixture) => fixture.status === 'scheduled').map(toPlayoffMatchCard)
     : matches.filter((match) => match.state === 'upcoming').map(toMatchCard);
   const nextMatch = playoffState.groupStageComplete ? upcomingMatches[0] : findNextMatch(matches, now);
   const groupLeaders = groupStandings.map((group) => {
@@ -172,11 +172,11 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
     countyLeaderboard,
     tournamentSummary,
     tournamentStats: [
-      { label: 'Väravaid kokku', value: String(goals), detail: `${completed} lõppenud mänguga` },
-      { label: 'Keskmine', value: completed > 0 ? formatDecimal(goals / completed) : '0,00', detail: 'väravat mängu kohta' },
-      { label: 'Nullimängud', value: String(countCleanSheets(latestResults)), detail: 'Kinnitatud tulemuste põhjal' },
-      { label: 'Suurim võit', value: biggestWin(latestResults), detail: 'Kinnitatud tulemuste põhjal' },
-      { label: 'Väravaterohkeim', value: highestScoringMatch(latestResults), detail: 'Kinnitatud tulemuste põhjal' }
+      { label: 'VĆ¤ravaid kokku', value: String(goals), detail: `${completed} lĆµppenud mĆ¤nguga` },
+      { label: 'Keskmine', value: completed > 0 ? formatDecimal(goals / completed) : '0,00', detail: 'vĆ¤ravat mĆ¤ngu kohta' },
+      { label: 'NullimĆ¤ngud', value: String(countCleanSheets(latestResults)), detail: 'Kinnitatud tulemuste pĆµhjal' },
+      { label: 'Suurim vĆµit', value: biggestWin(latestResults), detail: 'Kinnitatud tulemuste pĆµhjal' },
+      { label: 'VĆ¤ravaterohkeim', value: highestScoringMatch(latestResults), detail: 'Kinnitatud tulemuste pĆµhjal' }
     ],
     tournamentProgressByStage,
     predictionLeagueInsights
@@ -333,7 +333,7 @@ async function getConfirmedLatestResults(db: QueryableDatabase, shouldUseOfficia
       awayScore,
       stage: row.group_id ? `Alagrupp ${row.group_id}` : stageLabel(row.stage as Match['stage']),
       winner: homeScore === awayScore ? 'Draw' : homeScore > awayScore ? homeTeam : awayTeam,
-      finishedAt: formatDateTime(String(row.confirmed_at ?? row.kickoff_at))
+      finishedAt: formatTallinnDateTime(String(row.confirmed_at ?? row.kickoff_at))
     };
   });
 }
@@ -487,7 +487,7 @@ function toMatchCard(match: {
       homeScore: match.homeScore,
       awayScore: match.awayScore
     }),
-    kickoffTime: formatDateTime(match.kickoffAt),
+    kickoffTime: formatTallinnDateTime(match.kickoffAt),
     stage: match.groupId ? `Alagrupp ${match.groupId}` : stageLabel(match.stage),
     status: match.state === 'live' ? 'live' : publicMatchStatus(match.publicStatus),
     venue: ''
@@ -513,7 +513,7 @@ function toPlayoffMatchCard(match: {
       homeScore: match.homeScore,
       awayScore: match.awayScore
     }),
-    kickoffTime: match.kickoffAt ? formatDateTime(match.kickoffAt) : 'TBC',
+    kickoffTime: match.kickoffAt ? formatTallinnDateTime(match.kickoffAt) : 'TBC',
     stage: stageLabel(match.stage),
     status: match.status === 'live' ? 'live' : match.status === 'finished' ? 'confirming' : 'scheduled',
     venue: match.venue ?? ''
@@ -803,11 +803,17 @@ function highestScoringMatch(results: PublicResultCard[]): string {
 function formatDateTime(value: string): string {
   const date = new Intl.DateTimeFormat('et-EE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value)).replace(/\.$/, '');
   const time = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value));
-  return `${date} • ${time}`;
+  return `${date} ā€¢ ${time}`;
 }
 
 function formatDecimal(value: number): string {
   return value.toLocaleString('et-EE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatTallinnDateTime(value: string): string {
+  const date = new Intl.DateTimeFormat('et-EE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value)).replace(/\.$/, '');
+  const time = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Tallinn' }).format(new Date(value));
+  return `${date} ${time}`;
 }
 
 function resolveConfirmedScore(
@@ -833,22 +839,22 @@ function buildTournamentSummary(input: {
   const phaseValue = input.playoffState.groupStageComplete ? 'Play-off' : 'Alagrupid';
   const phaseDetail = input.playoffState.groupStageComplete
     ? input.liveMatchesCount > 0
-      ? 'Play-off kohtumised on käimas'
+      ? 'Play-off kohtumised on kĆ¤imas'
       : input.upcomingMatchesCount > 0
-        ? 'R32 kohtumised on järjekorras'
+        ? 'R32 kohtumised on jĆ¤rjekorras'
         : 'Play-off ajakava uueneb'
     : input.completed > 0
       ? 'Turniir on alanud'
-      : 'Avamängu ootel';
+      : 'AvamĆ¤ngu ootel';
   const teamDetail = input.playoffState.groupStageComplete
     ? `${input.playoffState.r32FixturesKnownCount} / 16 R32 paari on teada`
     : 'Alagrupid A-L';
 
   return [
     { label: 'Turniiri faas', value: phaseValue, detail: phaseDetail, tone: 'gold' },
-    { label: 'Mängitud', value: `${input.completed} / ${input.totalMatches}`, detail: `${Math.max(input.totalMatches - input.completed, 0)} kohtumist on veel ees`, tone: 'blue' },
-    { label: 'Väravad', value: String(input.goals), detail: input.completed > 0 ? `${formatDecimal(input.goals / input.completed)} väravat mängu kohta` : 'Kinnitatud väravaid veel ei ole', tone: 'green' },
-    { label: 'Võistkonnad', value: '48', detail: teamDetail, tone: 'red' }
+    { label: 'MĆ¤ngitud', value: `${input.completed} / ${input.totalMatches}`, detail: `${Math.max(input.totalMatches - input.completed, 0)} kohtumist on veel ees`, tone: 'blue' },
+    { label: 'VĆ¤ravad', value: String(input.goals), detail: input.completed > 0 ? `${formatDecimal(input.goals / input.completed)} vĆ¤ravat mĆ¤ngu kohta` : 'Kinnitatud vĆ¤ravaid veel ei ole', tone: 'green' },
+    { label: 'VĆµistkonnad', value: '48', detail: teamDetail, tone: 'red' }
   ];
 }
 
@@ -859,7 +865,7 @@ function buildTournamentProgressByStage(confirmedStageCounts: Partial<Record<Mat
     { stage: 'Kaheksandikfinaalid', completed: confirmedStageCounts.R16 ?? 0, total: 8 },
     { stage: 'Veerandfinaalid', completed: confirmedStageCounts.QF ?? 0, total: 4 },
     { stage: 'Poolfinaalid', completed: confirmedStageCounts.SF ?? 0, total: 2 },
-    { stage: '3. koha mäng', completed: confirmedStageCounts.THIRD_PLACE ?? 0, total: 1 },
+    { stage: '3. koha mĆ¤ng', completed: confirmedStageCounts.THIRD_PLACE ?? 0, total: 1 },
     { stage: 'Finaal', completed: confirmedStageCounts.FINAL ?? 0, total: 1 }
   ];
 }
@@ -871,7 +877,7 @@ function stageLabel(stage: Match['stage']): string {
     R16: 'R16',
     QF: 'Veerandfinaal',
     SF: 'Poolfinaal',
-    THIRD_PLACE: '3. koha mäng',
+    THIRD_PLACE: '3. koha mĆ¤ng',
     FINAL: 'Finaal'
   }[stage];
 }
@@ -890,3 +896,5 @@ function stringOrUndefined(value: unknown): string | undefined {
   if (value === null || value === undefined || value === '') return undefined;
   return String(value);
 }
+
+

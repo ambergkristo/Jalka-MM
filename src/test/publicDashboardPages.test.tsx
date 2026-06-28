@@ -293,6 +293,32 @@ describe('public dashboard pages', () => {
     expect(landing).toContain('Mehhiko');
   });
 
+  it('renders all 16 upcoming R32 fixtures on the landing page', () => {
+    activeState = buildPublicTournamentState({
+      ...createConfirmedSnapshot(),
+      todayMatches: [],
+      upcomingMatches: Array.from({ length: 16 }, (_, index) => {
+        const day = String(28 + Math.floor(index / 4)).padStart(2, '0');
+        const hour = String(18 + (index % 4) * 2).padStart(2, '0');
+        return {
+          id: String(73 + index),
+          homeTeam: `Team ${index + 1}A`,
+          awayTeam: `Team ${index + 1}B`,
+          kickoffTime: `${day}.06 · ${hour}:00`,
+          stage: 'R32',
+          status: 'scheduled',
+          venue: `Stadium ${index + 1}`
+        };
+      })
+    }, new Date('2026-06-29T12:00:00.000Z'));
+
+    const landing = renderToStaticMarkup(<LandingDashboard />);
+
+    expect(landing).toContain('Tulevased playoff mängud');
+    expect(landing).toContain('16 mängu');
+    expect((landing.match(/match-card-premium/g) ?? []).length).toBe(16);
+  });
+
   it('shows an explicit error notice when the public snapshot fetch fails', () => {
     activeState = {
       ...buildPublicTournamentState(undefined, new Date('2026-06-06T12:00:00.000Z')),

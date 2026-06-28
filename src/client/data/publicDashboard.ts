@@ -8,7 +8,7 @@ const matches = matchesJson as Match[];
 
 export interface MatchSection {
   eyebrow: string;
-  title: 'Avapäeva mängud' | 'Tänased mängud' | 'Tulevad mängud';
+  title: 'AvapÃ¤eva mÃ¤ngud' | 'TÃ¤nased mÃ¤ngud' | 'Tulevad mÃ¤ngud' | 'Tulevased playoff mÃ¤ngud';
   matches: DashboardMatch[];
 }
 
@@ -18,7 +18,7 @@ export function getPublicMatchSection(now = new Date()): MatchSection {
   if (now.getTime() < TOURNAMENT_START_UTC) {
     return {
       eyebrow: '11. juuni 2026',
-      title: 'Avapäeva mängud',
+      title: 'AvapÃ¤eva mÃ¤ngud',
       matches: openingMatchdayFixtures()
     };
   }
@@ -30,15 +30,15 @@ export function getPublicMatchSection(now = new Date()): MatchSection {
 
   if (today.length > 0) {
     return {
-      eyebrow: 'Täna',
-      title: 'Tänased mängud',
+      eyebrow: 'TÃ¤na',
+      title: 'TÃ¤nased mÃ¤ngud',
       matches: today
     };
   }
 
   return {
     eyebrow: 'Ajakava',
-    title: 'Tulevad mängud',
+    title: 'Tulevad mÃ¤ngud',
     matches: upcomingFixtures(now, 3)
   };
 }
@@ -66,7 +66,7 @@ function toDashboardMatch(match: Match): DashboardMatch {
     id: String(match.id),
     homeTeam: match.homeSlot,
     awayTeam: match.awaySlot,
-    kickoffTime: formatKickoff(match.kickoffAt),
+    kickoffTime: formatTallinnKickoff(match.kickoffAt),
     stage: match.groupId ? `Alagrupp ${match.groupId}` : stageLabel(match.stage),
     status: 'scheduled',
     venue: venueCity(match.venue)
@@ -84,7 +84,7 @@ function sameTallinnDate(kickoffAt: string, now: Date): boolean {
   return formatter.format(new Date(kickoffAt)) === formatter.format(now);
 }
 
-function formatKickoff(kickoffAt: string): string {
+function formatTallinnKickoff(kickoffAt: string): string {
   if (!hasValidKickoff(kickoffAt)) return 'TBC';
   const date = new Intl.DateTimeFormat('et-EE', {
     timeZone: 'Europe/Tallinn',
@@ -96,7 +96,7 @@ function formatKickoff(kickoffAt: string): string {
     hour: '2-digit',
     minute: '2-digit'
   }).format(new Date(kickoffAt));
-  return `${date} • ${time}`;
+  return `${date} ${time}`;
 }
 
 function venueCity(venue: string | undefined): string {

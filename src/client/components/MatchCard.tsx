@@ -3,11 +3,15 @@ import { teamFromName } from '../lib/teamLookup.js';
 import { TeamBadge } from './TeamBadge.js';
 
 export function MatchCard({ match }: { match: DashboardMatch }) {
-  const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
+  const isLive = match.status === 'live' || match.status === 'confirming';
+  const hasScore = isLive && match.homeScore !== undefined && match.awayScore !== undefined;
+  const kickoff = splitKickoff(match.kickoffTime);
+
   return (
     <article className="match-card-premium">
       <div className="match-card-topline">
         <span>{match.stage}</span>
+        <span className="match-card-match-number">{matchNumber(match.id)}</span>
         <em>{statusLabel(match.status)}</em>
       </div>
       <div className="match-teams">
@@ -20,7 +24,10 @@ export function MatchCard({ match }: { match: DashboardMatch }) {
             <small>{match.kickoffTime}</small>
           </span>
         ) : (
-          <span className="match-kickoff">{match.kickoffTime}</span>
+          <span className="match-kickoff" aria-label={`Algusaeg ${match.kickoffTime}`}>
+            <strong>{kickoff.date}</strong>
+            <small>{kickoff.time || 'TBC'}</small>
+          </span>
         )}
         <TeamBadge team={teamFromName(match.awayTeam)} align="right" />
       </div>
@@ -36,4 +43,22 @@ function statusLabel(status: DashboardMatch['status']) {
     confirming: 'Kinnitamisel',
     final: 'Lõppenud'
   }[status];
+}
+
+function matchNumber(id: string): string {
+  const numericId = Number(id);
+  return Number.isFinite(numericId) ? `#${numericId}` : id;
+}
+
+function splitKickoff(value: string): { date: string; time: string } {
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  const match = normalized.match(/^(.+?)(?:\s+\u00b7\s+|\s+)(\d{1,2}:\d{2})$/);
+  if (match) {
+    return {
+      date: match[1],
+      time: match[2]
+    };
+  }
+
+  return { date: normalized, time: '' };
 }

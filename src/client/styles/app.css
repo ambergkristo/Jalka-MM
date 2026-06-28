@@ -472,7 +472,7 @@ main {
 .match-card-topline {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   color: var(--muted);
   font-size: .78rem;
   font-weight: 900;
@@ -485,6 +485,11 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.match-card-match-number {
+  margin-left: auto;
+  color: #d9e8ff;
 }
 
 .match-card-topline em {
@@ -508,17 +513,30 @@ main {
   display: grid;
   place-items: center;
   min-width: 0;
-  padding: 0 8px;
-  min-height: 38px;
+  padding: 8px 10px;
+  min-height: 72px;
   border: 1px solid rgba(212, 175, 55, .38);
   border-radius: var(--radius);
-  background: rgba(212, 175, 55, .12);
+  background: linear-gradient(180deg, rgba(212, 175, 55, .18), rgba(212, 175, 55, .10));
   color: #ffe996;
-  font-size: .78rem;
   font-weight: 950;
   line-height: 1.05;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
+}
+
+.match-kickoff strong {
+  display: block;
+  font-size: 1.06rem;
+  letter-spacing: .02em;
+}
+
+.match-kickoff small {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, .78);
+  font-size: .86rem;
+  font-weight: 900;
 }
 
 .match-live-score {
