@@ -1,7 +1,7 @@
 import matchesJson from '../../data/worldcup2026/matches.json';
 import type { Match } from '../../domain/types.js';
 import { buildCanonicalPublicLeaderboardEntries } from '../../domain/publicLeaderboard.js';
-import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
+import type { GroupPrediction, KnockoutRoundPrediction, PredictionBundle, PredictionStatus, PlayerMatchPrediction, TopScorerPredictionStatus } from '../../domain/predictionRepository.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { resolveScorerIdentity } from '../../domain/scorerIdentity.js';
 import type { TournamentTopScorer } from '../data/mock.js';
@@ -27,6 +27,40 @@ export interface TopScorerPredictionView {
   status: TopScorerPredictionStatus;
 }
 
+export interface PlayerPlayoffMatchPredictionView {
+  matchId: number;
+  homeTeam: string;
+  homeTeamCode?: string;
+  awayTeam: string;
+  awayTeamCode?: string;
+  homeScore: number;
+  awayScore: number;
+  predictedWinner?: string;
+  penaltyWinner?: string;
+}
+
+export interface PlayerPlayoffRoundTeamsView {
+  r32: string[];
+  r16: string[];
+  quarterFinal: string[];
+  semiFinal: string[];
+  final: string[];
+  thirdPlace: string[];
+  champion: string;
+}
+
+export interface PlayerPlayoffPredictionView {
+  championPick: string;
+  topScorerPick: string;
+  r32Matches: PlayerPlayoffMatchPredictionView[];
+  r16Matches: PlayerPlayoffMatchPredictionView[];
+  quarterFinalMatches: PlayerPlayoffMatchPredictionView[];
+  semiFinalMatches: PlayerPlayoffMatchPredictionView[];
+  finalMatch?: PlayerPlayoffMatchPredictionView;
+  thirdPlaceMatch?: PlayerPlayoffMatchPredictionView;
+  predictedRoundTeams: PlayerPlayoffRoundTeamsView;
+}
+
 export interface PlayerProfileView {
   playerId: string;
   name: string;
@@ -40,6 +74,7 @@ export interface PlayerProfileView {
   championStatus: PredictionStatus;
   topScorerPrediction: TopScorerPredictionView;
   knockoutPrediction: KnockoutRoundPrediction[];
+  playoffPrediction: PlayerPlayoffPredictionView;
   groupPredictions: PlayerGroupPredictionView[];
   errors: string[];
 }
@@ -118,6 +153,7 @@ export function getPredictionSeedErrors(): string[] {
 function toPlayerProfileView(bundle: PredictionBundle): PlayerProfileView {
   const entry = bundle.leaderboardEntry;
   const awards = bundle.awardsPrediction;
+  const playoffPrediction = buildPlayerPlayoffPrediction(bundle);
   return {
     playerId: bundle.player.id,
     name: bundle.player.name,
@@ -136,8 +172,38 @@ function toPlayerProfileView(bundle: PredictionBundle): PlayerProfileView {
       status: awards?.topScorerStatus ?? 'Eliminated'
     },
     knockoutPrediction: bundle.knockoutPrediction?.rounds ?? [],
+    playoffPrediction,
     groupPredictions: withGroupMatchPredictions(bundle),
     errors: bundle.errors
+  };
+}
+
+function buildPlayerPlayoffPrediction(bundle: PredictionBundle): PlayerPlayoffPredictionView {
+  const knockoutPrediction = bundle.knockoutPrediction;
+  const roundsByName = new Map((knockoutPrediction?.rounds ?? []).map((round) => [round.round, round.teams]));
+  const playoffMatches = bundle.matchPredictions
+    .filter((prediction) => prediction.matchId >= 73 && prediction.matchId <= 104)
+    .sort((left, right) => left.matchId - right.matchId)
+    .map(toPlayerPlayoffMatchPredictionView);
+
+  return {
+    championPick: bundle.awardsPrediction?.championTeam ?? 'Ennustus puudub',
+    topScorerPick: bundle.awardsPrediction?.topScorerName ?? 'Ennustus puudub',
+    r32Matches: playoffMatches.filter((match) => match.matchId >= 73 && match.matchId <= 88),
+    r16Matches: playoffMatches.filter((match) => match.matchId >= 89 && match.matchId <= 96),
+    quarterFinalMatches: playoffMatches.filter((match) => match.matchId >= 97 && match.matchId <= 100),
+    semiFinalMatches: playoffMatches.filter((match) => match.matchId >= 101 && match.matchId <= 102),
+    finalMatch: playoffMatches.find((match) => match.matchId === 103),
+    thirdPlaceMatch: playoffMatches.find((match) => match.matchId === 104),
+    predictedRoundTeams: {
+      r32: roundsByName.get('R32') ?? [],
+      r16: roundsByName.get('R16') ?? [],
+      quarterFinal: roundsByName.get('QF') ?? [],
+      semiFinal: roundsByName.get('SF') ?? [],
+      final: roundsByName.get('Final') ?? [],
+      thirdPlace: knockoutPrediction?.thirdPlaceWinner ? [knockoutPrediction.thirdPlaceWinner] : [],
+      champion: bundle.awardsPrediction?.championTeam ?? roundsByName.get('Final')?.[0] ?? 'Ennustus puudub'
+    }
   };
 }
 
@@ -205,4 +271,20 @@ function findMatchingTopScorer(playerName: string, topScorers: TournamentTopScor
     if (predicted.playerId && actual.playerId === predicted.playerId) return true;
     return actual.lookupKey === predicted.lookupKey;
   });
+}
+
+function toPlayerPlayoffMatchPredictionView(prediction: PlayerMatchPrediction): PlayerPlayoffMatchPredictionView {
+  const homeTeam = teamFromName(prediction.predictedHomeTeam ?? '');
+  const awayTeam = teamFromName(prediction.predictedAwayTeam ?? '');
+  return {
+    matchId: prediction.matchId,
+    homeTeam: homeTeam.name || prediction.predictedHomeTeam || 'Selgumisel',
+    homeTeamCode: homeTeam.code,
+    awayTeam: awayTeam.name || prediction.predictedAwayTeam || 'Selgumisel',
+    awayTeamCode: awayTeam.code,
+    homeScore: prediction.homeScore,
+    awayScore: prediction.awayScore,
+    predictedWinner: prediction.predictedWinner,
+    penaltyWinner: prediction.penaltyWinner
+  };
 }

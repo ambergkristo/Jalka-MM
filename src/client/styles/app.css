@@ -1135,6 +1135,127 @@ main {
   color: var(--gold);
 }
 
+.playoff-prediction-card {
+  display: grid;
+  gap: 14px;
+}
+
+.playoff-subcard {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .045);
+}
+
+.playoff-match-list,
+.playoff-bonus-list {
+  display: grid;
+  gap: 10px;
+}
+
+.playoff-match-row,
+.playoff-bonus-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .045);
+}
+
+.playoff-match-topline,
+.playoff-bonus-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.playoff-match-topline {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.playoff-match-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.playoff-match-score {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 76px;
+}
+
+.playoff-match-score strong {
+  color: var(--white);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.playoff-match-score small {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.playoff-round-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.playoff-round-card {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .045);
+}
+
+.playoff-round-card > span {
+  color: var(--gold);
+  font-size: .78rem;
+  font-weight: 1000;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playoff-round-card > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.playoff-round-card p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.playoff-bonus-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.playoff-bonus-copy strong {
+  color: var(--white);
+}
+
+.playoff-bonus-copy span {
+  color: var(--muted);
+  font-size: .84rem;
+}
+
 .bracket-card,
 .group-prediction-card {
   display: grid;
@@ -1209,6 +1330,28 @@ main {
 
 .group-accordion summary::-webkit-details-marker {
   display: none;
+}
+
+.group-prediction-card {
+  padding: 14px;
+}
+
+.group-prediction-card > summary {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 950;
+  list-style: none;
+}
+
+.group-prediction-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.group-prediction-body {
+  display: grid;
+  gap: 14px;
 }
 
 .group-accordion h3 {

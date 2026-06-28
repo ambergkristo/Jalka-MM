@@ -113,7 +113,7 @@ function main() {
     playerCountImported: publicPlayers.length,
     skippedRows,
     missingFields,
-    unknownColumns: ['data sheet columns after awards/knockout summary are not imported in Sprint 8'],
+    unknownColumns: ['data sheet summary columns are mirrored by individual player sheets and are not exported separately.'],
     predictionSectionsDetected: {
       playerSheets: playerSheetNames.length,
       matchPredictions: matchPredictions.length,
@@ -134,10 +134,10 @@ function main() {
     },
     discoveredMapping: {
       players: 'data sheet rows 4+, columns A:D = name, KOV/location, email, existing points',
-      matchPredictions: 'individual player sheets rows 1-72, columns B:E = home team, home score, away score, away team; matchId = row number',
+      matchPredictions: 'individual player sheets rows 1-72 and 91-122, columns B:G = home team, home score, away score, away team, penalties; matchId = row number',
       groupPredictions: 'individual player sheets rows 76-87, columns B/E/H/F = group first, second, third, group id',
-      knockoutPredictions: 'individual player sheets rows 91-106 R32, 107-114 R16, 115-118 QF, 119-120 SF, row 122 Final',
-      awardsPredictions: 'individual player sheets rows 124/132, column C = champion/top scorer'
+      knockoutPredictions: 'individual player sheets rows 91-106 R32, 107-114 R16, 115-118 QF, 119-120 SF, row 122 Final, row 126 third-place winner',
+      awardsPredictions: 'individual player sheets rows 124/131, column C = champion/top scorer'
     },
     validationErrors: validation.errors
   };
@@ -195,22 +195,51 @@ function extractPlayers(rows: unknown[][], playerSheetByNumber: Map<number, stri
 }
 
 function extractMatchPredictions(player: ImportedPlayer, rows: unknown[][], warnings: string[]): PlayerMatchPrediction[] {
+  return [
+    ...extractMatchPredictionRange(player, rows, 0, 72, 1, 'group match', warnings),
+    ...extractMatchPredictionRange(player, rows, 90, 122, 73, 'playoff match', warnings)
+  ];
+}
+
+function extractMatchPredictionRange(
+  player: ImportedPlayer,
+  rows: unknown[][],
+  fromIndex: number,
+  toIndexExclusive: number,
+  firstMatchId: number,
+  label: string,
+  warnings: string[]
+): PlayerMatchPrediction[] {
   const predictions: PlayerMatchPrediction[] = [];
-  for (let index = 0; index < 72; index += 1) {
+  for (let index = fromIndex; index < toIndexExclusive; index += 1) {
     const row = rows[index] ?? [];
     const homeScore = number(row[2]);
     const awayScore = number(row[3]);
     if (homeScore === undefined || awayScore === undefined) {
-      warnings.push(`${player.name}: missing score for group match ${index + 1}; match prediction skipped.`);
+      warnings.push(`${player.name}: missing score for ${label} ${index - fromIndex + 1}; match prediction skipped.`);
       continue;
     }
+    const predictedHomeTeam = text(row[1]) || undefined;
+    const predictedAwayTeam = text(row[4]) || undefined;
+    const penaltyHome = number(row[5]);
+    const penaltyAway = number(row[6]);
+    const penaltyWinner = penaltyHome !== undefined && penaltyAway !== undefined && homeScore === awayScore
+      ? penaltyHome > penaltyAway
+        ? predictedHomeTeam
+        : penaltyAway > penaltyHome
+          ? predictedAwayTeam
+          : undefined
+      : undefined;
+
     predictions.push({
       playerId: player.id,
-      matchId: index + 1,
-      predictedHomeTeam: text(row[1]) || undefined,
-      predictedAwayTeam: text(row[4]) || undefined,
+      matchId: firstMatchId + (index - fromIndex),
+      predictedHomeTeam,
+      predictedAwayTeam,
       homeScore,
-      awayScore
+      awayScore,
+      penaltyWinner,
+      predictedWinner: homeScore > awayScore ? predictedHomeTeam : awayScore > homeScore ? predictedAwayTeam : penaltyWinner
     });
   }
   return predictions;
@@ -244,7 +273,8 @@ function extractKnockoutPrediction(player: ImportedPlayer, rows: unknown[][]): K
       { round: 'QF', teams: uniqueTeams(rows, 114, 117) },
       { round: 'SF', teams: uniqueTeams(rows, 118, 119) },
       { round: 'Final', teams: uniqueTeams(rows, 121, 121) }
-    ]
+    ],
+    thirdPlaceWinner: text(rows[125]?.[2]) || undefined
   };
 }
 

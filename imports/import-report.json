@@ -204,11 +204,11 @@
     "Row 66: missing email in source workbook for Nora Suluste"
   ],
   "unknownColumns": [
-    "data sheet columns after awards/knockout summary are not imported in Sprint 8"
+    "data sheet summary columns are mirrored by individual player sheets and are not exported separately."
   ],
   "predictionSectionsDetected": {
     "playerSheets": 109,
-    "matchPredictions": 7848,
+    "matchPredictions": 11336,
     "groupPredictionSets": 109,
     "knockoutPredictions": 109,
     "awardsPredictions": 109
@@ -232,10 +232,10 @@
   },
   "discoveredMapping": {
     "players": "data sheet rows 4+, columns A:D = name, KOV/location, email, existing points",
-    "matchPredictions": "individual player sheets rows 1-72, columns B:E = home team, home score, away score, away team; matchId = row number",
+    "matchPredictions": "individual player sheets rows 1-72 and 91-122, columns B:G = home team, home score, away score, away team, penalties; matchId = row number",
     "groupPredictions": "individual player sheets rows 76-87, columns B/E/H/F = group first, second, third, group id",
-    "knockoutPredictions": "individual player sheets rows 91-106 R32, 107-114 R16, 115-118 QF, 119-120 SF, row 122 Final",
-    "awardsPredictions": "individual player sheets rows 124/132, column C = champion/top scorer"
+    "knockoutPredictions": "individual player sheets rows 91-106 R32, 107-114 R16, 115-118 QF, 119-120 SF, row 122 Final, row 126 third-place winner",
+    "awardsPredictions": "individual player sheets rows 124/131, column C = champion/top scorer"
   },
   "validationErrors": []
 }

@@ -4,7 +4,7 @@ import { StatusBadge } from './StatusBadge.js';
 export function ChampionCard({ player }: { player: PlayerProfileView }) {
   return (
     <section className="profile-feature-card champion-card">
-      <p className="eyebrow">Ennustatud meister</p>
+      <p className="eyebrow">MM võitja</p>
       <strong>{player.predictedChampion}</strong>
       <StatusBadge value={statusLabel(player.championStatus)} tone={player.championStatus === 'Eliminated' ? 'danger' : player.championStatus === 'Won Tournament' ? 'gold' : 'good'} />
     </section>

@@ -6,7 +6,7 @@ export function TopScorerCard({ player }: { player: PlayerProfileView }) {
 
   return (
     <section className="profile-feature-card top-scorer-card">
-      <p className="eyebrow">Ennustatud väravakütt</p>
+      <p className="eyebrow">Parim väravakütt</p>
       <strong>{prediction.name}</strong>
       <span>{prediction.team}</span>
       <div className="top-scorer-meta">

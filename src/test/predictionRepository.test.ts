@@ -31,7 +31,7 @@ describe('prediction seed validation', () => {
     const loadResult = loadDefaultPredictionSeedData();
     expect(loadResult.errors).toEqual([]);
     expect(loadResult.data.players).toHaveLength(109);
-    expect(loadResult.data.matchPredictions).toHaveLength(7848);
+    expect(loadResult.data.matchPredictions).toHaveLength(11336);
     expect(loadResult.data.leaderboard).toHaveLength(109);
     expect(loadResult.data.players.map((player) => player.id)).toContain('kristo-amberg');
     expect(loadResult.data.players.every((player) => typeof player.location === 'string' && player.location.length > 0)).toBe(true);
@@ -82,9 +82,10 @@ describe('prediction repository', () => {
     expect(repository.getLeaderboard()).toHaveLength(109);
     const bundle = repository.getPlayerPredictionBundle('kristo-amberg');
     expect(bundle?.player.name).toBe('Kristo Amberg');
-    expect(bundle?.matchPredictions).toHaveLength(72);
+    expect(bundle?.matchPredictions).toHaveLength(104);
     expect(bundle?.groupPredictions).toHaveLength(12);
     expect(bundle?.awardsPrediction?.championTeam).toBeTruthy();
+    expect(bundle?.knockoutPrediction?.thirdPlaceWinner).toBeTruthy();
   });
 
   it('returns undefined for missing player bundles instead of throwing', () => {

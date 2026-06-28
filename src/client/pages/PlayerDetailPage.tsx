@@ -1,7 +1,7 @@
-import { BracketCard } from '../components/BracketCard.js';
 import { ChampionCard } from '../components/ChampionCard.js';
 import { GroupPredictionAccordion } from '../components/GroupPredictionAccordion.js';
 import { PlayerSummaryCard } from '../components/PlayerSummaryCard.js';
+import { PlayoffPredictionSection } from '../components/PlayoffPredictionSection.js';
 import { TopScorerCard } from '../components/TopScorerCard.js';
 import { usePublicTournamentState } from '../lib/publicApi.js';
 import { applyLeaderboardRowToPlayerProfile, applyTopScorersToPlayerProfile, getPlayerProfile } from '../lib/predictionViewModels.js';
@@ -45,7 +45,7 @@ export function PlayerDetailPage({ playerId }: { playerId: string }) {
         <TopScorerCard player={visiblePlayer} />
       </section>
 
-      <BracketCard rounds={visiblePlayer.knockoutPrediction} />
+      <PlayoffPredictionSection player={visiblePlayer} tournamentState={tournamentState} />
       <GroupPredictionAccordion groups={visiblePlayer.groupPredictions} />
     </div>
   );

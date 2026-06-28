@@ -159,6 +159,10 @@ describe('public dashboard pages', () => {
     expect(tournament).not.toContain('Biggest rise today');
     expect(tournament).not.toContain('Highest single matchday score');
     expect(player).toContain('Kristo Amberg');
+    expect(player).toContain('Playoffi ennustus');
+    expect(player).toContain('R32 ennustatud mängud');
+    expect(player).toContain('Playoffi boonused');
+    expect(player).toContain('Alagrupi ennustus (lõppenud)');
     expect(player).not.toContain('@');
   });
 
@@ -265,6 +269,9 @@ describe('public dashboard pages', () => {
     expect(tournament).toContain('Parim tabavus');
     expect(tournament).not.toContain('Biggest fall today');
     expect(tournament).toContain('Punkte');
+    expect(player).toContain('Playoffi ennustus');
+    expect(player).toContain('Voorude kaupa');
+    expect(player).toContain('Playoffi boonused');
     expect(player).toContain('<b>2 v');
   });
 
