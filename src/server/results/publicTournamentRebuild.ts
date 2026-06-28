@@ -6,6 +6,7 @@ import type { QueryableDatabase } from '../databaseAdapter.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import { buildConfiguredActualScoringState } from './scoringState.js';
+import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
 
 export interface PublicTournamentStateRefreshResult {
   leaderboardRebuild?: LeaderboardRebuildResult;
@@ -19,7 +20,9 @@ export interface PublicTournamentStateRefreshResult {
 export async function rebuildPublicTournamentState(db: QueryableDatabase, now: Date): Promise<PublicTournamentStateRefreshResult> {
   await migrateResultPersistenceSchema(db);
   const nowIso = now.toISOString();
-  const finalizedResults = await readFinalizedResults(db, nowIso);
+  const confirmedGroupStageMatches = await countConfirmedGroupStageMatches(db);
+  const shouldUseOfficialGroupResults = useOfficialGroupStageResults(confirmedGroupStageMatches);
+  const finalizedResults = await readFinalizedResults(db, nowIso, shouldUseOfficialGroupResults);
   if (finalizedResults.length === 0) {
     await markPublicDashboardStateRebuilt(db, nowIso);
     return {
@@ -34,7 +37,7 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
   const previousEntries = await readLeaderboardEntries(db);
   const scorerRepair = await backfillTopScorersFromConfirmedResults(db, nowIso);
   await rebuildTopScorerStandings(db, nowIso);
-  const groupStandingsRowsCount = await rebuildGroupStandingsCacheFromConfirmedResults(db, now);
+  const groupStandingsRowsCount = await rebuildGroupStandingsCacheFromConfirmedResults(db, now, shouldUseOfficialGroupResults);
   const actualScoringState = await buildConfiguredActualScoringState(db, now);
   const leaderboardRebuild = await rebuildLeaderboardAfterFinalResult({
     finalizedResults,
@@ -62,7 +65,9 @@ export async function rebuildPublicTournamentState(db: QueryableDatabase, now: D
 export async function rebuildLeaderboardCacheFromConfirmedResults(db: QueryableDatabase, now: Date): Promise<LeaderboardRebuildResult | undefined> {
   await migrateResultPersistenceSchema(db);
   const nowIso = now.toISOString();
-  const finalizedResults = await readFinalizedResults(db, nowIso);
+  const confirmedGroupStageMatches = await countConfirmedGroupStageMatches(db);
+  const shouldUseOfficialGroupResults = useOfficialGroupStageResults(confirmedGroupStageMatches);
+  const finalizedResults = await readFinalizedResults(db, nowIso, shouldUseOfficialGroupResults);
   if (finalizedResults.length === 0) return undefined;
   const previousEntries = await readLeaderboardEntries(db);
   const actualScoringState = await buildConfiguredActualScoringState(db, now);
@@ -80,16 +85,23 @@ export async function rebuildLeaderboardCacheFromConfirmedResults(db: QueryableD
   return leaderboardRebuild;
 }
 
-async function readFinalizedResults(db: QueryableDatabase, nowIso: string): Promise<ResultUpdate[]> {
+async function readFinalizedResults(db: QueryableDatabase, nowIso: string, shouldUseOfficialGroupResults = false): Promise<ResultUpdate[]> {
   const rows = await db.all(`
-    SELECT match_id, confirmed_home_score, confirmed_away_score, is_final
+    SELECT m.id AS match_id, confirmed_home_score, confirmed_away_score, is_final
     FROM match_results
+    JOIN matches m ON m.id = match_results.match_id
     WHERE ${CONFIRMED_FINAL_RESULT_SQL}
     ORDER BY match_id
   `);
   return rows.flatMap((row) => {
-    const homeScore = toNumber(row.confirmed_home_score);
-    const awayScore = toNumber(row.confirmed_away_score);
+    const resolvedScore = resolveConfirmedScore(
+      Number(row.match_id),
+      toNumber(row.confirmed_home_score),
+      toNumber(row.confirmed_away_score),
+      shouldUseOfficialGroupResults
+    );
+    const homeScore = resolvedScore?.homeScore;
+    const awayScore = resolvedScore?.awayScore;
     if (homeScore === undefined || awayScore === undefined) return [];
     return [{
       matchId: Number(row.match_id),
@@ -197,7 +209,11 @@ async function writeLeaderboardMetadata(db: QueryableDatabase, metadata: Leaderb
   );
 }
 
-export async function rebuildGroupStandingsCacheFromConfirmedResults(db: QueryableDatabase, now: Date): Promise<number> {
+export async function rebuildGroupStandingsCacheFromConfirmedResults(
+  db: QueryableDatabase,
+  now: Date,
+  shouldUseOfficialGroupResults = false
+): Promise<number> {
   await migrateResultPersistenceSchema(db);
   const teams = await db.all('SELECT id, name, group_id FROM teams WHERE group_id IS NOT NULL ORDER BY group_id, id');
   const standings = new Map<string, {
@@ -230,7 +246,7 @@ export async function rebuildGroupStandingsCacheFromConfirmedResults(db: Queryab
   }
 
   const results = await db.all(`
-    SELECT m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
+    SELECT m.id AS match_id, m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
     WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
@@ -240,8 +256,15 @@ export async function rebuildGroupStandingsCacheFromConfirmedResults(db: Queryab
     const home = standings.get(String(result.home_team_id));
     const away = standings.get(String(result.away_team_id));
     if (!home || !away) continue;
-    applyResult(home, Number(result.confirmed_home_score), Number(result.confirmed_away_score));
-    applyResult(away, Number(result.confirmed_away_score), Number(result.confirmed_home_score));
+    const resolvedScore = resolveConfirmedScore(
+      Number(result.match_id),
+      toNumber(result.confirmed_home_score),
+      toNumber(result.confirmed_away_score),
+      shouldUseOfficialGroupResults
+    );
+    if (!resolvedScore) continue;
+    applyResult(home, resolvedScore.homeScore, resolvedScore.awayScore);
+    applyResult(away, resolvedScore.awayScore, resolvedScore.homeScore);
   }
 
   const groups = [...new Set([...standings.values()].map((row) => row.groupId))].sort();
@@ -310,6 +333,15 @@ async function countRows(db: QueryableDatabase, table: string): Promise<number> 
   return Number((await db.one(`SELECT COUNT(*) AS count FROM ${table}`))?.count ?? 0);
 }
 
+async function countConfirmedGroupStageMatches(db: QueryableDatabase): Promise<number> {
+  return Number((await db.one(`
+    SELECT COUNT(*) AS count
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
+  `))?.count ?? 0);
+}
+
 function applyResult(row: {
   played: number;
   wins: number;
@@ -341,4 +373,17 @@ function toNumber(value: unknown): number | undefined {
   if (value === null || value === undefined) return undefined;
   const number = Number(value);
   return Number.isFinite(number) ? number : undefined;
+}
+
+function resolveConfirmedScore(
+  matchId: number,
+  homeScore: number | undefined,
+  awayScore: number | undefined,
+  shouldUseOfficialGroupResults: boolean
+): { homeScore: number; awayScore: number } | undefined {
+  if (homeScore === undefined || awayScore === undefined) return undefined;
+  if (!shouldUseOfficialGroupResults) {
+    return { homeScore, awayScore };
+  }
+  return getOfficialGroupStageResult(matchId) ?? { homeScore, awayScore };
 }

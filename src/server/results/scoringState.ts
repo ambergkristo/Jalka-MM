@@ -4,6 +4,7 @@ import { MANUAL_UNKNOWN_SCORER_NAME } from './manualScorerCorrections.js';
 import { resolveScorerIdentity } from '../../domain/scorerIdentity.js';
 import type { ActualGroupStanding, ActualKnockoutResults, ActualTopScorer } from '../../domain/pointsEngine.js';
 import { extractOpenWorldCupThirdPlaceQualifierSignals, fetchOpenWorldCupGames, type OpenWorldCupThirdPlaceQualifierSignal } from './openWorldCupResultProvider.js';
+import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
 import { loadOrganizerThirdPlaceQualifierSignals } from './thirdPlaceQualifierLocks.js';
 
@@ -116,6 +117,8 @@ export async function buildActualGroupStandings(
     WHERE m.stage = 'GROUP' AND m.group_id IS NOT NULL
     ORDER BY m.id
   `);
+  const confirmedGroupStageMatches = results.filter((result) => isConfirmedFinalResult(result)).length;
+  const shouldUseOfficialGroupResults = useOfficialGroupStageResults(confirmedGroupStageMatches);
 
   for (const result of results) {
     const groupId = String(result.group_id);
@@ -128,10 +131,14 @@ export async function buildActualGroupStandings(
     const home = standings.get(String(result.home_team_id));
     const away = standings.get(String(result.away_team_id));
     if (!home || !away) continue;
-    const homeScore = Number(result.confirmed_home_score ?? result.home_score ?? 0);
-    const awayScore = Number(result.confirmed_away_score ?? result.away_score ?? 0);
-    applyResult(home, homeScore, awayScore);
-    applyResult(away, awayScore, homeScore);
+    const resolvedScore = resolveConfirmedGroupStageScore(
+      Number(result.id ?? result.match_id ?? 0),
+      Number(result.confirmed_home_score ?? result.home_score ?? 0),
+      Number(result.confirmed_away_score ?? result.away_score ?? 0),
+      shouldUseOfficialGroupResults
+    );
+    applyResult(home, resolvedScore.homeScore, resolvedScore.awayScore);
+    applyResult(away, resolvedScore.awayScore, resolvedScore.homeScore);
   }
 
   const finalGroups = [...groupCoverage.entries()]
@@ -480,6 +487,18 @@ function buildGroupQualifierAudit(standings: ActualGroupStanding[] | undefined):
 
 function normalizeKey(value: string): string {
   return value.trim().toLocaleLowerCase('en');
+}
+
+function resolveConfirmedGroupStageScore(
+  matchId: number,
+  homeScore: number,
+  awayScore: number,
+  shouldUseOfficialGroupResults: boolean
+): { homeScore: number; awayScore: number } {
+  if (!shouldUseOfficialGroupResults) {
+    return { homeScore, awayScore };
+  }
+  return getOfficialGroupStageResult(matchId) ?? { homeScore, awayScore };
 }
 
 function mergeThirdPlaceQualifierSignals(

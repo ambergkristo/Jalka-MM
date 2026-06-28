@@ -35,6 +35,9 @@ describe('public state health', () => {
       assert.equal(diagnostics.confirmedResultsCount, 1);
       assert.equal(diagnostics.liveMatchesCount >= 0, true);
       assert.equal(diagnostics.latestResultsCount, 1);
+      assert.equal(diagnostics.groupStageComplete, false);
+      assert.equal(diagnostics.confirmedGroupStageMatches, 1);
+      assert.equal(diagnostics.lastPlayoffStateRebuildAt, now.toISOString());
       assert.equal(diagnostics.groupStandingsRowsCount > 0, true);
       assert.equal(diagnostics.leaderboardRowsCount, 109);
       assert.equal(diagnostics.canonicalLeaderboardRowsCount, 109);

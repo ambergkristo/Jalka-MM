@@ -183,6 +183,16 @@ function buildLiveMatchSection(liveMatches: DashboardMatch[], limit = 3): MatchS
 }
 
 function buildCanonicalMatchSection(todayMatches: DashboardMatch[], upcomingMatches: DashboardMatch[], limit = 3): MatchSection {
+  const playoffUpcomingOnly = todayMatches.length === 0 &&
+    upcomingMatches.length > 0 &&
+    upcomingMatches.every((match) => isPlayoffStage(match.stage));
+  if (playoffUpcomingOnly) {
+    return {
+      eyebrow: 'Play-off',
+      title: 'Tulevased playoff mängud',
+      matches: upcomingMatches.slice(0, limit)
+    };
+  }
   if (todayMatches.length > 0) {
     return {
       eyebrow: 'Täna',
@@ -195,6 +205,10 @@ function buildCanonicalMatchSection(todayMatches: DashboardMatch[], upcomingMatc
     title: 'Tulevad mängud',
     matches: upcomingMatches.slice(0, limit)
   };
+}
+
+function isPlayoffStage(value: string): boolean {
+  return ['R32', 'R16', 'Veerandfinaal', 'Poolfinaal', 'Finaal', '3. koha mäng'].includes(value);
 }
 
 function toLeaderboardRow(entry: PublicLeaderboardEntry): LeaderboardRowView {

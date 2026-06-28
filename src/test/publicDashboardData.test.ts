@@ -439,4 +439,68 @@ describe('public tournament state', () => {
     expect(section.title).toBe('Tänased mängud');
     expect(section.matches.map((match) => match.id)).toEqual(['21']);
   });
+
+  it('switches the public match section to upcoming playoff games after the group stage', () => {
+    const snapshot = createSnapshot({
+      todayMatches: [],
+      upcomingMatches: [
+        {
+          id: '73',
+          homeTeam: 'Mexico',
+          awayTeam: 'Japan',
+          kickoffTime: '30.06.2026 19:00',
+          stage: 'R32',
+          status: 'scheduled',
+          venue: 'Azteca'
+        },
+        {
+          id: '74',
+          homeTeam: 'Brazil',
+          awayTeam: 'Croatia',
+          kickoffTime: '30.06.2026 22:00',
+          stage: 'R32',
+          status: 'scheduled',
+          venue: 'Monterrey'
+        }
+      ]
+    });
+
+    const section = selectPublicMatchSection(snapshot, new Date('2026-06-29T12:00:00.000Z'), 3);
+    const state = buildPublicTournamentState(snapshot, new Date('2026-06-29T12:00:00.000Z'));
+
+    expect(section.title).toBe('Tulevased playoff mängud');
+    expect(section.matches.map((match) => match.id)).toEqual(['73', '74']);
+    expect(state.matchSection.title).toBe('Tulevased playoff mängud');
+  });
+
+  it('keeps playoff upcoming fixtures in canonical kickoff order', () => {
+    const snapshot = createSnapshot({
+      todayMatches: [],
+      upcomingMatches: [
+        {
+          id: '73',
+          homeTeam: 'Mexico',
+          awayTeam: 'Japan',
+          kickoffTime: '30.06.2026 19:00',
+          stage: 'R32',
+          status: 'scheduled',
+          venue: 'Azteca'
+        },
+        {
+          id: '74',
+          homeTeam: 'Brazil',
+          awayTeam: 'Croatia',
+          kickoffTime: '30.06.2026 22:00',
+          stage: 'R32',
+          status: 'scheduled',
+          venue: 'Monterrey'
+        }
+      ]
+    });
+
+    const state = buildPublicTournamentState(snapshot, new Date('2026-06-29T12:00:00.000Z'));
+
+    expect(state.upcomingMatches.map((match) => match.id)).toEqual(['73', '74']);
+    expect(state.latestResults).toHaveLength(2);
+  });
 });

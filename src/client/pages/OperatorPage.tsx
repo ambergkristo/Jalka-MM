@@ -87,6 +87,10 @@ interface PublicStateDiagnostics {
   confirmedGoalsCount: number;
   liveMatchesCount: number;
   latestResultsCount: number;
+  groupStageComplete: boolean;
+  confirmedGroupStageMatches: number;
+  r32FixturesKnownCount: number;
+  upcomingPlayoffFixturesCount: number;
   groupStandingsSource: string;
   groupStandingsRowsCount: number;
   topScorerRowsCount: number;
@@ -102,6 +106,7 @@ interface PublicStateDiagnostics {
   lastResultSyncAt?: string;
   lastPublicDashboardReadAt?: string;
   lastPublicSnapshotRebuildAt?: string;
+  lastPlayoffStateRebuildAt?: string;
   lastScorerRebuildAt?: string;
   lastProviderCheckAt?: string;
   lastLeaderboardRebuildAt?: string;
@@ -654,10 +659,15 @@ export function OperatorPage() {
               <div><span>Viimane provideri kontroll</span><strong>{formatTimestamp(diagnostics?.lastProviderCheckAt ?? diagnostics?.resultAgentStatus.lastRunAt)}</strong></div>
               <div><span>Viimane result sync</span><strong>{formatTimestamp(diagnostics?.lastResultSyncAt)}</strong></div>
               <div><span>Viimane snapshot rebuild</span><strong>{formatTimestamp(diagnostics?.lastPublicSnapshotRebuildAt)}</strong></div>
+              <div><span>Viimane playoff rebuild</span><strong>{formatTimestamp(diagnostics?.lastPlayoffStateRebuildAt)}</strong></div>
               <div><span>Kinnitatud tulemused</span><strong>{diagnostics?.confirmedResultsCount ?? 0}</strong></div>
+              <div><span>Alagrupi seis</span><strong>{diagnostics?.groupStageComplete ? 'Valmis' : 'Käib'}</strong></div>
+              <div><span>Alagrupimänge kinnitatud</span><strong>{diagnostics?.confirmedGroupStageMatches ?? 0} / 72</strong></div>
               <div><span>Kinnitatud väravad</span><strong>{diagnostics?.confirmedGoalsCount ?? 0}</strong></div>
               <div><span>Live mänge</span><strong>{diagnostics?.liveMatchesCount ?? 0}</strong></div>
               <div><span>Viimaseid tulemusi</span><strong>{diagnostics?.latestResultsCount ?? 0}</strong></div>
+              <div><span>R32 paare teada</span><strong>{diagnostics?.r32FixturesKnownCount ?? 0}</strong></div>
+              <div><span>Eesolevaid playoff mänge</span><strong>{diagnostics?.upcomingPlayoffFixturesCount ?? 0}</strong></div>
               <div><span>Scorer facts</span><strong>{diagnostics?.scorerFactsCount ?? 0}</strong></div>
               <div><span>Scorer fact goals</span><strong>{diagnostics?.scorerFactsGoalsCount ?? 0}</strong></div>
               <div><span>Top scorer ridu</span><strong>{diagnostics?.topScorerRowsCount ?? 0}</strong></div>

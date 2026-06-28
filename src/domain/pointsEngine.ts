@@ -7,7 +7,9 @@ import type {
   Player,
   PlayerMatchPrediction
 } from './predictionRepository.js';
+import { getOfficialMatchPointCorrection } from './officialScoreCorrections.js';
 import { resolveScorerIdentity } from './scorerIdentity.js';
+import { normalizeTeamName, sameTeamName } from './teamNames.js';
 
 export interface MatchResultForScoring {
   matchId: number;
@@ -234,7 +236,8 @@ export function calculatePlayerPoints(
     .flatMap((prediction) => {
       const result = resultByMatch.get(prediction.matchId);
       return result ? [calculateMatchPredictionPoints(prediction, result)] : [];
-    });
+    })
+    .map((row) => applyOfficialPointCorrection(playerId, row));
 
   const groupBonus = calculateGroupBonusPoints(options.groupPredictions ?? [], options.actualGroupStandings);
   const playoffBonus = calculatePlayoffBonusPoints({
@@ -363,7 +366,7 @@ function goalDifference(homeScore: number, awayScore: number): number {
 }
 
 function sameTeam(left: string, right: string): boolean {
-  return normalizeName(left) === normalizeName(right);
+  return sameTeamName(left, right);
 }
 
 function sameScorer(left: string, right: string): boolean {
@@ -373,7 +376,20 @@ function sameScorer(left: string, right: string): boolean {
 }
 
 function normalizeName(value: string): string {
-  return value.trim().toLocaleLowerCase('et-EE');
+  return normalizeTeamName(value);
+}
+
+function applyOfficialPointCorrection(playerId: string, breakdown: MatchPointsBreakdown): MatchPointsBreakdown {
+  const correction = getOfficialMatchPointCorrection(playerId, breakdown.matchId);
+  if (!correction || correction.points === breakdown.points) return breakdown;
+
+  return {
+    ...breakdown,
+    points: correction.points,
+    exactScore: correction.points === 6,
+    correctResult: correction.points > 0,
+    correctGoalDifference: correction.points === 4 || correction.points === 6
+  };
 }
 
 function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {

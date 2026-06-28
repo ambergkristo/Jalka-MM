@@ -15,6 +15,8 @@ import {
 } from './publicTournamentRebuild.js';
 import { classifyPublicMatchState } from './publicMatchState.js';
 import { derivePublicResultStatus } from './publicResultStatus.js';
+import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
+import { buildCanonicalPlayoffState } from './playoffState.js';
 
 const METADATA_ID = 'public-state';
 const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers', 'resync-scorers-from-confirmed-results']);
@@ -37,6 +39,10 @@ export interface PublicStateDiagnostics {
   confirmedGoalsCount: number;
   liveMatchesCount: number;
   latestResultsCount: number;
+  groupStageComplete: boolean;
+  confirmedGroupStageMatches: number;
+  r32FixturesKnownCount: number;
+  upcomingPlayoffFixturesCount: number;
   groupStandingsSource: 'computed-from-confirmed-results';
   groupStandingsRowsCount: number;
   topScorerRowsCount: number;
@@ -52,6 +58,7 @@ export interface PublicStateDiagnostics {
   lastResultSyncAt?: string;
   lastPublicDashboardReadAt?: string;
   lastPublicSnapshotRebuildAt?: string;
+  lastPlayoffStateRebuildAt?: string;
   lastScorerRebuildAt?: string;
   lastProviderCheckAt?: string;
   lastLeaderboardRebuildAt?: string;
@@ -148,8 +155,14 @@ export async function collectPublicStateDiagnostics(input: {
   await migrateResultPersistenceSchema(database);
   const resultAgentStatus = input.resultAgentStatus ?? await getResultsAgentStatus(now);
   const metadata = await readPublicStateMetadata(database);
+  const confirmedGroupStageMatches = await countConfirmedGroupStageMatches(database);
+  const shouldUseOfficialGroupResults = useOfficialGroupStageResults(confirmedGroupStageMatches);
+  const playoffState = await buildCanonicalPlayoffState({
+    now,
+    confirmedGroupStageMatches
+  }).catch(() => undefined);
   const confirmedResultsCount = await countConfirmedResults(database);
-  const confirmedGoalsCount = await countConfirmedGoals(database);
+  const confirmedGoalsCount = await countConfirmedGoals(database, shouldUseOfficialGroupResults);
   const liveMatchesCount = await countLiveMatches(database, now);
   const latestResultsCount = Math.min(confirmedResultsCount, 8);
   const groupStandingsRowsCount = await countRows(database, 'group_standings');
@@ -193,6 +206,10 @@ export async function collectPublicStateDiagnostics(input: {
     confirmedGoalsCount,
     liveMatchesCount,
     latestResultsCount,
+    groupStageComplete: playoffState?.groupStageComplete ?? false,
+    confirmedGroupStageMatches: playoffState?.confirmedGroupStageMatches ?? confirmedGroupStageMatches,
+    r32FixturesKnownCount: playoffState?.r32FixturesKnownCount ?? 0,
+    upcomingPlayoffFixturesCount: playoffState?.upcomingPlayoffFixturesCount ?? 0,
     groupStandingsSource: 'computed-from-confirmed-results',
     groupStandingsRowsCount,
     topScorerRowsCount,
@@ -208,6 +225,7 @@ export async function collectPublicStateDiagnostics(input: {
     lastResultSyncAt,
     lastPublicDashboardReadAt: metadata.last_public_dashboard_read_at,
     lastPublicSnapshotRebuildAt: metadata.last_public_snapshot_rebuild_at,
+    lastPlayoffStateRebuildAt: playoffState?.generatedAt,
     lastScorerRebuildAt,
     lastProviderCheckAt: resultAgentStatus.lastRunAt ?? undefined,
     lastLeaderboardRebuildAt: resultAgentStatus.lastLeaderboardRebuildAt ?? undefined,
@@ -695,6 +713,15 @@ async function countConfirmedResults(db: QueryableDatabase): Promise<number> {
   `))?.count ?? 0);
 }
 
+async function countConfirmedGroupStageMatches(db: QueryableDatabase): Promise<number> {
+  return Number((await db.one(`
+    SELECT COUNT(*) AS count
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
+  `))?.count ?? 0);
+}
+
 async function countLiveMatches(db: QueryableDatabase, now: Date): Promise<number> {
   const rows = await db.all(`
     SELECT
@@ -752,13 +779,25 @@ async function readLastScorerRebuildAt(db: QueryableDatabase): Promise<string | 
   return row?.updated_at ? String(row.updated_at) : undefined;
 }
 
-async function countConfirmedGoals(db: QueryableDatabase): Promise<number> {
-  const row = await db.one(`
-    SELECT COALESCE(SUM(COALESCE(confirmed_home_score, home_score, 0) + COALESCE(confirmed_away_score, away_score, 0)), 0) AS total
-    FROM match_results
+async function countConfirmedGoals(db: QueryableDatabase, shouldUseOfficialGroupResults = false): Promise<number> {
+  const rows = await db.all(`
+    SELECT m.id, confirmed_home_score, confirmed_away_score
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
     WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `);
-  return Number(row?.total ?? 0);
+  return rows.reduce((total, row) => {
+    const score = shouldUseOfficialGroupResults
+      ? getOfficialGroupStageResult(Number(row.id)) ?? {
+        homeScore: Number(row.confirmed_home_score ?? 0),
+        awayScore: Number(row.confirmed_away_score ?? 0)
+      }
+      : {
+        homeScore: Number(row.confirmed_home_score ?? 0),
+        awayScore: Number(row.confirmed_away_score ?? 0)
+      };
+    return total + score.homeScore + score.awayScore;
+  }, 0);
 }
 
 async function countScorerFactGoals(db: QueryableDatabase): Promise<number> {

@@ -268,6 +268,31 @@ describe('public dashboard pages', () => {
     expect(player).toContain('<b>2 v');
   });
 
+  it('renders playoff upcoming games as the main landing section while keeping latest results visible', () => {
+    activeState = buildPublicTournamentState({
+      ...createConfirmedSnapshot(),
+      todayMatches: [],
+      upcomingMatches: [
+        {
+          id: '73',
+          homeTeam: 'Mexico',
+          awayTeam: 'Japan',
+          kickoffTime: '30.06.2026 19:00',
+          stage: 'R32',
+          status: 'scheduled',
+          venue: 'Azteca'
+        }
+      ]
+    }, new Date('2026-06-29T12:00:00.000Z'));
+
+    const landing = renderToStaticMarkup(<LandingDashboard />);
+
+    expect(landing).toContain('Tulevased playoff mängud');
+    expect(landing).toContain('R32');
+    expect(landing).toContain('Viimased tulemused');
+    expect(landing).toContain('Mehhiko');
+  });
+
   it('shows an explicit error notice when the public snapshot fetch fails', () => {
     activeState = {
       ...buildPublicTournamentState(undefined, new Date('2026-06-06T12:00:00.000Z')),

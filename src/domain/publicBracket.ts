@@ -51,8 +51,26 @@ export interface ResolvedBracketSlot {
   teamCode?: string;
 }
 
+export interface PlayoffBracketFixture {
+  matchId: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeTeamId?: string;
+  awayTeamId?: string;
+  homeTeamCode?: string;
+  awayTeamCode?: string;
+  homeLabel?: string;
+  awayLabel?: string;
+  homeScore?: number;
+  awayScore?: number;
+  kickoffAt?: string;
+  status: BracketMatch['status'];
+  winnerTeamId?: string;
+}
+
 export interface BuildPublicPlayoffBracketOptions {
   resolvedSlots?: Record<string, ResolvedBracketSlot>;
+  fixturesByMatchId?: Map<number, PlayoffBracketFixture>;
 }
 
 const roundLabels: Record<Exclude<BracketStage, 'FINAL' | 'THIRD_PLACE'>, string> = {
@@ -82,56 +100,64 @@ const r32SlotPairs = [
 ] as const;
 
 export function buildPublicPlayoffBracketTree(options: BuildPublicPlayoffBracketOptions = {}): BracketTree {
-  const leftR32 = buildR32Matches('LEFT', 1, 8, options);
-  const rightR32 = buildR32Matches('RIGHT', 9, 16, options);
+  const bracketOptions = {
+    ...options,
+    resolvedSlots: buildResolvedSlots(options)
+  };
 
   return {
     left: {
       side: 'LEFT',
       rounds: [
-        round('left-r32', 'R32', 0, leftR32),
-        round('left-r16', 'R16', 1, buildWinnerMatches('LEFT', 'R16', 1, 4, 1, '1/16', 'r32', options)),
-        round('left-qf', 'QF', 2, buildWinnerMatches('LEFT', 'QF', 1, 2, 1, '1/8', 'r16', options)),
-        round('left-sf', 'SF', 3, buildWinnerMatches('LEFT', 'SF', 1, 1, 1, 'VF', 'qf', options))
+        round('left-r32', 'R32', 0, buildR32Matches('LEFT', 1, 8, 73, bracketOptions)),
+        round('left-r16', 'R16', 1, buildWinnerMatches('LEFT', 'R16', 1, 4, 1, '1/16', 'r32', 89, bracketOptions)),
+        round('left-qf', 'QF', 2, buildWinnerMatches('LEFT', 'QF', 1, 2, 1, '1/8', 'r16', 97, bracketOptions)),
+        round('left-sf', 'SF', 3, buildWinnerMatches('LEFT', 'SF', 1, 1, 1, 'VF', 'qf', 101, bracketOptions))
       ]
     },
     right: {
       side: 'RIGHT',
       rounds: [
-        round('right-r32', 'R32', 0, rightR32),
-        round('right-r16', 'R16', 1, buildWinnerMatches('RIGHT', 'R16', 5, 8, 5, '1/16', 'r32', options)),
-        round('right-qf', 'QF', 2, buildWinnerMatches('RIGHT', 'QF', 3, 4, 3, '1/8', 'r16', options)),
-        round('right-sf', 'SF', 3, buildWinnerMatches('RIGHT', 'SF', 2, 2, 2, 'VF', 'qf', options))
+        round('right-r32', 'R32', 0, buildR32Matches('RIGHT', 9, 16, 81, bracketOptions)),
+        round('right-r16', 'R16', 1, buildWinnerMatches('RIGHT', 'R16', 5, 8, 5, '1/16', 'r32', 93, bracketOptions)),
+        round('right-qf', 'QF', 2, buildWinnerMatches('RIGHT', 'QF', 3, 4, 3, '1/8', 'r16', 99, bracketOptions)),
+        round('right-sf', 'SF', 3, buildWinnerMatches('RIGHT', 'SF', 2, 2, 2, 'VF', 'qf', 102, bracketOptions))
       ]
     },
-    final: {
+    final: applyFixtureData({
       id: 'final-1',
       stage: 'FINAL',
       side: 'CENTER',
       roundIndex: 4,
       order: 1,
-      homeSlot: slot('winner-sf-1', 'PF-1 võitja', 'sf-1', options),
-      awaySlot: slot('winner-sf-2', 'PF-2 võitja', 'sf-2', options),
+      homeSlot: slot('winner-sf-1', 'PF-1 võitja', 'sf-1', bracketOptions),
+      awaySlot: slot('winner-sf-2', 'PF-2 võitja', 'sf-2', bracketOptions),
       status: 'scheduled'
-    },
-    thirdPlace: {
+    }, 104, bracketOptions),
+    thirdPlace: applyFixtureData({
       id: 'third-place',
       stage: 'THIRD_PLACE',
       side: 'CENTER',
       roundIndex: 4,
       order: 2,
-      homeSlot: slot('loser-sf-1', 'PF-1 kaotaja', 'sf-1', options),
-      awaySlot: slot('loser-sf-2', 'PF-2 kaotaja', 'sf-2', options),
+      homeSlot: slot('loser-sf-1', 'PF-1 kaotaja', 'sf-1', bracketOptions),
+      awaySlot: slot('loser-sf-2', 'PF-2 kaotaja', 'sf-2', bracketOptions),
       status: 'scheduled'
-    }
+    }, 103, bracketOptions)
   };
 }
 
-function buildR32Matches(side: 'LEFT' | 'RIGHT', first: number, last: number, options: BuildPublicPlayoffBracketOptions): BracketMatch[] {
+function buildR32Matches(
+  side: 'LEFT' | 'RIGHT',
+  first: number,
+  last: number,
+  firstInternalMatchId: number,
+  options: BuildPublicPlayoffBracketOptions
+): BracketMatch[] {
   const matches: BracketMatch[] = [];
   for (let matchNumber = first; matchNumber <= last; matchNumber += 1) {
     const [homeLabel, awayLabel] = r32SlotPairs[matchNumber - 1];
-    matches.push({
+    matches.push(applyFixtureData({
       id: `r32-${matchNumber}`,
       stage: 'R32',
       side,
@@ -140,7 +166,7 @@ function buildR32Matches(side: 'LEFT' | 'RIGHT', first: number, last: number, op
       homeSlot: slot(`r32-${matchNumber}-home`, homeLabel, homeLabel, options),
       awaySlot: slot(`r32-${matchNumber}-away`, awayLabel, awayLabel, options),
       status: 'scheduled'
-    });
+    }, firstInternalMatchId + (matchNumber - first), options));
   }
   return matches;
 }
@@ -153,13 +179,14 @@ function buildWinnerMatches(
   firstSourceMatchNumber: number,
   sourceRoundLabel: string,
   sourceIdPrefix: string,
+  firstInternalMatchId: number,
   options: BuildPublicPlayoffBracketOptions
 ): BracketMatch[] {
   const matches: BracketMatch[] = [];
   for (let matchNumber = firstMatchNumber; matchNumber <= lastMatchNumber; matchNumber += 1) {
     const sourceOne = firstSourceMatchNumber + (matchNumber - firstMatchNumber) * 2;
     const sourceTwo = sourceOne + 1;
-    matches.push({
+    matches.push(applyFixtureData({
       id: `${stage.toLowerCase()}-${matchNumber}`,
       stage,
       side,
@@ -168,7 +195,7 @@ function buildWinnerMatches(
       homeSlot: slot(`winner-${sourceIdPrefix}-${sourceOne}`, `${sourceRoundLabel}-${sourceOne} võitja`, `${sourceIdPrefix}-${sourceOne}`, options),
       awaySlot: slot(`winner-${sourceIdPrefix}-${sourceTwo}`, `${sourceRoundLabel}-${sourceTwo} võitja`, `${sourceIdPrefix}-${sourceTwo}`, options),
       status: 'scheduled'
-    });
+    }, firstInternalMatchId + (matchNumber - firstMatchNumber), options));
   }
   return matches;
 }
@@ -201,4 +228,73 @@ function slot(id: string, label: string, source: string, options: BuildPublicPla
     source,
     seedLabel: label
   };
+}
+
+function applyFixtureData(match: BracketMatch, internalMatchId: number, options: BuildPublicPlayoffBracketOptions): BracketMatch {
+  const fixture = options.fixturesByMatchId?.get(internalMatchId);
+  if (!fixture) return match;
+
+  return {
+    ...match,
+    homeSlot: {
+      ...match.homeSlot,
+      label: fixture.homeTeam,
+      teamId: fixture.homeTeamId,
+      teamName: fixture.homeTeam,
+      teamCode: fixture.homeTeamCode,
+      seedLabel: fixture.homeLabel ?? match.homeSlot.seedLabel
+    },
+    awaySlot: {
+      ...match.awaySlot,
+      label: fixture.awayTeam,
+      teamId: fixture.awayTeamId,
+      teamName: fixture.awayTeam,
+      teamCode: fixture.awayTeamCode,
+      seedLabel: fixture.awayLabel ?? match.awaySlot.seedLabel
+    },
+    homeScore: fixture.homeScore,
+    awayScore: fixture.awayScore,
+    winnerTeamId: fixture.winnerTeamId,
+    kickoffUtc: fixture.kickoffAt,
+    status: fixture.status
+  };
+}
+
+function buildResolvedSlots(options: BuildPublicPlayoffBracketOptions): Record<string, ResolvedBracketSlot> | undefined {
+  const resolvedSlots = { ...(options.resolvedSlots ?? {}) };
+  for (const fixture of options.fixturesByMatchId?.values() ?? []) {
+    const winnerSource = winnerSourceForMatchId(fixture.matchId);
+    if (!winnerSource) continue;
+    const winnerSlot = resolveWinnerSlot(fixture);
+    if (winnerSlot) resolvedSlots[winnerSource] = winnerSlot;
+  }
+
+  return Object.keys(resolvedSlots).length > 0 ? resolvedSlots : undefined;
+}
+
+function resolveWinnerSlot(fixture: PlayoffBracketFixture): ResolvedBracketSlot | undefined {
+  if (!fixture.winnerTeamId) return undefined;
+  if (fixture.winnerTeamId === fixture.homeTeamId) {
+    return {
+      teamId: fixture.homeTeamId,
+      teamName: fixture.homeTeam,
+      teamCode: fixture.homeTeamCode
+    };
+  }
+  if (fixture.winnerTeamId === fixture.awayTeamId) {
+    return {
+      teamId: fixture.awayTeamId,
+      teamName: fixture.awayTeam,
+      teamCode: fixture.awayTeamCode
+    };
+  }
+  return undefined;
+}
+
+function winnerSourceForMatchId(matchId: number): string | undefined {
+  if (matchId >= 73 && matchId <= 88) return `r32-${matchId - 72}`;
+  if (matchId >= 89 && matchId <= 96) return `r16-${matchId - 88}`;
+  if (matchId >= 97 && matchId <= 100) return `qf-${matchId - 96}`;
+  if (matchId >= 101 && matchId <= 102) return `sf-${matchId - 100}`;
+  return undefined;
 }

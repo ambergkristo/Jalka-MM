@@ -213,6 +213,31 @@ describe('official group bonus scoring', () => {
       { group: 'C', winnerPoints: 10, secondPlacePoints: 5, qualifierPoints: 0, points: 15 }
     ]);
   });
+
+  it('matches organizer team aliases against canonical final group standings', () => {
+    const standings: ActualGroupStanding[] = [
+      { group: 'E', team: 'Colombia', rank: 1, qualified: true },
+      { group: 'E', team: 'Congo DR', rank: 2, qualified: true },
+      { group: 'E', team: 'South Africa', rank: 3, qualified: true },
+      { group: 'E', team: 'Paraguay', rank: 4, qualified: false }
+    ];
+
+    const predictions: GroupPrediction[] = [{
+      playerId: 'p1',
+      group: 'E',
+      first: 'Kolumbia',
+      second: 'Kongo DV',
+      third: 'Lõuna Aafrika Vabariik'
+    }];
+
+    expect(calculateGroupBonusPoints(predictions, standings).breakdown).toEqual([{
+      group: 'E',
+      winnerPoints: 10,
+      secondPlacePoints: 5,
+      qualifierPoints: 3,
+      points: 18
+    }]);
+  });
 });
 
 describe('official playoff and top scorer bonuses', () => {
@@ -290,6 +315,22 @@ describe('player totals and leaderboard rebuild', () => {
       hitRate: 1,
       matchesScored: 2
     });
+  });
+
+  it('applies official match-point corrections from the organizer scoresheet', () => {
+    const martin = calculatePlayerPoints('martin-becis', [
+      { playerId: 'martin-becis', matchId: 17, homeScore: 2, awayScore: 0 },
+      { playerId: 'martin-becis', matchId: 20, homeScore: 2, awayScore: 0 }
+    ], [
+      { matchId: 17, homeScore: 2, awayScore: 0, isFinal: true },
+      { matchId: 20, homeScore: 2, awayScore: 0, isFinal: true }
+    ]);
+
+    expect(martin.breakdown).toEqual([
+      { matchId: 17, points: 2, exactScore: false, correctResult: true, correctGoalDifference: false },
+      { matchId: 20, points: 2, exactScore: false, correctResult: true, correctGoalDifference: false }
+    ]);
+    expect(martin.matchPoints).toBe(4);
   });
 
   it('orders leaderboard by total points, exact scores, correct results, then player id', () => {

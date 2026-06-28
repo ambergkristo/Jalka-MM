@@ -6,6 +6,7 @@ import { getCurrentLeaderboard } from './resultAgentRuntime.js';
 import type { LeaderboardEntry } from '../../domain/predictionRepository.js';
 import { buildCountyLeaderboard, type CountyLeaderboardRow } from '../../domain/countyLeaderboard.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
+import type { Match } from '../../domain/types.js';
 import { touchPublicDashboardRead } from './publicStateHealth.js';
 import { backfillTopScorersFromConfirmedResults, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
@@ -14,6 +15,8 @@ import { classifyPublicMatchState } from './publicMatchState.js';
 import { derivePublicResultStatus } from './publicResultStatus.js';
 import { getPredictionLeagueInsights } from './predictionLeagueInsights.js';
 import type { PredictionLeagueInsights } from '../../domain/predictionLeagueInsights.js';
+import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
+import { buildCanonicalPlayoffState } from './playoffState.js';
 
 export interface PublicDashboardSnapshot {
   generatedAt: string;
@@ -103,13 +106,16 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
   await migrateResultPersistenceSchema(db);
   await touchPublicDashboardRead({ db, now });
   const matches = await getPublicMatches(db, now);
-  const liveMatches = matches.filter((match) => match.state === 'live').map(toMatchCard);
-  const todayMatches = matches.filter((match) => match.state === 'today').map(toMatchCard);
-  const upcomingMatches = matches.filter((match) => match.state === 'upcoming').map(toMatchCard);
-  const nextMatch = findNextMatch(matches, now);
-  const latestResults = await getConfirmedLatestResults(db);
-  const resultSummary = await getConfirmedResultSummary(db);
-  const groupStandings = await getPublicGroupStandings(db);
+  const confirmedStageCounts = await getConfirmedStageCounts(db);
+  const confirmedGroupStageMatches = confirmedStageCounts.GROUP ?? 0;
+  const shouldUseOfficialGroupResults = useOfficialGroupStageResults(confirmedGroupStageMatches);
+  const playoffState = await buildCanonicalPlayoffState({
+    now,
+    confirmedGroupStageMatches
+  });
+  const latestResults = await getConfirmedLatestResults(db, shouldUseOfficialGroupResults);
+  const resultSummary = await getConfirmedResultSummary(db, shouldUseOfficialGroupResults);
+  const groupStandings = await getPublicGroupStandings(db, shouldUseOfficialGroupResults);
   const topScorers = await getPublicTopScorers(db);
   const leaderboard = await getCurrentLeaderboard();
   const countyLeaderboard = buildCountyLeaderboard({
@@ -120,6 +126,16 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
   const totalMatches = Number((await db.one('SELECT COUNT(*) AS count FROM matches'))?.count ?? 104);
   const completed = resultSummary.completedMatchesCount;
   const goals = resultSummary.totalGoals;
+  const liveMatches = playoffState.groupStageComplete
+    ? playoffState.fixtures.filter((fixture) => fixture.status === 'live').map(toPlayoffMatchCard)
+    : matches.filter((match) => match.state === 'live').map(toMatchCard);
+  const todayMatches = playoffState.groupStageComplete
+    ? []
+    : matches.filter((match) => match.state === 'today').map(toMatchCard);
+  const upcomingMatches = playoffState.groupStageComplete
+    ? playoffState.fixtures.filter((fixture) => fixture.status === 'scheduled' && fixture.kickoffAt).map(toPlayoffMatchCard)
+    : matches.filter((match) => match.state === 'upcoming').map(toMatchCard);
+  const nextMatch = playoffState.groupStageComplete ? upcomingMatches[0] : findNextMatch(matches, now);
   const groupLeaders = groupStandings.map((group) => {
     const leader = group.teams[0];
     return {
@@ -128,6 +144,15 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
       points: leader?.played ? leader.points : undefined,
       record: leader?.played ? `${leader.wins}-${leader.draws}-${leader.losses}` : undefined
     };
+  });
+  const tournamentProgressByStage = buildTournamentProgressByStage(confirmedStageCounts);
+  const tournamentSummary = buildTournamentSummary({
+    completed,
+    totalMatches,
+    goals,
+    playoffState,
+    upcomingMatchesCount: upcomingMatches.length,
+    liveMatchesCount: liveMatches.length
   });
 
   return {
@@ -142,15 +167,10 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
     groupStandings,
     groupLeaders,
     topScorers,
-    playoffBracket: buildPublicPlayoffBracketTree(),
+    playoffBracket: buildPublicPlayoffBracketTree({ fixturesByMatchId: playoffState.bracketFixturesByMatchId }),
     leaderboard: leaderboard.entries,
     countyLeaderboard,
-    tournamentSummary: [
-      { label: 'Turniiri faas', value: 'Alagrupid', detail: completed > 0 ? 'Turniir on alanud' : 'Avamängu ootel', tone: 'gold' },
-      { label: 'Mängitud', value: `${completed} / ${totalMatches}`, detail: `${Math.max(totalMatches - completed, 0)} kohtumist on veel ees`, tone: 'blue' },
-      { label: 'Väravad', value: String(goals), detail: completed > 0 ? `${formatDecimal(goals / completed)} väravat mängu kohta` : 'Kinnitatud väravaid veel ei ole', tone: 'green' },
-      { label: 'Võistkonnad', value: '48', detail: 'Alagrupid A-L', tone: 'red' }
-    ],
+    tournamentSummary,
     tournamentStats: [
       { label: 'Väravaid kokku', value: String(goals), detail: `${completed} lõppenud mänguga` },
       { label: 'Keskmine', value: completed > 0 ? formatDecimal(goals / completed) : '0,00', detail: 'väravat mängu kohta' },
@@ -158,14 +178,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
       { label: 'Suurim võit', value: biggestWin(latestResults), detail: 'Kinnitatud tulemuste põhjal' },
       { label: 'Väravaterohkeim', value: highestScoringMatch(latestResults), detail: 'Kinnitatud tulemuste põhjal' }
     ],
-    tournamentProgressByStage: [
-      { stage: 'Alagrupid', completed, total: 72 },
-      { stage: '1/16-finaalid', completed: 0, total: 16 },
-      { stage: 'Kaheksandikfinaalid', completed: 0, total: 8 },
-      { stage: 'Veerandfinaalid', completed: 0, total: 4 },
-      { stage: 'Poolfinaalid', completed: 0, total: 2 },
-      { stage: 'Finaalid', completed: 0, total: 2 }
-    ],
+    tournamentProgressByStage,
     predictionLeagueInsights
   };
 }
@@ -281,10 +294,11 @@ export async function resetPublicTournamentRuntimeState(db: QueryableDatabase): 
   `);
 }
 
-async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicResultCard[]> {
+async function getConfirmedLatestResults(db: QueryableDatabase, shouldUseOfficialGroupResults = false): Promise<PublicResultCard[]> {
   const rows = await db.all(`
     SELECT
       m.id,
+      m.stage,
       m.group_id,
       m.kickoff_at,
       COALESCE(home.name, m.home_slot) AS home_team,
@@ -301,8 +315,14 @@ async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicR
     LIMIT 8
   `);
   return rows.map((row) => {
-    const homeScore = Number(row.confirmed_home_score);
-    const awayScore = Number(row.confirmed_away_score);
+    const resolvedScore = resolveConfirmedScore(
+      Number(row.id),
+      Number(row.confirmed_home_score),
+      Number(row.confirmed_away_score),
+      shouldUseOfficialGroupResults
+    );
+    const homeScore = resolvedScore.homeScore;
+    const awayScore = resolvedScore.awayScore;
     const homeTeam = String(row.home_team);
     const awayTeam = String(row.away_team);
     return {
@@ -311,25 +331,49 @@ async function getConfirmedLatestResults(db: QueryableDatabase): Promise<PublicR
       awayTeam,
       homeScore,
       awayScore,
-      stage: row.group_id ? `Alagrupp ${row.group_id}` : 'Turniir',
+      stage: row.group_id ? `Alagrupp ${row.group_id}` : stageLabel(row.stage as Match['stage']),
       winner: homeScore === awayScore ? 'Draw' : homeScore > awayScore ? homeTeam : awayTeam,
       finishedAt: formatDateTime(String(row.confirmed_at ?? row.kickoff_at))
     };
   });
 }
 
-async function getConfirmedResultSummary(db: QueryableDatabase): Promise<{ completedMatchesCount: number; totalGoals: number }> {
-  const row = await db.one(`
+async function getConfirmedResultSummary(db: QueryableDatabase, shouldUseOfficialGroupResults = false): Promise<{ completedMatchesCount: number; totalGoals: number }> {
+  const rows = await db.all(`
     SELECT
-      COUNT(*) AS completed_matches_count,
-      COALESCE(SUM(COALESCE(r.confirmed_home_score, r.home_score, 0) + COALESCE(r.confirmed_away_score, r.away_score, 0)), 0) AS total_goals
+      m.id,
+      r.confirmed_home_score,
+      r.confirmed_away_score
     FROM match_results r
+    JOIN matches m ON m.id = r.match_id
     WHERE ${CONFIRMED_FINAL_RESULT_SQL}
   `);
-  return {
-    completedMatchesCount: Number(row?.completed_matches_count ?? 0),
-    totalGoals: Number(row?.total_goals ?? 0)
-  };
+  return rows.reduce<{ completedMatchesCount: number; totalGoals: number }>((summary, row) => {
+    const resolvedScore = resolveConfirmedScore(
+      Number(row.id),
+      Number(row.confirmed_home_score),
+      Number(row.confirmed_away_score),
+      shouldUseOfficialGroupResults
+    );
+    return {
+      completedMatchesCount: summary.completedMatchesCount + 1,
+      totalGoals: summary.totalGoals + resolvedScore.homeScore + resolvedScore.awayScore
+    };
+  }, { completedMatchesCount: 0, totalGoals: 0 });
+}
+
+async function getConfirmedStageCounts(db: QueryableDatabase): Promise<Partial<Record<Match['stage'], number>>> {
+  const rows = await db.all(`
+    SELECT m.stage, COUNT(*) AS count
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
+    GROUP BY m.stage
+  `);
+  return rows.reduce<Partial<Record<Match['stage'], number>>>((counts, row) => {
+    counts[row.stage as Match['stage']] = Number(row.count ?? 0);
+    return counts;
+  }, {});
 }
 
 async function getUpcomingMatches(db: QueryableDatabase, now = new Date()): Promise<PublicMatchCard[]> {
@@ -340,6 +384,7 @@ async function getUpcomingMatches(db: QueryableDatabase, now = new Date()): Prom
 
 async function getPublicMatches(db: QueryableDatabase, now: Date): Promise<Array<{
   id: number;
+  stage: Match['stage'];
   groupId?: string;
   kickoffAt: string;
   homeTeam: string;
@@ -352,6 +397,7 @@ async function getPublicMatches(db: QueryableDatabase, now: Date): Promise<Array
   const rows = await db.all(`
     SELECT
       m.id,
+      m.stage,
       m.group_id,
       m.kickoff_at,
       COALESCE(home.name, m.home_slot) AS home_team,
@@ -390,6 +436,7 @@ async function getPublicMatches(db: QueryableDatabase, now: Date): Promise<Array
       : {};
     return [{
       id: Number(row.id),
+      stage: row.stage as Match['stage'],
       groupId: row.group_id ? String(row.group_id) : undefined,
       kickoffAt,
       homeTeam: String(row.home_team),
@@ -403,6 +450,7 @@ async function getPublicMatches(db: QueryableDatabase, now: Date): Promise<Array
 
 function findNextMatch(matches: Array<{
   id: number;
+  stage: Match['stage'];
   groupId?: string;
   kickoffAt: string;
   homeTeam: string;
@@ -421,6 +469,7 @@ function findNextMatch(matches: Array<{
 
 function toMatchCard(match: {
   id: number;
+  stage: Match['stage'];
   groupId?: string;
   kickoffAt: string;
   homeTeam: string;
@@ -439,9 +488,35 @@ function toMatchCard(match: {
       awayScore: match.awayScore
     }),
     kickoffTime: formatDateTime(match.kickoffAt),
-    stage: match.groupId ? `Alagrupp ${match.groupId}` : 'Turniir',
+    stage: match.groupId ? `Alagrupp ${match.groupId}` : stageLabel(match.stage),
     status: match.state === 'live' ? 'live' : publicMatchStatus(match.publicStatus),
     venue: ''
+  };
+}
+
+function toPlayoffMatchCard(match: {
+  matchId: number;
+  homeTeam: string;
+  awayTeam: string;
+  kickoffAt?: string;
+  stage: Match['stage'];
+  status: 'scheduled' | 'live' | 'finished';
+  venue?: string;
+  homeScore?: number;
+  awayScore?: number;
+}): PublicMatchCard {
+  return {
+    id: String(match.matchId),
+    homeTeam: match.homeTeam,
+    awayTeam: match.awayTeam,
+    ...(match.homeScore === undefined || match.awayScore === undefined ? {} : {
+      homeScore: match.homeScore,
+      awayScore: match.awayScore
+    }),
+    kickoffTime: match.kickoffAt ? formatDateTime(match.kickoffAt) : 'TBC',
+    stage: stageLabel(match.stage),
+    status: match.status === 'live' ? 'live' : match.status === 'finished' ? 'confirming' : 'scheduled',
+    venue: match.venue ?? ''
   };
 }
 
@@ -459,11 +534,11 @@ function publicScoreNumber(value: unknown): number | undefined {
   return score;
 }
 
-async function getPublicGroupStandings(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
-  return buildGroupStandingsRows(db);
+async function getPublicGroupStandings(db: QueryableDatabase, shouldUseOfficialGroupResults = false): Promise<PublicGroupStanding[]> {
+  return buildGroupStandingsRows(db, shouldUseOfficialGroupResults);
 }
 
-async function buildGroupStandingsRows(db: QueryableDatabase): Promise<PublicGroupStanding[]> {
+async function buildGroupStandingsRows(db: QueryableDatabase, shouldUseOfficialGroupResults = false): Promise<PublicGroupStanding[]> {
   const teams = await db.all('SELECT id, name, group_id FROM teams WHERE group_id IS NOT NULL ORDER BY group_id, id');
   const standings = new Map<string, StandingRow>();
   for (const team of teams) {
@@ -484,7 +559,7 @@ async function buildGroupStandingsRows(db: QueryableDatabase): Promise<PublicGro
   }
 
   const results = await db.all(`
-    SELECT m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
+    SELECT m.id AS match_id, m.home_team_id, m.away_team_id, r.confirmed_home_score, r.confirmed_away_score
     FROM match_results r
     JOIN matches m ON m.id = r.match_id
     WHERE ${CONFIRMED_FINAL_RESULT_SQL} AND m.stage = 'GROUP'
@@ -494,8 +569,14 @@ async function buildGroupStandingsRows(db: QueryableDatabase): Promise<PublicGro
     const home = standings.get(String(result.home_team_id));
     const away = standings.get(String(result.away_team_id));
     if (!home || !away) continue;
-    applyResult(home, Number(result.confirmed_home_score), Number(result.confirmed_away_score));
-    applyResult(away, Number(result.confirmed_away_score), Number(result.confirmed_home_score));
+    const resolvedScore = resolveConfirmedScore(
+      Number(result.match_id ?? 0),
+      Number(result.confirmed_home_score),
+      Number(result.confirmed_away_score),
+      shouldUseOfficialGroupResults
+    );
+    applyResult(home, resolvedScore.homeScore, resolvedScore.awayScore);
+    applyResult(away, resolvedScore.awayScore, resolvedScore.homeScore);
   }
 
   const groups = [...new Set([...standings.values()].map((row) => row.groupId))].sort();
@@ -727,6 +808,72 @@ function formatDateTime(value: string): string {
 
 function formatDecimal(value: number): string {
   return value.toLocaleString('et-EE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function resolveConfirmedScore(
+  matchId: number,
+  homeScore: number,
+  awayScore: number,
+  shouldUseOfficialGroupResults: boolean
+): { homeScore: number; awayScore: number } {
+  if (!shouldUseOfficialGroupResults) {
+    return { homeScore, awayScore };
+  }
+  return getOfficialGroupStageResult(matchId) ?? { homeScore, awayScore };
+}
+
+function buildTournamentSummary(input: {
+  completed: number;
+  totalMatches: number;
+  goals: number;
+  playoffState: { groupStageComplete: boolean; r32FixturesKnownCount: number };
+  upcomingMatchesCount: number;
+  liveMatchesCount: number;
+}): PublicDashboardSnapshot['tournamentSummary'] {
+  const phaseValue = input.playoffState.groupStageComplete ? 'Play-off' : 'Alagrupid';
+  const phaseDetail = input.playoffState.groupStageComplete
+    ? input.liveMatchesCount > 0
+      ? 'Play-off kohtumised on käimas'
+      : input.upcomingMatchesCount > 0
+        ? 'R32 kohtumised on järjekorras'
+        : 'Play-off ajakava uueneb'
+    : input.completed > 0
+      ? 'Turniir on alanud'
+      : 'Avamängu ootel';
+  const teamDetail = input.playoffState.groupStageComplete
+    ? `${input.playoffState.r32FixturesKnownCount} / 16 R32 paari on teada`
+    : 'Alagrupid A-L';
+
+  return [
+    { label: 'Turniiri faas', value: phaseValue, detail: phaseDetail, tone: 'gold' },
+    { label: 'Mängitud', value: `${input.completed} / ${input.totalMatches}`, detail: `${Math.max(input.totalMatches - input.completed, 0)} kohtumist on veel ees`, tone: 'blue' },
+    { label: 'Väravad', value: String(input.goals), detail: input.completed > 0 ? `${formatDecimal(input.goals / input.completed)} väravat mängu kohta` : 'Kinnitatud väravaid veel ei ole', tone: 'green' },
+    { label: 'Võistkonnad', value: '48', detail: teamDetail, tone: 'red' }
+  ];
+}
+
+function buildTournamentProgressByStage(confirmedStageCounts: Partial<Record<Match['stage'], number>>): PublicDashboardSnapshot['tournamentProgressByStage'] {
+  return [
+    { stage: 'Alagrupid', completed: confirmedStageCounts.GROUP ?? 0, total: 72 },
+    { stage: '1/16-finaalid', completed: confirmedStageCounts.R32 ?? 0, total: 16 },
+    { stage: 'Kaheksandikfinaalid', completed: confirmedStageCounts.R16 ?? 0, total: 8 },
+    { stage: 'Veerandfinaalid', completed: confirmedStageCounts.QF ?? 0, total: 4 },
+    { stage: 'Poolfinaalid', completed: confirmedStageCounts.SF ?? 0, total: 2 },
+    { stage: '3. koha mäng', completed: confirmedStageCounts.THIRD_PLACE ?? 0, total: 1 },
+    { stage: 'Finaal', completed: confirmedStageCounts.FINAL ?? 0, total: 1 }
+  ];
+}
+
+function stageLabel(stage: Match['stage']): string {
+  return {
+    GROUP: 'Alagrupid',
+    R32: 'R32',
+    R16: 'R16',
+    QF: 'Veerandfinaal',
+    SF: 'Poolfinaal',
+    THIRD_PLACE: '3. koha mäng',
+    FINAL: 'Finaal'
+  }[stage];
 }
 
 function publicMatchStatus(publicStatus: string): PublicMatchCard['status'] {

@@ -1,0 +1,440 @@
+{
+  "source": "Argo scoresheet ALAGRUPI ERI.pdf",
+  "generatedAt": "2026-06-28T07:14:25.099Z",
+  "matchIdsInScoresheetOrder": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72
+  ],
+  "results": [
+    {
+      "matchId": 1,
+      "homeScore": 2,
+      "awayScore": 0
+    },
+    {
+      "matchId": 2,
+      "homeScore": 2,
+      "awayScore": 1
+    },
+    {
+      "matchId": 3,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 4,
+      "homeScore": 4,
+      "awayScore": 1
+    },
+    {
+      "matchId": 5,
+      "homeScore": 0,
+      "awayScore": 1
+    },
+    {
+      "matchId": 6,
+      "homeScore": 2,
+      "awayScore": 0
+    },
+    {
+      "matchId": 7,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 8,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 9,
+      "homeScore": 1,
+      "awayScore": 0
+    },
+    {
+      "matchId": 10,
+      "homeScore": 7,
+      "awayScore": 1
+    },
+    {
+      "matchId": 11,
+      "homeScore": 2,
+      "awayScore": 2
+    },
+    {
+      "matchId": 12,
+      "homeScore": 5,
+      "awayScore": 1
+    },
+    {
+      "matchId": 13,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 14,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 15,
+      "homeScore": 2,
+      "awayScore": 2
+    },
+    {
+      "matchId": 16,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 17,
+      "homeScore": 3,
+      "awayScore": 1
+    },
+    {
+      "matchId": 18,
+      "homeScore": 1,
+      "awayScore": 4
+    },
+    {
+      "matchId": 19,
+      "homeScore": 3,
+      "awayScore": 0
+    },
+    {
+      "matchId": 20,
+      "homeScore": 3,
+      "awayScore": 1
+    },
+    {
+      "matchId": 21,
+      "homeScore": 1,
+      "awayScore": 0
+    },
+    {
+      "matchId": 22,
+      "homeScore": 4,
+      "awayScore": 2
+    },
+    {
+      "matchId": 23,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 24,
+      "homeScore": 1,
+      "awayScore": 3
+    },
+    {
+      "matchId": 25,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 26,
+      "homeScore": 4,
+      "awayScore": 1
+    },
+    {
+      "matchId": 27,
+      "homeScore": 6,
+      "awayScore": 0
+    },
+    {
+      "matchId": 28,
+      "homeScore": 1,
+      "awayScore": 0
+    },
+    {
+      "matchId": 29,
+      "homeScore": 3,
+      "awayScore": 0
+    },
+    {
+      "matchId": 30,
+      "homeScore": 0,
+      "awayScore": 1
+    },
+    {
+      "matchId": 31,
+      "homeScore": 0,
+      "awayScore": 1
+    },
+    {
+      "matchId": 32,
+      "homeScore": 2,
+      "awayScore": 0
+    },
+    {
+      "matchId": 33,
+      "homeScore": 2,
+      "awayScore": 1
+    },
+    {
+      "matchId": 34,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 35,
+      "homeScore": 5,
+      "awayScore": 1
+    },
+    {
+      "matchId": 36,
+      "homeScore": 0,
+      "awayScore": 4
+    },
+    {
+      "matchId": 37,
+      "homeScore": 2,
+      "awayScore": 2
+    },
+    {
+      "matchId": 38,
+      "homeScore": 4,
+      "awayScore": 0
+    },
+    {
+      "matchId": 39,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 40,
+      "homeScore": 1,
+      "awayScore": 3
+    },
+    {
+      "matchId": 41,
+      "homeScore": 3,
+      "awayScore": 2
+    },
+    {
+      "matchId": 42,
+      "homeScore": 3,
+      "awayScore": 0
+    },
+    {
+      "matchId": 43,
+      "homeScore": 2,
+      "awayScore": 0
+    },
+    {
+      "matchId": 44,
+      "homeScore": 1,
+      "awayScore": 2
+    },
+    {
+      "matchId": 45,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 46,
+      "homeScore": 0,
+      "awayScore": 1
+    },
+    {
+      "matchId": 47,
+      "homeScore": 5,
+      "awayScore": 0
+    },
+    {
+      "matchId": 48,
+      "homeScore": 1,
+      "awayScore": 0
+    },
+    {
+      "matchId": 49,
+      "homeScore": 0,
+      "awayScore": 3
+    },
+    {
+      "matchId": 50,
+      "homeScore": 4,
+      "awayScore": 2
+    },
+    {
+      "matchId": 51,
+      "homeScore": 2,
+      "awayScore": 1
+    },
+    {
+      "matchId": 52,
+      "homeScore": 3,
+      "awayScore": 1
+    },
+    {
+      "matchId": 53,
+      "homeScore": 0,
+      "awayScore": 3
+    },
+    {
+      "matchId": 54,
+      "homeScore": 1,
+      "awayScore": 0
+    },
+    {
+      "matchId": 55,
+      "homeScore": 0,
+      "awayScore": 2
+    },
+    {
+      "matchId": 56,
+      "homeScore": 2,
+      "awayScore": 1
+    },
+    {
+      "matchId": 57,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 58,
+      "homeScore": 1,
+      "awayScore": 3
+    },
+    {
+      "matchId": 59,
+      "homeScore": 3,
+      "awayScore": 2
+    },
+    {
+      "matchId": 60,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 61,
+      "homeScore": 1,
+      "awayScore": 4
+    },
+    {
+      "matchId": 62,
+      "homeScore": 5,
+      "awayScore": 0
+    },
+    {
+      "matchId": 63,
+      "homeScore": 1,
+      "awayScore": 1
+    },
+    {
+      "matchId": 64,
+      "homeScore": 1,
+      "awayScore": 5
+    },
+    {
+      "matchId": 65,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 66,
+      "homeScore": 0,
+      "awayScore": 1
+    },
+    {
+      "matchId": 67,
+      "homeScore": 0,
+      "awayScore": 2
+    },
+    {
+      "matchId": 68,
+      "homeScore": 2,
+      "awayScore": 1
+    },
+    {
+      "matchId": 69,
+      "homeScore": 3,
+      "awayScore": 3
+    },
+    {
+      "matchId": 70,
+      "homeScore": 1,
+      "awayScore": 3
+    },
+    {
+      "matchId": 71,
+      "homeScore": 0,
+      "awayScore": 0
+    },
+    {
+      "matchId": 72,
+      "homeScore": 3,
+      "awayScore": 1
+    }
+  ]
+}

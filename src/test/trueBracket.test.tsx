@@ -43,6 +43,37 @@ describe('true playoff bracket', () => {
     expect(markup).not.toContain('Brasiilia');
   });
 
+  it('fills canonical R32 fixtures, kickoff times, and advances confirmed winners into the next round', () => {
+    const tree = buildPublicPlayoffBracketTree({
+      fixturesByMatchId: new Map([
+        [73, {
+          matchId: 73,
+          homeTeam: 'Mehhiko',
+          awayTeam: 'Jaapan',
+          homeTeamId: 'mex',
+          awayTeamId: 'jpn',
+          homeTeamCode: 'MEX',
+          awayTeamCode: 'JPN',
+          kickoffAt: '2026-06-30T16:00:00.000Z',
+          homeScore: 2,
+          awayScore: 1,
+          status: 'finished',
+          winnerTeamId: 'mex'
+        }]
+      ])
+    });
+
+    expect(tree.left.rounds[0]?.matches[0]?.homeSlot.teamName).toBe('Mehhiko');
+    expect(tree.left.rounds[0]?.matches[0]?.awaySlot.teamName).toBe('Jaapan');
+    expect(tree.left.rounds[0]?.matches[0]?.kickoffUtc).toBe('2026-06-30T16:00:00.000Z');
+    expect(tree.left.rounds[1]?.matches[0]?.homeSlot.teamName).toBe('Mehhiko');
+
+    const markup = renderToStaticMarkup(<TrueBracket tree={tree} />);
+    expect(markup).toContain('Mehhiko');
+    expect(markup).toContain('30. juuni');
+    expect(markup).toContain('Lõppenud');
+  });
+
   it('keeps public bracket labels Estonian', () => {
     const markup = renderToStaticMarkup(<TrueBracket tree={playoffBracketTree} />);
     expect(markup).not.toContain('Winner ');
