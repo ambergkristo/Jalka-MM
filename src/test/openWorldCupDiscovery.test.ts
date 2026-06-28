@@ -62,6 +62,29 @@ describe('open worldcup discovery helpers', () => {
     });
   });
 
+  it('converts R32 kickoff times using the stadium timezone instead of the host machine timezone', () => {
+    const teamLookup = buildTeamLookup([
+      { id: '5', name_en: 'Canada' },
+      { id: '6', name_en: 'South Africa' }
+    ]);
+
+    const candidate = buildCandidateFixture(
+      {
+        id: '73',
+        type: 'r32',
+        home_team_id: '6',
+        away_team_id: '5',
+        stadium_id: '16',
+        local_date: '06/28/2026 12:00',
+        status: 'SCHEDULED'
+      },
+      matchesSeed.slice(72, 73),
+      teamLookup
+    );
+
+    expect(candidate.kickoffUtc).toBe('2026-06-28T19:00:00.000Z');
+  });
+
   it('reports unmatched rows with a concise reason', () => {
     expect(
       buildUnmatchedReport([

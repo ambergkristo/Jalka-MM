@@ -71,6 +71,25 @@ interface OpenWorldCupGame {
   events?: Array<unknown>;
 }
 
+const STADIUM_TIME_ZONE_BY_ID: Record<string, string> = {
+  '1': 'America/Mexico_City',
+  '2': 'America/Mexico_City',
+  '3': 'America/Monterrey',
+  '4': 'America/Chicago',
+  '5': 'America/Chicago',
+  '6': 'America/Chicago',
+  '7': 'America/New_York',
+  '8': 'America/New_York',
+  '9': 'America/New_York',
+  '10': 'America/New_York',
+  '11': 'America/New_York',
+  '12': 'America/Toronto',
+  '13': 'America/Vancouver',
+  '14': 'America/Los_Angeles',
+  '15': 'America/Los_Angeles',
+  '16': 'America/Los_Angeles'
+};
+
 interface CandidateFile {
   provider: 'open-worldcup';
   apiBaseUrl: string;
@@ -292,11 +311,24 @@ export function collectTeams(payload: unknown): OpenWorldCupTeam[] {
 export function buildCandidateFixture(game: OpenWorldCupGame, seedMatches: SeedMatch[], teamLookup: Map<string, OpenWorldCupTeam>) {
   const resolvedHomeTeam = resolveTeamLabel(game.home_team_id, game.home_team_name_en ?? game.home_team_label, teamLookup);
   const resolvedAwayTeam = resolveTeamLabel(game.away_team_id, game.away_team_name_en ?? game.away_team_label, teamLookup);
-  const bestMatch = findBestSeedMatch(game, seedMatches, resolvedHomeTeam, resolvedAwayTeam);
+  const normalizedType = String(game.type ?? '').trim().toUpperCase();
+  const directR32Match = normalizedType === 'R32'
+    ? seedMatches.find((match) => match.id === Number(game.id))
+    : undefined;
+  const bestMatch = directR32Match
+    ? {
+        match: directR32Match,
+        confidence: 'high' as const,
+        notes: `match ${directR32Match.id}: provider R32 fixture id`
+      }
+    : findBestSeedMatch(game, seedMatches, resolvedHomeTeam, resolvedAwayTeam);
+  const kickoffUtc = bestMatch.match.id >= 73
+    ? toUtcIso(game.local_date, resolveStadiumTimeZone(game.stadium_id))
+    : toUtcIso(game.local_date);
   return {
     provider: 'open-worldcup' as const,
     providerFixtureId: String(game.id ?? ''),
-    kickoffUtc: toUtcIso(game.local_date),
+    kickoffUtc,
     homeTeam: resolvedHomeTeam,
     awayTeam: resolvedAwayTeam,
     venue: game.stadium_name ? String(game.stadium_name) : game.stadium_id ? String(game.stadium_id) : undefined,
@@ -313,7 +345,7 @@ export function summarizeGame(game: OpenWorldCupGame, teamLookup: Map<string, Op
   const awayTeam = resolveTeamLabel(game.away_team_id, game.away_team_name_en ?? game.away_team_label, teamLookup);
   return {
     providerFixtureId: String(game.id ?? ''),
-    kickoffUtc: toUtcIso(game.local_date),
+    kickoffUtc: toUtcIso(game.local_date, resolveStadiumTimeZone(game.stadium_id)),
     homeTeam,
     awayTeam,
     status: normalizeStatus(game),
@@ -577,10 +609,84 @@ function toNumber(value: unknown): number | undefined {
   return Number.isFinite(number) ? number : undefined;
 }
 
-function toUtcIso(value: string | undefined): string {
+function resolveStadiumTimeZone(stadiumId: string | number | undefined): string | undefined {
+  const normalized = String(stadiumId ?? '').trim();
+  if (!normalized) return undefined;
+  return STADIUM_TIME_ZONE_BY_ID[normalized];
+}
+
+function toUtcIso(value: string | undefined, timeZone?: string): string {
   if (!value) return new Date(0).toISOString();
   const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString();
+  if (hasExplicitTimezone(value) || !timeZone) {
+    return Number.isFinite(parsed) ? new Date(parsed).toISOString() : new Date(0).toISOString();
+  }
+  const local = parseProviderLocalDate(value);
+  const utcMillis = localDateTimeToUtcMillis(local, timeZone);
+  return new Date(utcMillis).toISOString();
+}
+
+function hasExplicitTimezone(value: string): boolean {
+  return /(?:z|[+-]\d{2}:\d{2})$/i.test(value.trim());
+}
+
+function parseProviderLocalDate(value: string): { year: number; month: number; day: number; hour: number; minute: number } {
+  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);
+  if (!match) {
+    const parsed = Date.parse(value);
+    if (!Number.isFinite(parsed)) return { year: 1970, month: 1, day: 1, hour: 0, minute: 0 };
+    const date = new Date(parsed);
+    return {
+      year: date.getUTCFullYear(),
+      month: date.getUTCMonth() + 1,
+      day: date.getUTCDate(),
+      hour: date.getUTCHours(),
+      minute: date.getUTCMinutes()
+    };
+  }
+  return {
+    month: Number(match[1]),
+    day: Number(match[2]),
+    year: Number(match[3]),
+    hour: Number(match[4]),
+    minute: Number(match[5])
+  };
+}
+
+function localDateTimeToUtcMillis(local: { year: number; month: number; day: number; hour: number; minute: number }, timeZone: string): number {
+  let utcMillis = Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute);
+  for (let index = 0; index < 8; index += 1) {
+    const zoned = getDatePartsInZone(new Date(utcMillis), timeZone);
+    const desired = Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute);
+    const actual = Date.UTC(zoned.year, zoned.month - 1, zoned.day, zoned.hour, zoned.minute);
+    const diff = desired - actual;
+    if (diff === 0) break;
+    utcMillis += diff;
+  }
+  return utcMillis;
+}
+
+function getDatePartsInZone(date: Date, timeZone: string): { year: number; month: number; day: number; hour: number; minute: number } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(date);
+  const result: Record<string, number> = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') result[part.type] = Number(part.value);
+  }
+  return {
+    year: result.year,
+    month: result.month,
+    day: result.day,
+    hour: result.hour,
+    minute: result.minute
+  };
 }
 
 function trimTrailingSlash(value: string): string {
