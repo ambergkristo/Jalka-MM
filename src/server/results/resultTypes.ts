@@ -1,3 +1,5 @@
+import type { Stage } from '../../domain/types.js';
+
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'HT' | 'ET' | 'PEN' | 'FINISHED' | 'POSTPONED' | 'SUSPENDED';
 export type PublicResultStatus = 'SCHEDULED' | 'LIVE' | 'CONFIRMING' | 'CONFIRMED_FINAL' | 'NEEDS_REVIEW';
 
@@ -13,6 +15,7 @@ export interface ResultScorer {
 
 export interface TrackedMatch {
   id: number;
+  stage?: Stage;
   providerMatchId?: string;
   kickoffUtc: string;
   status: MatchStatus;

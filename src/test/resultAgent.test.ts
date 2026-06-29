@@ -123,6 +123,7 @@ describe('result agent update cycle', () => {
     const now = new Date('2026-06-11T19:30:00.000Z');
     const repository = new InMemoryResultRepository([{
       id: 1,
+      stage: 'GROUP',
       kickoffUtc: '2026-06-11T19:00:00.000Z',
       status: 'SCHEDULED',
       homeTeam: 'Mexico',
@@ -155,6 +156,86 @@ describe('result agent update cycle', () => {
       leaderboardRebuilt: false
     });
     await expect(repository.getFinalizedResults()).resolves.toHaveLength(0);
+  });
+
+  it('confirms finished playoff matches immediately and rebuilds the leaderboard from the confirmed result', async () => {
+    const now = new Date('2026-06-28T21:30:00.000Z');
+    const repository = new InMemoryResultRepository([{
+      id: 73,
+      stage: 'R32',
+      kickoffUtc: '2026-06-28T19:00:00.000Z',
+      status: 'SCHEDULED',
+      homeTeam: 'South Africa',
+      awayTeam: 'Canada',
+      isFinal: false
+    }]);
+    const provider: ResultProvider = {
+      name: 'open-worldcup-result-provider',
+      mode: 'live' as const,
+      async fetchMatchUpdate(match, now) {
+        return toResultUpdate({
+          match,
+          provider: 'open-worldcup-result-provider',
+          providerStatus: 'FINISHED',
+          now,
+          homeScore: 0,
+          awayScore: 1,
+          minute: 90,
+          providerMatchId: '73'
+        });
+      }
+    };
+
+    const summary = await runResultUpdateCycle({ repository, provider, now });
+
+    expect(summary.finalizedResults).toBe(1);
+    expect(summary.leaderboardRebuilt).toBe(true);
+    await expect(repository.getFinalizedResults()).resolves.toHaveLength(1);
+    await expect(repository.getFinalizedResults()).resolves.toMatchObject([{
+      matchId: 73,
+      publicStatus: 'CONFIRMED_FINAL',
+      confirmedHomeScore: 0,
+      confirmedAwayScore: 1
+    }]);
+  });
+
+  it('uses the same immediate confirmation path for later playoff rounds too', async () => {
+    const now = new Date('2026-07-05T21:30:00.000Z');
+    const repository = new InMemoryResultRepository([{
+      id: 104,
+      stage: 'FINAL',
+      kickoffUtc: '2026-07-05T19:00:00.000Z',
+      status: 'SCHEDULED',
+      homeTeam: 'Winner SF1',
+      awayTeam: 'Winner SF2',
+      isFinal: false
+    }]);
+    const provider: ResultProvider = {
+      name: 'open-worldcup-result-provider',
+      mode: 'live' as const,
+      async fetchMatchUpdate(match, now) {
+        return toResultUpdate({
+          match,
+          provider: 'open-worldcup-result-provider',
+          providerStatus: 'FINISHED',
+          now,
+          homeScore: 2,
+          awayScore: 1,
+          minute: 120,
+          providerMatchId: '104'
+        });
+      }
+    };
+
+    const summary = await runResultUpdateCycle({ repository, provider, now });
+
+    expect(summary.finalizedResults).toBe(1);
+    await expect(repository.getFinalizedResults()).resolves.toMatchObject([{
+      matchId: 104,
+      publicStatus: 'CONFIRMED_FINAL',
+      confirmedHomeScore: 2,
+      confirmedAwayScore: 1
+    }]);
   });
 
   it('syncs live scorer facts without finalizing results or rebuilding leaderboard scores', async () => {

@@ -36,6 +36,7 @@ export function decideResultConsensus(input: {
   previousObservations?: ProviderResultObservation[];
   now: Date;
   confirmationDelayMs?: number;
+  immediateFinalConfirmation?: boolean;
 }): ConsensusDecision {
   const nowIso = input.now.toISOString();
   const confirmationDelayMs = input.confirmationDelayMs ?? CONFIRMATION_DELAY_MS;
@@ -65,6 +66,17 @@ export function decideResultConsensus(input: {
       now: input.now,
       confirmationDelayMs,
       warning: `Final observation from ${input.observation.provider} for match ${input.observation.matchId} did not include a complete score.`
+    });
+  }
+
+  if (input.immediateFinalConfirmation) {
+    return confirmedDecision({
+      base,
+      observation: input.observation,
+      observations,
+      nowIso,
+      confidence: 'provider-repeat',
+      source: input.observation.provider
     });
   }
 

@@ -33,6 +33,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
     const rows = await this.db.all(`
       SELECT
         m.id,
+        m.stage,
         m.kickoff_at,
         COALESCE(t_home.name_et, t_home.name, m.home_slot) AS home_team,
         COALESCE(t_away.name_et, t_away.name, m.away_slot) AS away_team,
@@ -55,6 +56,7 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
       if (Number.isNaN(Date.parse(kickoffUtc))) return [];
       return [{
         id: Number(row.id),
+        stage: row.stage ? (String(row.stage) as TrackedMatch['stage']) : undefined,
         providerMatchId: nullableString(row.provider_fixture_id),
         kickoffUtc,
         status: row.status ? (String(row.status) as MatchStatus) : 'SCHEDULED',

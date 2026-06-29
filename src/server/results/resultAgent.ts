@@ -59,7 +59,8 @@ export async function runResultUpdateCycle(input: {
       previousResult,
       previousObservations,
       now: input.now,
-      confirmationDelayMs
+      confirmationDelayMs,
+      immediateFinalConfirmation: match.stage ? match.stage !== 'GROUP' : selectedUpdate.matchId >= 73
     });
     warnings.push(...consensus.warnings);
     const warningDetail = toWarningDetail({ match, update: selectedUpdate, consensusWarnings: consensus.warnings });
