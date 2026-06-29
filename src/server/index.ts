@@ -7,18 +7,18 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, deleteThirdPlaceQualifierLockRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, listThirdPlaceQualifierLocksRuntime, queueResultAgentCatchUp, runResultsAgentCycle, upsertThirdPlaceQualifierLockRuntime } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, deleteThirdPlaceQualifierLockRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, listThirdPlaceQualifierLocksRuntime, queueResultAgentCatchUp, repairPlayoffResults, runResultsAgentCycle, upsertThirdPlaceQualifierLockRuntime } from './results/resultAgentRuntime.js';
 import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runFullSafeRebuild, runPublicStateRepairAction } from './results/publicStateHealth.js';
 import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
 import { collectProviderHealth } from './results/providerHealth.js';
 
 await seedTournamentData();
 try {
+  await repairPlayoffResults(new Date());
   await rebuildPublicTournamentState(db, new Date());
 } catch (error) {
   console.warn('Startup public-state repair skipped:', error instanceof Error ? error.message : String(error));
 }
-void queueResultAgentCatchUp(new Date());
 const resultAgentCatchUpInterval = setInterval(() => {
   void queueResultAgentCatchUp(new Date());
 }, 60_000);

@@ -1,7 +1,7 @@
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { db } from '../db.js';
-import { getResultsAgentStatus, runResultsAgentCycle } from './resultAgentRuntime.js';
+import { getResultsAgentStatus, repairPlayoffResults, runResultsAgentCycle } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { backfillTopScorersFromConfirmedResults, countUnknownManualScorerGoals, countVisibleScorerFactGoals, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
@@ -273,7 +273,7 @@ export async function runPublicStateRepairAction(input: {
     let resultAgentRun: Awaited<ReturnType<typeof runResultsAgentCycle>> | undefined;
     let scorerRepair: Awaited<ReturnType<typeof backfillTopScorersFromConfirmedResults>> | undefined;
     if (input.action === 'catch-up') {
-      resultAgentRun = await runResultsAgentCycle(now);
+      resultAgentRun = await repairPlayoffResults(now);
     }
 
     if (input.action === 'resync-scorers-from-confirmed-results') {
@@ -422,7 +422,7 @@ function buildFullSafeRebuildSteps(database: QueryableDatabase, now: Date): Full
       step: 'result-agent-catch-up',
       label: 'Run result-agent catch-up',
       async run() {
-        const result = await runResultsAgentCycle(now);
+        const result = await repairPlayoffResults(now);
         return {
           message: `Result-agent catch-up completed: ${result.updatedMatches} match update(s), ${result.finalizedResults} finalized.`,
           summary: { scoresUpdated: result.updatedMatches },

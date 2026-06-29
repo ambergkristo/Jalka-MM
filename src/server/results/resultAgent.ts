@@ -21,11 +21,22 @@ export async function runResultUpdateCycle(input: {
   now: Date;
   dryRun?: boolean;
   confirmationDelayMinutes?: number;
+  matchIds?: number[];
 }): Promise<ResultAgentRunSummary> {
   const startedAt = input.now.toISOString();
   const matches = await input.repository.listTrackedMatches();
-  const plans = planMatchUpdates(matches, input.now);
-  const duePlans = plans.filter((plan) => plan.shouldCheckNow);
+  const selectedMatches = input.matchIds?.length
+    ? matches.filter((match) => input.matchIds?.includes(match.id))
+    : matches;
+  const plans = input.matchIds?.length
+    ? selectedMatches.map((match) => ({
+      matchId: match.id,
+      shouldCheckNow: true,
+      reason: 'forced-repair',
+      nextCheckAt: undefined
+    }))
+    : planMatchUpdates(selectedMatches, input.now);
+  const duePlans = input.matchIds?.length ? plans : plans.filter((plan) => plan.shouldCheckNow);
   let updatesApplied = 0;
   let finalizedResults = 0;
   let confirmationPending = 0;

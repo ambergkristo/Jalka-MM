@@ -49,6 +49,36 @@ export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boole
   });
 }
 
+export function repairPlayoffResults(now = new Date(), options: { dryRun?: boolean } = {}) {
+  return (async () => {
+    const trackedMatches = await repository.listTrackedMatches();
+    const playoffMatchIds = trackedMatches
+      .filter((match) => match.stage && match.stage !== 'GROUP' && !match.isFinal)
+      .map((match) => match.id);
+
+    if (playoffMatchIds.length === 0) {
+      return runResultUpdateCycle({
+        repository,
+        leaderboardRepository: repository,
+        provider,
+        now,
+        dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
+        confirmationDelayMinutes: providerConfig.confirmationDelayMinutes
+      });
+    }
+
+    return runResultUpdateCycle({
+      repository,
+      leaderboardRepository: repository,
+      provider,
+      now,
+      dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
+      confirmationDelayMinutes: providerConfig.confirmationDelayMinutes,
+      matchIds: playoffMatchIds
+    });
+  })();
+}
+
 export function queueResultAgentCatchUp(now = new Date()): Promise<void> | undefined {
   if (providerConfig.writeMode !== 'live') return undefined;
   if (catchUpInFlight) return catchUpInFlight;

@@ -238,6 +238,64 @@ describe('result agent update cycle', () => {
     }]);
   });
 
+  it('repairs an already-stuck playoff result even when the next check is in the future', async () => {
+    const now = new Date('2026-06-29T06:05:00.000Z');
+    const repository = new InMemoryResultRepository([{
+      id: 73,
+      stage: 'R32',
+      kickoffUtc: '2026-06-28T19:00:00.000Z',
+      status: 'SCHEDULED',
+      homeTeam: 'South Africa',
+      awayTeam: 'Canada',
+      isFinal: false,
+      nextCheckAt: '2026-06-29T08:00:00.000Z'
+    }]);
+    const refreshDerivedTournamentState = vi.fn(async () => ({
+      recalculatedAt: now.toISOString(),
+      playersProcessed: 109,
+      matchesProcessed: 1,
+      changedEntries: 1,
+      entries: [],
+      warnings: []
+    }));
+    (repository as InMemoryResultRepository & {
+      refreshDerivedTournamentState: typeof refreshDerivedTournamentState;
+    }).refreshDerivedTournamentState = refreshDerivedTournamentState;
+    const provider: ResultProvider = {
+      name: 'open-worldcup-result-provider',
+      mode: 'live' as const,
+      async fetchMatchUpdate(match, now) {
+        return toResultUpdate({
+          match,
+          provider: 'open-worldcup-result-provider',
+          providerStatus: 'FINISHED',
+          now,
+          homeScore: 0,
+          awayScore: 1,
+          minute: 90,
+          providerMatchId: '73'
+        });
+      }
+    };
+
+    const summary = await runResultUpdateCycle({
+      repository,
+      provider,
+      now,
+      matchIds: [73]
+    });
+
+    expect(summary.finalizedResults).toBe(1);
+    expect(summary.leaderboardRebuilt).toBe(true);
+    expect(refreshDerivedTournamentState).toHaveBeenCalledTimes(1);
+    await expect(repository.getFinalizedResults()).resolves.toMatchObject([{
+      matchId: 73,
+      publicStatus: 'CONFIRMED_FINAL',
+      confirmedHomeScore: 0,
+      confirmedAwayScore: 1
+    }]);
+  });
+
   it('syncs live scorer facts without finalizing results or rebuilding leaderboard scores', async () => {
     const now = new Date('2026-06-11T19:30:00.000Z');
     const repository = new InMemoryResultRepository([{
