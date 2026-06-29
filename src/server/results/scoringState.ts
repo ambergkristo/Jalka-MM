@@ -209,7 +209,6 @@ export async function buildActualGroupStandings(
 }
 
 export async function buildActualKnockoutResults(db: QueryableDatabase): Promise<ActualKnockoutResults> {
-  const stageCoverage = await getKnockoutStageCoverage(db);
   const actualKnockoutResults: ActualKnockoutResults = { stageTeams: {} };
   const stageOrder: Array<'R32' | 'R16' | 'QF' | 'SF'> = ['R32', 'R16', 'QF', 'SF'];
   const stageToNextRound: Record<'R32' | 'R16' | 'QF' | 'SF', 'R16' | 'QF' | 'SF' | 'Final'> = {
@@ -220,8 +219,6 @@ export async function buildActualKnockoutResults(db: QueryableDatabase): Promise
   };
 
   for (const stage of stageOrder) {
-    const coverage = stageCoverage.get(stage);
-    if (!coverage || coverage.total === 0 || coverage.confirmed !== coverage.total) continue;
     const winners = await getConfirmedStageWinners(db, stage);
     if (winners.length === 0) continue;
     actualKnockoutResults.stageTeams![stageToNextRound[stage]] = winners;

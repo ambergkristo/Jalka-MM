@@ -45,6 +45,30 @@ describe('actual scoring state derivation', () => {
     });
   });
 
+  it('advances a confirmed R32 winner into R16 before the full knockout stage is complete', async () => {
+    const db = createMockDatabase({
+      teams: knockoutTeams(),
+      matches: knockoutMatches(),
+      results: [
+        { matchId: 73, homeScore: 0, awayScore: 1, publicStatus: 'CONFIRMED_FINAL', isFinal: true }
+      ],
+      scorerFacts: []
+    });
+
+    await expect(buildActualKnockoutResults(db)).resolves.toMatchObject({
+      stageTeams: {
+        R16: ['Canada']
+      }
+    });
+    await expect(buildActualScoringState(db)).resolves.toMatchObject({
+      actualKnockoutResults: {
+        stageTeams: {
+          R16: ['Canada']
+        }
+      }
+    });
+  });
+
   it('does not expose tournament top scorers before the final and third-place matches are confirmed', async () => {
     const db = createMockDatabase({
       teams: baseTeams(),
@@ -383,6 +407,22 @@ function baseTeams() {
     { id: 'ARG', name: 'Argentina', name_et: 'Argentina', code: 'ARG' },
     { id: 'FRA', name: 'France', name_et: 'France', code: 'FRA' }
   ];
+}
+
+function knockoutTeams() {
+  return [
+    { id: 'RSA', name: 'South Africa', name_et: 'South Africa', code: 'RSA' },
+    { id: 'CAN', name: 'Canada', name_et: 'Canada', code: 'CAN' }
+  ];
+}
+
+function knockoutMatches() {
+  return Array.from({ length: 16 }, (_, index) => ({
+    id: 73 + index,
+    stage: 'R32',
+    home_team_id: 'RSA',
+    away_team_id: 'CAN'
+  }));
 }
 
 function baseMatches() {
