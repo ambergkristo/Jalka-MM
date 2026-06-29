@@ -9,18 +9,44 @@ import { DatabaseResultRepository } from './databaseResultRepository.js';
 import type { LeaderboardRepository } from './leaderboardRepository.js';
 import { confirmManualResult, type ManualResultConfirmationInput } from './manualResultCorrection.js';
 import { backfillTopScorersFromConfirmedResults, countVisibleScorerFactGoals, rebuildTopScorerStandings, syncConfirmedScorersForMatch } from './topScorerStandings.js';
-import type { ResultUpdate } from './resultTypes.js';
+import type { ResultUpdate, ResultsAgentRepository } from './resultTypes.js';
 import { normalizeScorerName } from './scorerNormalization.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
 import { buildConfiguredActualScoringState } from './scoringState.js';
 import { repairPersistedLeaderboardSnapshot as repairPersistedLeaderboardSnapshotImpl } from './leaderboardRepair.js';
 import { buildLeaderboardScoringBreakdown } from './leaderboardScoring.js';
 import { deleteThirdPlaceQualifierLockForGroup, listThirdPlaceQualifierLocks, upsertThirdPlaceQualifierLock, type ThirdPlaceQualifierLockInput } from './thirdPlaceQualifierLocks.js';
+import { buildCanonicalPlayoffState } from './playoffState.js';
+import type { ResultProvider } from './resultProvider.js';
 
 const repository = new DatabaseResultRepository(db);
 const providerConfig = loadResultProviderConfig();
 const provider = createResultProvider(providerConfig);
 let catchUpInFlight: Promise<void> | undefined;
+
+export interface PlayoffRepairMatchStatus {
+  providerFixtureId?: number;
+  providerStatus?: string;
+  providerScore?: string;
+  internalMatchId: number;
+  storedStatus?: string;
+  confirmedHomeScore?: number;
+  confirmedAwayScore?: number;
+  isConfirmedFinal: boolean;
+  includedInPlayedCount: boolean;
+  includedInLatestResults: boolean;
+  canadaInR16: boolean;
+  leaderboardRebuiltAfterRepair: boolean;
+}
+
+export interface PlayoffRepairStatus {
+  lastRepairStartedAt?: string;
+  lastRepairFinishedAt?: string;
+  checked: number;
+  repaired: number;
+  errors: string[];
+  match73?: PlayoffRepairMatchStatus;
+}
 
 export function getResultsAgentStatus(now = new Date()) {
   return getResultAgentStatus({ repository, provider, now }).then((status) => ({
@@ -50,33 +76,106 @@ export function runResultsAgentCycle(now = new Date(), options: { dryRun?: boole
 }
 
 export function repairPlayoffResults(now = new Date(), options: { dryRun?: boolean } = {}) {
-  return (async () => {
-    const trackedMatches = await repository.listTrackedMatches();
-    const playoffMatchIds = trackedMatches
-      .filter((match) => match.stage && match.stage !== 'GROUP' && !match.isFinal)
-      .map((match) => match.id);
+  return repairPlayoffResultsWith({
+    repository,
+    leaderboardRepository: repository,
+    provider,
+    now,
+    dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
+    confirmationDelayMinutes: providerConfig.confirmationDelayMinutes,
+    db
+  });
+}
 
-    if (playoffMatchIds.length === 0) {
-      return runResultUpdateCycle({
-        repository,
-        leaderboardRepository: repository,
-        provider,
-        now,
-        dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
-        confirmationDelayMinutes: providerConfig.confirmationDelayMinutes
-      });
-    }
+export async function repairPlayoffResultsWith(input: {
+  repository: ResultsAgentRepository & { refreshDerivedTournamentState?: (timestamp: string) => Promise<unknown> };
+  leaderboardRepository: LeaderboardRepository;
+  provider: ResultProvider;
+  now: Date;
+  db: typeof db;
+  dryRun?: boolean;
+  confirmationDelayMinutes?: number;
+}): Promise<PlayoffRepairStatus> {
+  const startedAt = input.now.toISOString();
+  const trackedMatches = await input.repository.listTrackedMatches();
+  const playoffMatches = trackedMatches.filter((match) => match.stage && match.stage !== 'GROUP' && !match.isFinal);
+  const errors: string[] = [];
+  let checked = 0;
+  let repaired = 0;
+  let leaderboardRebuiltAfterRepair = false;
+  console.info('[playoff-repair] started', { startedAt, checkedMatches: playoffMatches.length });
 
-    return runResultUpdateCycle({
-      repository,
-      leaderboardRepository: repository,
-      provider,
-      now,
-      dryRun: options.dryRun ?? providerConfig.writeMode === 'dry-run',
-      confirmationDelayMinutes: providerConfig.confirmationDelayMinutes,
-      matchIds: playoffMatchIds
+  if (playoffMatches.length === 0) {
+    const fallbackRun = await runResultsAgentCycle(input.now, { dryRun: input.dryRun });
+    console.info('[playoff-repair] completed', {
+      checked: fallbackRun.checkedMatches,
+      repaired: fallbackRun.finalizedResults,
+      errors: errors.length
     });
-  })();
+    return {
+      lastRepairStartedAt: startedAt,
+      lastRepairFinishedAt: fallbackRun.finishedAt,
+      checked: fallbackRun.checkedMatches,
+      repaired: fallbackRun.finalizedResults,
+      errors,
+      match73: await buildPlayoffRepairMatchStatus(input.db, input.repository, input.provider, input.now, fallbackRun.leaderboardRebuilt).catch(() => undefined)
+    };
+  }
+
+  for (const match of playoffMatches) {
+    checked += 1;
+    console.info(`[playoff-repair] checking match #${match.id} providerFixtureId=${match.providerMatchId ?? 'unknown'}`);
+    try {
+      const preview = await input.provider.fetchMatchUpdate(match, input.now);
+      console.info(`[playoff-repair] provider status=${preview.rawProviderStatus ?? preview.status} score=${formatScore(preview.homeScore, preview.awayScore) ?? 'n/a'} match #${match.id}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(message);
+      console.info(`[playoff-repair] provider error match #${match.id}: ${message}`);
+    }
+  }
+
+  const runSummary = await runResultUpdateCycle({
+    repository: input.repository,
+    leaderboardRepository: input.leaderboardRepository,
+    provider: input.provider,
+    now: input.now,
+    dryRun: input.dryRun ?? providerConfig.writeMode === 'dry-run',
+    confirmationDelayMinutes: input.confirmationDelayMinutes,
+    matchIds: playoffMatches.map((match) => match.id)
+  });
+
+  repaired = runSummary.finalizedResults;
+  const refresh = await input.repository.refreshDerivedTournamentState?.(input.now.toISOString());
+  leaderboardRebuiltAfterRepair = Boolean(refresh) || runSummary.leaderboardRebuilt;
+  const repairedMatch73 = await input.repository.getMatchResult(73).catch(() => undefined);
+  if (repairedMatch73?.isFinal && repairedMatch73.publicStatus === 'CONFIRMED_FINAL') {
+    console.info('[playoff-repair] persisted match #73 as CONFIRMED_FINAL');
+  }
+  if (leaderboardRebuiltAfterRepair) {
+    console.info('[playoff-repair] rebuilt public snapshot');
+    console.info('[playoff-repair] rebuilt leaderboard');
+  }
+
+  const match73 = await buildPlayoffRepairMatchStatus(input.db, input.repository, input.provider, input.now, leaderboardRebuiltAfterRepair).catch((error) => {
+    errors.push(error instanceof Error ? error.message : String(error));
+    return undefined;
+  });
+
+  console.info('[playoff-repair] completed', {
+    checked,
+    repaired,
+    errors: errors.length
+  });
+
+  return {
+    lastRepairStartedAt: startedAt,
+    lastRepairFinishedAt: runSummary.finishedAt,
+    checked,
+    repaired,
+    errors,
+    match73
+  };
 }
 
 export function queueResultAgentCatchUp(now = new Date()): Promise<void> | undefined {
@@ -84,9 +183,7 @@ export function queueResultAgentCatchUp(now = new Date()): Promise<void> | undef
   if (catchUpInFlight) return catchUpInFlight;
 
   catchUpInFlight = (async () => {
-    const status = await repository.getStatus(provider.name, now);
-    if (status.staleMatchesCount === 0) return;
-    await runResultsAgentCycle(now);
+    await repairPlayoffResults(now);
   })()
     .catch((error) => {
       console.warn('Result agent catch-up failed:', error instanceof Error ? error.message : String(error));
@@ -211,6 +308,33 @@ export async function getLeaderboardScoringBreakdown(playerQuery: string, now = 
   });
 }
 
+export async function getPlayoffRepairStatus(input: {
+  db?: typeof db;
+  repository?: ResultsAgentRepository;
+  provider?: ResultProvider;
+  now?: Date;
+} = {}): Promise<PlayoffRepairStatus> {
+  const database = input.db ?? db;
+  const resultsRepository = input.repository ?? repository;
+  const resultProvider = input.provider ?? provider;
+  const now = input.now ?? new Date();
+  const latestRun = await database.one(`
+    SELECT started_at, finished_at, checked_matches, finalized_matches, leaderboard_rebuilt, warnings_json
+    FROM result_agent_runs
+    ORDER BY finished_at DESC
+    LIMIT 1
+  `).catch(() => null);
+  const match73 = await buildPlayoffRepairMatchStatus(database, resultsRepository, resultProvider, now, Boolean(latestRun?.leaderboard_rebuilt)).catch(() => undefined);
+  return {
+    lastRepairStartedAt: latestRun?.started_at ? String(latestRun.started_at) : undefined,
+    lastRepairFinishedAt: latestRun?.finished_at ? String(latestRun.finished_at) : undefined,
+    checked: Number(latestRun?.checked_matches ?? 0),
+    repaired: Number(latestRun?.finalized_matches ?? 0),
+    errors: parseWarnings(latestRun?.warnings_json),
+    match73
+  };
+}
+
 export async function listThirdPlaceQualifierLocksRuntime() {
   return {
     locks: await listThirdPlaceQualifierLocks(db)
@@ -231,6 +355,76 @@ export async function upsertThirdPlaceQualifierLockRuntime(input: ThirdPlaceQual
       warnings: rebuild.warnings
     } : undefined
   };
+}
+
+async function buildPlayoffRepairMatchStatus(
+  database: typeof db,
+  resultsRepository: ResultsAgentRepository,
+  resultProvider: ResultProvider,
+  now: Date,
+  leaderboardRebuiltAfterRepair: boolean
+): Promise<PlayoffRepairMatchStatus | undefined> {
+  const trackedMatches = await resultsRepository.listTrackedMatches();
+  const match = trackedMatches.find((candidate) => candidate.id === 73);
+  if (!match) return undefined;
+  const stored = await resultsRepository.getMatchResult(73).catch(() => undefined);
+  const providerUpdate = await resultProvider.fetchMatchUpdate(match, now).catch(() => undefined);
+  const confirmedResultsCount = Number((await database.one(`
+    SELECT COUNT(*) AS count
+    FROM match_results
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
+  `).catch(() => null))?.count ?? 0);
+  const latestResultRows = await database.all(`
+    SELECT m.id
+    FROM match_results r
+    JOIN matches m ON m.id = r.match_id
+    WHERE ${CONFIRMED_FINAL_RESULT_SQL}
+    ORDER BY COALESCE(r.confirmed_at, r.last_checked_at) DESC, m.id DESC
+    LIMIT 8
+  `).catch(() => []);
+  const playoffState = await buildCanonicalPlayoffState({
+    now,
+    confirmedGroupStageMatches: confirmedResultsCount
+  }).catch(() => undefined);
+  const playoffFixture = playoffState?.bracketFixturesByMatchId.get(73);
+  const canadaInR16 = Boolean(
+    playoffFixture?.winnerTeamId &&
+    (
+      (playoffFixture.homeTeamId && playoffFixture.winnerTeamId === playoffFixture.homeTeamId && /canada/i.test(playoffFixture.homeTeam)) ||
+      (playoffFixture.awayTeamId && playoffFixture.winnerTeamId === playoffFixture.awayTeamId && /canada/i.test(playoffFixture.awayTeam))
+    )
+  );
+  const includedInLatestResults = latestResultRows.some((row) => Number(row.id) === 73);
+  return {
+    providerFixtureId: Number(stored?.providerMatchId ?? match.providerMatchId ?? 73),
+    providerStatus: providerUpdate?.rawProviderStatus ?? providerUpdate?.status ?? stored?.rawProviderStatus ?? stored?.status,
+    providerScore: formatScore(providerUpdate?.homeScore ?? stored?.homeScore ?? stored?.confirmedHomeScore, providerUpdate?.awayScore ?? stored?.awayScore ?? stored?.confirmedAwayScore),
+    internalMatchId: 73,
+    storedStatus: stored?.publicStatus ?? stored?.status,
+    confirmedHomeScore: stored?.confirmedHomeScore ?? stored?.homeScore,
+    confirmedAwayScore: stored?.confirmedAwayScore ?? stored?.awayScore,
+    isConfirmedFinal: Boolean(stored?.isFinal && stored.publicStatus === 'CONFIRMED_FINAL' || (stored?.confirmedHomeScore !== undefined && stored?.confirmedAwayScore !== undefined)),
+    includedInPlayedCount: Boolean(stored?.confirmedHomeScore !== undefined && stored?.confirmedAwayScore !== undefined),
+    includedInLatestResults,
+    canadaInR16,
+    leaderboardRebuiltAfterRepair
+  };
+}
+
+function formatScore(homeScore?: number, awayScore?: number): string | undefined {
+  if (typeof homeScore !== 'number' || typeof awayScore !== 'number') return undefined;
+  if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) return undefined;
+  return `${homeScore}-${awayScore}`;
+}
+
+function parseWarnings(value: unknown): string[] {
+  if (typeof value !== 'string' || value.length === 0) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function deleteThirdPlaceQualifierLockRuntime(group: string, now = new Date()) {

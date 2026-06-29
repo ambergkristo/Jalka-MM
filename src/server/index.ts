@@ -7,15 +7,19 @@ import { getPublicState, healthCheck, seedTournamentData } from './db.js';
 import { db } from './db.js';
 import type { ManualResultConfirmationInput } from './results/manualResultCorrection.js';
 import { getPublicResultsPayload, getPublicTournamentPayload, getPublicTournamentSnapshot } from './results/publicTournamentSnapshot.js';
-import { confirmManualResultRuntime, deleteThirdPlaceQualifierLockRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getResultsAgentRunPermission, getResultsAgentStatus, listThirdPlaceQualifierLocksRuntime, queueResultAgentCatchUp, repairPlayoffResults, runResultsAgentCycle, upsertThirdPlaceQualifierLockRuntime } from './results/resultAgentRuntime.js';
+import { confirmManualResultRuntime, deleteThirdPlaceQualifierLockRuntime, getCurrentLeaderboard, getLeaderboardScoringBreakdown, getManualResultPermission, getPlayoffRepairStatus, getResultsAgentRunPermission, getResultsAgentStatus, listThirdPlaceQualifierLocksRuntime, queueResultAgentCatchUp, repairPlayoffResults, upsertThirdPlaceQualifierLockRuntime } from './results/resultAgentRuntime.js';
 import { collectPublicStateDiagnostics, queuePublicStateRepairIfStale, runFullSafeRebuild, runPublicStateRepairAction } from './results/publicStateHealth.js';
 import { rebuildPublicTournamentState } from './results/publicTournamentRebuild.js';
 import { collectProviderHealth } from './results/providerHealth.js';
 
 await seedTournamentData();
+const startupAt = new Date();
+console.info('[startup] service started', { startedAt: startupAt.toISOString() });
 try {
+  console.info('[startup] result agent startup repair requested', { startedAt: startupAt.toISOString() });
   await repairPlayoffResults(new Date());
   await rebuildPublicTournamentState(db, new Date());
+  console.info('[startup] result agent startup repair completed', { finishedAt: new Date().toISOString() });
 } catch (error) {
   console.warn('Startup public-state repair skipped:', error instanceof Error ? error.message : String(error));
 }
@@ -70,6 +74,13 @@ createServer(async (request, response) => {
       }
     }
     if (request.method === 'GET' && url.pathname === '/api/results-agent/status') return json(response, 200, await getResultsAgentStatus());
+    if (request.method === 'GET' && url.pathname === '/api/operator/playoff-repair-status') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      return json(response, 200, await getPlayoffRepairStatus());
+    }
     if (request.method === 'GET' && url.pathname === '/api/public-state/diagnostics') return json(response, 200, await collectPublicStateDiagnostics({ db }));
     if (request.method === 'GET' && url.pathname === '/api/provider-health') return json(response, 200, await collectProviderHealth({ db, resultAgentStatus: await getResultsAgentStatus() }));
     if (request.method === 'GET' && url.pathname === '/api/operator/scoring-breakdown') {
@@ -128,13 +139,21 @@ createServer(async (request, response) => {
       if (!permission.allowed) return json(response, permission.status, { error: permission.error });
       return json(response, 200, await runFullSafeRebuild({ db }));
     }
+    if (request.method === 'POST' && url.pathname === '/api/operator/repair-playoff-results-now') {
+      const permission = getManualResultPermission({
+        providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
+      });
+      if (!permission.allowed) return json(response, permission.status, { error: permission.error });
+      const result = await repairPlayoffResults(new Date());
+      return json(response, 200, result);
+    }
     if (request.method === 'POST' && url.pathname === '/api/results-agent/run') {
       const permission = getResultsAgentRunPermission({
         dryRunRequested: url.searchParams.get('dryRun') === 'true',
         providedSecret: singleHeaderValue(request.headers['x-results-agent-secret'])
       });
       if (!permission.allowed) return json(response, permission.status, { error: permission.error });
-      return json(response, 200, await runResultsAgentCycle(new Date(), { dryRun: permission.dryRun }));
+      return json(response, 200, await repairPlayoffResults(new Date(), { dryRun: permission.dryRun }));
     }
     if (request.method === 'POST' && url.pathname === '/api/results-agent/manual-confirm') {
       const permission = getManualResultPermission({

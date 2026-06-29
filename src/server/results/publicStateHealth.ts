@@ -1,7 +1,7 @@
 import type { QueryableDatabase } from '../databaseAdapter.js';
 import { predictionRepository } from '../../domain/predictionRepository.js';
 import { db } from '../db.js';
-import { getResultsAgentStatus, repairPlayoffResults, runResultsAgentCycle } from './resultAgentRuntime.js';
+import { getResultsAgentStatus, repairPlayoffResults, type PlayoffRepairStatus } from './resultAgentRuntime.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { backfillTopScorersFromConfirmedResults, countUnknownManualScorerGoals, countVisibleScorerFactGoals, rebuildTopScorerStandings } from './topScorerStandings.js';
 import { normalizeScorerName } from './scorerNormalization.js';
@@ -78,7 +78,7 @@ export interface PublicStateRepairResult {
   message: string;
   generatedAt: string;
   publicSnapshotRebuiltAt: string;
-  resultAgentRun?: Awaited<ReturnType<typeof runResultsAgentCycle>>;
+  resultAgentRun?: PlayoffRepairStatus;
   leaderboardRowsCount: number;
   topScorerRowsCount: number;
   groupStandingsRowsCount: number;
@@ -270,7 +270,7 @@ export async function runPublicStateRepairAction(input: {
   });
 
   try {
-    let resultAgentRun: Awaited<ReturnType<typeof runResultsAgentCycle>> | undefined;
+    let resultAgentRun: PlayoffRepairStatus | undefined;
     let scorerRepair: Awaited<ReturnType<typeof backfillTopScorersFromConfirmedResults>> | undefined;
     if (input.action === 'catch-up') {
       resultAgentRun = await repairPlayoffResults(now);
@@ -424,13 +424,12 @@ function buildFullSafeRebuildSteps(database: QueryableDatabase, now: Date): Full
       async run() {
         const result = await repairPlayoffResults(now);
         return {
-          message: `Result-agent catch-up completed: ${result.updatedMatches} match update(s), ${result.finalizedResults} finalized.`,
-          summary: { scoresUpdated: result.updatedMatches },
+          message: `Result-agent catch-up completed: ${result.checked} match check(s), ${result.repaired} repaired.`,
+          summary: { scoresUpdated: result.repaired },
           details: {
-            checkedMatches: result.checkedMatches,
-            updatedMatches: result.updatedMatches,
-            finalizedResults: result.finalizedResults,
-            warningsCount: result.warnings.length
+            checkedMatches: result.checked,
+            repairedMatches: result.repaired,
+            errorsCount: result.errors.length
           }
         };
       }
@@ -977,12 +976,12 @@ function deriveOperatorStatus(
 
 function summarizeRepairMessage(
   action: PublicStateRepairAction,
-  resultAgentRun?: Awaited<ReturnType<typeof runResultsAgentCycle>>,
+  resultAgentRun?: PlayoffRepairStatus,
   scorerRepair?: Awaited<ReturnType<typeof backfillTopScorersFromConfirmedResults>>
 ): string {
   if (action === 'catch-up') {
-    const finalized = resultAgentRun?.finalizedResults ?? 0;
-    return finalized > 0 ? `Result-agent catch-up completed with ${finalized} finalized match(es).` : 'Result-agent catch-up completed without new final results.';
+    const repaired = resultAgentRun?.repaired ?? 0;
+    return repaired > 0 ? `Result-agent catch-up completed with ${repaired} repaired playoff match(es).` : 'Result-agent catch-up completed without new final results.';
   }
   if (action === 'rebuild-public-dashboard') return 'Public dashboard caches were rebuilt from confirmed facts.';
   if (action === 'rebuild-group-standings') return 'Group standings cache was rebuilt from confirmed results.';

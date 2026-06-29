@@ -27,6 +27,14 @@ export function planMatchUpdate(match: TrackedMatch, now: Date): MatchUpdatePlan
   }
 
   const kickoff = new Date(match.kickoffUtc);
+  if (Number.isNaN(kickoff.getTime())) {
+    return {
+      matchId: match.id,
+      shouldCheckNow: true,
+      reason: 'unknown-kickoff',
+      nextCheckAt: addMilliseconds(now, PASSIVE_RESCHEDULE_MS).toISOString()
+    };
+  }
   const activeWindowStartsAt = new Date(kickoff.getTime() - ACTIVE_CHECK_WINDOW_MS);
   const expectedFullTimeCheckAt = new Date(kickoff.getTime() + EXPECTED_FULL_TIME_AFTER_KICKOFF_MS);
 
