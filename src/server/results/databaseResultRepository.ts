@@ -7,6 +7,7 @@ import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { rebuildPublicTournamentState } from './publicTournamentRebuild.js';
 import { syncConfirmedScorersForMatch } from './topScorerStandings.js';
 import { CONFIRMED_FINAL_RESULT_SQL } from './finalizedResultState.js';
+import { listCanonicalRuntimeMatches, toTrackedMatch } from './canonicalMatchCatalog.js';
 import type { LeaderboardRebuildResult, MatchStatus, ProviderResultObservation, PublicResultStatus, ResultAgentRunSummary, ResultAgentStatus, ResultAgentWarningDetail, ResultUpdate, ResultsAgentRepository, TrackedMatch } from './resultTypes.js';
 
 export class DatabaseResultRepository implements ResultsAgentRepository, LeaderboardRepository {
@@ -30,46 +31,8 @@ export class DatabaseResultRepository implements ResultsAgentRepository, Leaderb
 
   async listTrackedMatches(): Promise<TrackedMatch[]> {
     await this.migrate();
-    const rows = await this.db.all(`
-      SELECT
-        m.id,
-        m.stage,
-        m.kickoff_at,
-        COALESCE(t_home.name_et, t_home.name, m.home_slot) AS home_team,
-        COALESCE(t_away.name_et, t_away.name, m.away_slot) AS away_team,
-        r.provider_fixture_id,
-        r.status,
-        COALESCE(r.confirmed_home_score, r.home_score) AS home_score,
-        COALESCE(r.confirmed_away_score, r.away_score) AS away_score,
-        r.minute,
-        r.is_final,
-        r.last_checked_at,
-        r.next_check_at
-      FROM matches m
-      LEFT JOIN match_results r ON r.match_id = m.id
-      LEFT JOIN teams t_home ON t_home.id = m.home_team_id
-      LEFT JOIN teams t_away ON t_away.id = m.away_team_id
-      ORDER BY m.id
-    `);
-    return rows.flatMap((row) => {
-      const kickoffUtc = String(row.kickoff_at);
-      if (Number.isNaN(Date.parse(kickoffUtc))) return [];
-      return [{
-        id: Number(row.id),
-        stage: row.stage ? (String(row.stage) as TrackedMatch['stage']) : undefined,
-        providerMatchId: nullableString(row.provider_fixture_id),
-        kickoffUtc,
-        status: row.status ? (String(row.status) as MatchStatus) : 'SCHEDULED',
-        homeTeam: String(row.home_team),
-        awayTeam: String(row.away_team),
-        homeScore: nullableNumber(row.home_score),
-        awayScore: nullableNumber(row.away_score),
-        minute: nullableNumber(row.minute),
-        isFinal: toBoolean(row.is_final),
-        lastCheckedAt: nullableString(row.last_checked_at),
-        nextCheckAt: nullableString(row.next_check_at)
-      }];
-    });
+    const canonicalMatches = await listCanonicalRuntimeMatches(this.db, new Date());
+    return canonicalMatches.map(toTrackedMatch);
   }
 
   async saveResultUpdate(update: ResultUpdate): Promise<{ finalResultChanged: boolean }> {

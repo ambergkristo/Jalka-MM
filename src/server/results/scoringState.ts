@@ -7,6 +7,7 @@ import { extractOpenWorldCupThirdPlaceQualifierSignals, fetchOpenWorldCupGames, 
 import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
 import { loadOrganizerThirdPlaceQualifierSignals } from './thirdPlaceQualifierLocks.js';
+import { listCanonicalRuntimeMatches, type CanonicalRuntimeMatch } from './canonicalMatchCatalog.js';
 
 export type QualifierSource = 'groupTop2' | 'providerKnockoutSlot' | 'mathematicalLock' | 'organizerLock' | 'notConfirmed';
 
@@ -217,17 +218,18 @@ export async function buildActualKnockoutResults(db: QueryableDatabase): Promise
     QF: 'SF',
     SF: 'Final'
   };
+  const runtimeMatchById = new Map((await listCanonicalRuntimeMatches(db)).map((match) => [match.id, match]));
 
   for (const stage of stageOrder) {
-    const winners = await getConfirmedStageWinners(db, stage);
+    const winners = await getConfirmedStageWinners(db, stage, runtimeMatchById);
     if (winners.length === 0) continue;
     actualKnockoutResults.stageTeams![stageToNextRound[stage]] = winners;
   }
 
-  const thirdPlaceWinner = await getSingleKnockoutWinner(db, 'THIRD_PLACE');
+  const thirdPlaceWinner = await getSingleKnockoutWinner(db, 'THIRD_PLACE', runtimeMatchById);
   if (thirdPlaceWinner) actualKnockoutResults.thirdPlaceWinner = thirdPlaceWinner;
 
-  const champion = await getSingleKnockoutWinner(db, 'FINAL');
+  const champion = await getSingleKnockoutWinner(db, 'FINAL', runtimeMatchById);
   if (champion) actualKnockoutResults.champion = champion;
 
   if (!actualKnockoutResults.stageTeams || Object.keys(actualKnockoutResults.stageTeams).length === 0) delete actualKnockoutResults.stageTeams;
@@ -317,7 +319,11 @@ async function loadOpenWorldCupThirdPlaceQualifierSignals(
   return extractOpenWorldCupThirdPlaceQualifierSignals(games);
 }
 
-async function getConfirmedStageWinners(db: QueryableDatabase, stage: 'R32' | 'R16' | 'QF' | 'SF'): Promise<string[]> {
+async function getConfirmedStageWinners(
+  db: QueryableDatabase,
+  stage: 'R32' | 'R16' | 'QF' | 'SF',
+  runtimeMatchById: Map<number, CanonicalRuntimeMatch>
+): Promise<string[]> {
   const rows = await db.all(`
     SELECT
       m.id,
@@ -349,12 +355,16 @@ async function getConfirmedStageWinners(db: QueryableDatabase, stage: 'R32' | 'R
 
   return rows.flatMap((row) => {
     if (!isConfirmedFinalResult(row)) return [];
-    const winner = resolveWinner(row);
+    const winner = resolveWinner(applyCanonicalKnockoutMatch(row, runtimeMatchById.get(Number(row.id ?? 0))));
     return winner ? [winner] : [];
   });
 }
 
-async function getSingleKnockoutWinner(db: QueryableDatabase, stage: 'THIRD_PLACE' | 'FINAL'): Promise<string | undefined> {
+async function getSingleKnockoutWinner(
+  db: QueryableDatabase,
+  stage: 'THIRD_PLACE' | 'FINAL',
+  runtimeMatchById: Map<number, CanonicalRuntimeMatch>
+): Promise<string | undefined> {
   const rows = await db.all(`
     SELECT
       m.id,
@@ -385,7 +395,7 @@ async function getSingleKnockoutWinner(db: QueryableDatabase, stage: 'THIRD_PLAC
     LIMIT 1
   `, [stage]);
   if (!isConfirmedFinalResult(rows[0] ?? {})) return undefined;
-  return resolveWinner(rows[0]);
+  return resolveWinner(applyCanonicalKnockoutMatch(rows[0], runtimeMatchById.get(Number(rows[0]?.id ?? 0))));
 }
 
 function resolveWinner(row: Record<string, unknown> | undefined): string | undefined {
@@ -410,6 +420,22 @@ function resolvePenaltyWinnerName(penaltyWinner: string, row: Record<string, unk
   if ([homeTeamId, homeTeamCode, homeTeam?.toUpperCase()].includes(winnerKey)) return homeTeam;
   if ([awayTeamId, awayTeamCode, awayTeam?.toUpperCase()].includes(winnerKey)) return awayTeam;
   return penaltyWinner;
+}
+
+function applyCanonicalKnockoutMatch(
+  row: Record<string, unknown> | undefined,
+  runtimeMatch: CanonicalRuntimeMatch | undefined
+): Record<string, unknown> | undefined {
+  if (!row || !runtimeMatch) return row;
+  return {
+    ...row,
+    home_team_id: runtimeMatch.homeTeamId ?? row.home_team_id,
+    away_team_id: runtimeMatch.awayTeamId ?? row.away_team_id,
+    home_team_code: runtimeMatch.homeTeamCode ?? row.home_team_code,
+    away_team_code: runtimeMatch.awayTeamCode ?? row.away_team_code,
+    home_team: runtimeMatch.homeTeam ?? row.home_team,
+    away_team: runtimeMatch.awayTeam ?? row.away_team
+  };
 }
 
 function resolveTeamNameFromFacts(input: { teamId?: string; teamCode?: string; teamName?: string }): string {

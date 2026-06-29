@@ -192,18 +192,21 @@ describe.sequential('playoff repair runtime', () => {
     expect(report.repaired).toBe(1);
     expect(refreshSpy).toHaveBeenCalled();
     expect(report.match73).toMatchObject({
-      internalMatchId: 73,
+      matchNumber: 73,
+      foundInTrackedMatches: true,
       providerFixtureId: 73,
       providerStatus: 'FINISHED',
       providerScore: '0-1',
-      storedStatus: 'CONFIRMED_FINAL',
+      persistedStatus: 'CONFIRMED_FINAL',
       confirmedHomeScore: 0,
       confirmedAwayScore: 1,
-      isConfirmedFinal: true,
+      persistedIsConfirmedFinal: true,
+      includedInHealthConfirmed: true,
       includedInPlayedCount: true,
       includedInLatestResults: true,
       canadaInR16: true,
-      leaderboardRebuiltAfterRepair: true
+      snapshotRebuilt: true,
+      leaderboardRebuilt: true
     });
 
     const playedCount = Number((await activeDb!.one(`

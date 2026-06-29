@@ -209,6 +209,66 @@ describe('public state health', () => {
       assert.equal(snapshot.topScorers.length, 1);
     });
   });
+
+  it('counts future R32 fixtures as upcoming once group stage is complete', async () => {
+    await withSimulationDb(async (db) => {
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async () => ({
+        ok: true,
+        status: 200,
+        async text() {
+          return '';
+        },
+        async json() {
+          return {
+            response: [
+              {
+                id: 73,
+                type: 'R32',
+                status: 'FINISHED',
+                local_date: '2026-06-28T19:00:00.000Z',
+                home_team_name_en: 'South Africa',
+                away_team_name_en: 'Canada',
+                home_team_label: 'South Africa',
+                away_team_label: 'Canada',
+                home_score: 0,
+                away_score: 1
+              },
+              {
+                id: 74,
+                type: 'R32',
+                status: 'SCHEDULED',
+                local_date: '2026-06-29T20:30:00.000Z',
+                home_team_name_en: 'Germany',
+                away_team_name_en: 'Paraguay',
+                home_team_label: 'Germany',
+                away_team_label: 'Paraguay',
+                home_score: 0,
+                away_score: 0
+              }
+            ]
+          };
+        }
+      })) as unknown as typeof fetch;
+      try {
+        await seedConfirmedGroupStageResults(db);
+        const diagnostics = await collectPublicStateDiagnostics({
+          db,
+          now: new Date('2026-06-29T19:20:00.000Z'),
+          resultAgentStatus: {
+            ...MOCK_RESULT_AGENT_STATUS,
+            latestConfirmedResultCount: 72
+          }
+        });
+
+        assert.equal(diagnostics.groupStageComplete, true);
+        assert.equal(diagnostics.confirmedGroupStageMatches, 72);
+        assert.equal(diagnostics.upcomingPlayoffFixturesCount > 0, true);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+  });
 });
 
 async function withSimulationDb(callback: (db: QueryableDatabase) => Promise<void>): Promise<void> {
@@ -282,6 +342,30 @@ async function seedProviderConfirmedResult(db: QueryableDatabase): Promise<void>
       ]
     }]
   });
+}
+
+async function seedConfirmedGroupStageResults(db: QueryableDatabase): Promise<void> {
+  const repository = new DatabaseResultRepository(db);
+  for (let matchId = 1; matchId <= 72; matchId += 1) {
+    await repository.saveResultUpdate({
+      matchId,
+      providerMatchId: String(matchId),
+      status: 'FINISHED',
+      publicStatus: 'CONFIRMED_FINAL',
+      homeScore: 0,
+      awayScore: 0,
+      confirmedHomeScore: 0,
+      confirmedAwayScore: 0,
+      confirmedAt: '2026-06-28T00:00:00.000Z',
+      confirmationSource: 'seed',
+      confirmationConfidence: 'provider-repeat',
+      isFinal: true,
+      lastCheckedAt: '2026-06-28T00:00:00.000Z',
+      provider: 'seed-provider',
+      rawProviderStatus: 'FINISHED',
+      providerResults: []
+    });
+  }
 }
 
 function countRows(db: QueryableDatabase, table: string): Promise<number> {

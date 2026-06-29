@@ -25,18 +25,21 @@ const provider = createResultProvider(providerConfig);
 let catchUpInFlight: Promise<void> | undefined;
 
 export interface PlayoffRepairMatchStatus {
+  matchNumber: number;
+  foundInTrackedMatches: boolean;
   providerFixtureId?: number;
   providerStatus?: string;
   providerScore?: string;
-  internalMatchId: number;
-  storedStatus?: string;
+  persistedStatus?: string;
   confirmedHomeScore?: number;
   confirmedAwayScore?: number;
-  isConfirmedFinal: boolean;
+  persistedIsConfirmedFinal: boolean;
+  includedInHealthConfirmed: boolean;
   includedInPlayedCount: boolean;
   includedInLatestResults: boolean;
   canadaInR16: boolean;
-  leaderboardRebuiltAfterRepair: boolean;
+  snapshotRebuilt: boolean;
+  leaderboardRebuilt: boolean;
 }
 
 export interface PlayoffRepairStatus {
@@ -102,7 +105,8 @@ export async function repairPlayoffResultsWith(input: {
   const errors: string[] = [];
   let checked = 0;
   let repaired = 0;
-  let leaderboardRebuiltAfterRepair = false;
+  let snapshotRebuilt = false;
+  let leaderboardRebuilt = false;
   console.info('[playoff-repair] started', { startedAt, checkedMatches: playoffMatches.length });
 
   if (playoffMatches.length === 0) {
@@ -118,7 +122,10 @@ export async function repairPlayoffResultsWith(input: {
       checked: fallbackRun.checkedMatches,
       repaired: fallbackRun.finalizedResults,
       errors,
-      match73: await buildPlayoffRepairMatchStatus(input.db, input.repository, input.provider, input.now, fallbackRun.leaderboardRebuilt).catch(() => undefined)
+      match73: await buildPlayoffRepairMatchStatus(input.db, input.repository, input.provider, input.now, {
+        snapshotRebuilt: fallbackRun.leaderboardRebuilt,
+        leaderboardRebuilt: fallbackRun.leaderboardRebuilt
+      }).catch(() => undefined)
     };
   }
 
@@ -147,17 +154,21 @@ export async function repairPlayoffResultsWith(input: {
 
   repaired = runSummary.finalizedResults;
   const refresh = await input.repository.refreshDerivedTournamentState?.(input.now.toISOString());
-  leaderboardRebuiltAfterRepair = Boolean(refresh) || runSummary.leaderboardRebuilt;
+  snapshotRebuilt = Boolean(refresh) || runSummary.leaderboardRebuilt;
+  leaderboardRebuilt = Boolean(refresh) || runSummary.leaderboardRebuilt;
   const repairedMatch73 = await input.repository.getMatchResult(73).catch(() => undefined);
   if (repairedMatch73?.isFinal && repairedMatch73.publicStatus === 'CONFIRMED_FINAL') {
     console.info('[playoff-repair] persisted match #73 as CONFIRMED_FINAL');
   }
-  if (leaderboardRebuiltAfterRepair) {
+  if (snapshotRebuilt || leaderboardRebuilt) {
     console.info('[playoff-repair] rebuilt public snapshot');
     console.info('[playoff-repair] rebuilt leaderboard');
   }
 
-  const match73 = await buildPlayoffRepairMatchStatus(input.db, input.repository, input.provider, input.now, leaderboardRebuiltAfterRepair).catch((error) => {
+  const match73 = await buildPlayoffRepairMatchStatus(input.db, input.repository, input.provider, input.now, {
+    snapshotRebuilt,
+    leaderboardRebuilt
+  }).catch((error) => {
     errors.push(error instanceof Error ? error.message : String(error));
     return undefined;
   });
@@ -324,7 +335,10 @@ export async function getPlayoffRepairStatus(input: {
     ORDER BY finished_at DESC
     LIMIT 1
   `).catch(() => null);
-  const match73 = await buildPlayoffRepairMatchStatus(database, resultsRepository, resultProvider, now, Boolean(latestRun?.leaderboard_rebuilt)).catch(() => undefined);
+  const match73 = await buildPlayoffRepairMatchStatus(database, resultsRepository, resultProvider, now, {
+    snapshotRebuilt: Boolean(latestRun?.leaderboard_rebuilt),
+    leaderboardRebuilt: Boolean(latestRun?.leaderboard_rebuilt)
+  }).catch(() => undefined);
   return {
     lastRepairStartedAt: latestRun?.started_at ? String(latestRun.started_at) : undefined,
     lastRepairFinishedAt: latestRun?.finished_at ? String(latestRun.finished_at) : undefined,
@@ -362,11 +376,23 @@ async function buildPlayoffRepairMatchStatus(
   resultsRepository: ResultsAgentRepository,
   resultProvider: ResultProvider,
   now: Date,
-  leaderboardRebuiltAfterRepair: boolean
+  rebuildStatus: { snapshotRebuilt: boolean; leaderboardRebuilt: boolean }
 ): Promise<PlayoffRepairMatchStatus | undefined> {
   const trackedMatches = await resultsRepository.listTrackedMatches();
   const match = trackedMatches.find((candidate) => candidate.id === 73);
-  if (!match) return undefined;
+  if (!match) {
+    return {
+      matchNumber: 73,
+      foundInTrackedMatches: false,
+      persistedIsConfirmedFinal: false,
+      includedInHealthConfirmed: false,
+      includedInPlayedCount: false,
+      includedInLatestResults: false,
+      canadaInR16: false,
+      snapshotRebuilt: rebuildStatus.snapshotRebuilt,
+      leaderboardRebuilt: rebuildStatus.leaderboardRebuilt
+    };
+  }
   const stored = await resultsRepository.getMatchResult(73).catch(() => undefined);
   const providerUpdate = await resultProvider.fetchMatchUpdate(match, now).catch(() => undefined);
   const confirmedResultsCount = Number((await database.one(`
@@ -390,24 +416,28 @@ async function buildPlayoffRepairMatchStatus(
   const canadaInR16 = Boolean(
     playoffFixture?.winnerTeamId &&
     (
-      (playoffFixture.homeTeamId && playoffFixture.winnerTeamId === playoffFixture.homeTeamId && /canada/i.test(playoffFixture.homeTeam)) ||
-      (playoffFixture.awayTeamId && playoffFixture.winnerTeamId === playoffFixture.awayTeamId && /canada/i.test(playoffFixture.awayTeam))
+      (playoffFixture.homeTeamId && playoffFixture.winnerTeamId === playoffFixture.homeTeamId && /(canada|kanada)/i.test(playoffFixture.homeTeam)) ||
+      (playoffFixture.awayTeamId && playoffFixture.winnerTeamId === playoffFixture.awayTeamId && /(canada|kanada)/i.test(playoffFixture.awayTeam))
     )
   );
   const includedInLatestResults = latestResultRows.some((row) => Number(row.id) === 73);
+  const persistedIsConfirmedFinal = Boolean(stored?.isFinal && stored.publicStatus === 'CONFIRMED_FINAL' || (stored?.confirmedHomeScore !== undefined && stored?.confirmedAwayScore !== undefined));
   return {
+    matchNumber: 73,
+    foundInTrackedMatches: true,
     providerFixtureId: Number(stored?.providerMatchId ?? match.providerMatchId ?? 73),
     providerStatus: providerUpdate?.rawProviderStatus ?? providerUpdate?.status ?? stored?.rawProviderStatus ?? stored?.status,
     providerScore: formatScore(providerUpdate?.homeScore ?? stored?.homeScore ?? stored?.confirmedHomeScore, providerUpdate?.awayScore ?? stored?.awayScore ?? stored?.confirmedAwayScore),
-    internalMatchId: 73,
-    storedStatus: stored?.publicStatus ?? stored?.status,
+    persistedStatus: stored?.publicStatus ?? stored?.status,
     confirmedHomeScore: stored?.confirmedHomeScore ?? stored?.homeScore,
     confirmedAwayScore: stored?.confirmedAwayScore ?? stored?.awayScore,
-    isConfirmedFinal: Boolean(stored?.isFinal && stored.publicStatus === 'CONFIRMED_FINAL' || (stored?.confirmedHomeScore !== undefined && stored?.confirmedAwayScore !== undefined)),
+    persistedIsConfirmedFinal,
+    includedInHealthConfirmed: persistedIsConfirmedFinal,
     includedInPlayedCount: Boolean(stored?.confirmedHomeScore !== undefined && stored?.confirmedAwayScore !== undefined),
     includedInLatestResults,
     canadaInR16,
-    leaderboardRebuiltAfterRepair
+    snapshotRebuilt: rebuildStatus.snapshotRebuilt,
+    leaderboardRebuilt: rebuildStatus.leaderboardRebuilt
   };
 }
 

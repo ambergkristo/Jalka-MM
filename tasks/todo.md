@@ -283,3 +283,24 @@
 - [x] Add regressions for unfinished-tournament scorer state and stale persisted +50 repair.
 - [x] Run targeted tests plus build.
 - [ ] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+# Sprint 35 - Canonical Playoff Match Runtime Fix
+
+- [x] Prove the current divergence for playoff match `#73` between public schedule, result-agent tracked matches, provider health, and confirmed-result storage.
+- [x] Introduce one canonical playoff runtime source for kickoff, provider fixture id, resolved teams, and status.
+- [x] Make result-agent tracked matches include playoff fixtures `#73-#104` even when seeded DB kickoff is `TBC`.
+- [x] Make provider/public health upcoming and live counts use canonical playoff runtime data instead of raw `matches.kickoff_at`.
+- [x] Make confirmed playoff latest-results and knockout progression resolve actual teams from the canonical playoff source.
+- [x] Expand `/api/operator/repair-playoff-results-now` so the `#73` payload proves each repair layer.
+- [x] Add playoff regressions for tracked matches, upcoming counts, confirmation, played count, latest results, Canada progression, leaderboard bonus, and source-divergence prevention.
+- [x] Run targeted tests and `npm run build`.
+- [ ] Commit, push to `origin/main`, and verify `HEAD == origin/main`.
+
+## Review
+
+- Root cause: `DatabaseResultRepository.listTrackedMatches()` dropped playoff rows because seeded knockout `matches.kickoff_at` values are `TBC`, and `providerHealth.getMatchHealth()` separately counted upcoming matches from the same raw DB field. The landing page already used `buildCanonicalPlayoffState()` and therefore saw enriched playoff fixtures from discovery/provider data, while result polling and health still read the incompatible DB schedule.
+- Added `canonicalMatchCatalog` so tracked matches, provider health, public health live counts, latest results, and knockout progression all consume the same canonical playoff fixture enrichment for kickoff, provider fixture id, and resolved teams.
+- Targeted validation passed:
+  `npx vitest run src/test/canonicalMatchCatalog.test.ts src/test/playoffRepairRuntime.test.ts src/test/playoffLeaderboardBonus.test.ts src/test/scoringState.test.ts --reporter=verbose`
+  `node --test dist/test-db/public-state-health-node-test.js dist/test-db/provider-health-node-test.js dist/test-db/playoff-canonical-runtime-node-test.js`
+  `npm run build`

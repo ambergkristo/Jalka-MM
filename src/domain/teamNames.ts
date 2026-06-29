@@ -62,7 +62,9 @@ const aliasEntries: Array<[string, string]> = [
 const teamByLookupKey = buildTeamLookup();
 
 export function resolveCanonicalTeam(value: string): CanonicalTeamIdentity | undefined {
-  return teamByLookupKey.get(normalizeTeamName(value));
+  const normalized = normalizeBaseTeamName(value);
+  const aliased = aliasToLookupKey.get(normalized) ?? normalized;
+  return teamByLookupKey.get(aliased);
 }
 
 export function canonicalTeamName(value: string): string {
@@ -82,7 +84,8 @@ export function normalizeTeamName(value: string): string {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ');
-  return aliasToLookupKey.get(normalized) ?? normalized;
+  const aliased = aliasToLookupKey.get(normalized) ?? normalized;
+  return teamByLookupKey.get(aliased)?.id.toLowerCase() ?? aliased;
 }
 
 function buildTeamLookup(): Map<string, CanonicalTeamIdentity> {

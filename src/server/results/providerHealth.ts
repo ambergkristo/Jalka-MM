@@ -1,5 +1,6 @@
 import providerMatchMapSeed from '../../data/providerMatchMap.example.json' with { type: 'json' };
 import type { QueryableDatabase } from '../databaseAdapter.js';
+import { listCanonicalRuntimeMatches } from './canonicalMatchCatalog.js';
 import { CONFIRMED_FINAL_RESULT_SQL, isConfirmedFinalResult } from './finalizedResultState.js';
 import { migrateResultPersistenceSchema } from './resultPersistenceSchema.js';
 import { loadResultProviderConfig } from './resultProviderConfig.js';
@@ -166,40 +167,27 @@ async function getProviderPollState(db: QueryableDatabase): Promise<{ lastSucces
 }
 
 async function getMatchHealth(db: QueryableDatabase, now: Date): Promise<ProviderHealthPayload['matchHealth']> {
-  const rows = await db.all(`
-    SELECT
-      m.kickoff_at,
-      r.status,
-      r.provisional_status,
-      r.confirmation_confidence,
-      r.next_confirmation_check_at,
-      r.needs_review_reason,
-      r.is_final,
-      r.confirmed_home_score,
-      r.confirmed_away_score
-    FROM matches m
-    LEFT JOIN match_results r ON r.match_id = m.id
-  `);
-  const confirmed = rows.filter((row) => isConfirmedFinalResult(row));
-  const liveOrProvisional = rows.filter((row) => {
-    if (isConfirmedFinalResult(row)) return false;
-    const publicStatus = derivePublicResultStatus(row);
-    return publicStatus === 'LIVE' || publicStatus === 'CONFIRMING' || publicStatus === 'NEEDS_REVIEW';
+  const matches = await listCanonicalRuntimeMatches(db, now);
+  const confirmed = matches.filter((match) => match.isFinal);
+  const liveOrProvisional = matches.filter((match) =>
+    !match.isFinal &&
+    (match.publicStatus === 'LIVE' || match.publicStatus === 'CONFIRMING' || match.publicStatus === 'NEEDS_REVIEW')
+  );
+  const upcoming = matches.filter((match) => {
+    if (match.isFinal) return false;
+    const kickoffMs = Date.parse(match.kickoffAt);
+    return Number.isFinite(kickoffMs) && kickoffMs > now.getTime();
   });
-  const upcoming = rows.filter((row) => {
-    if (isConfirmedFinalResult(row)) return false;
-    return Date.parse(String(row.kickoff_at)) > now.getTime();
-  });
-  const awaitingConfirmation = rows.filter((row) => {
-    if (isConfirmedFinalResult(row)) return false;
-    const publicStatus = derivePublicResultStatus(row);
-    return publicStatus === 'CONFIRMING' ||
-      publicStatus === 'NEEDS_REVIEW' ||
-      Boolean(row.next_confirmation_check_at) ||
-      (Date.parse(String(row.kickoff_at)) <= now.getTime() && publicStatus !== 'LIVE');
+  const awaitingConfirmation = matches.filter((match) => {
+    if (match.isFinal) return false;
+    const kickoffMs = Date.parse(match.kickoffAt);
+    return match.publicStatus === 'CONFIRMING' ||
+      match.publicStatus === 'NEEDS_REVIEW' ||
+      Boolean(match.nextConfirmationCheckAt) ||
+      (Number.isFinite(kickoffMs) && kickoffMs <= now.getTime() && match.publicStatus !== 'LIVE');
   });
   return {
-    totalMatches: rows.length,
+    totalMatches: matches.length,
     confirmedMatches: confirmed.length,
     liveOrProvisionalMatches: liveOrProvisional.length,
     upcomingMatches: upcoming.length,
@@ -208,37 +196,19 @@ async function getMatchHealth(db: QueryableDatabase, now: Date): Promise<Provide
 }
 
 async function getDelayedConfirmationWarnings(db: QueryableDatabase, now: Date): Promise<ProviderHealthPayload['delayedConfirmationWarnings']> {
-  const rows = await db.all(`
-    SELECT
-      m.id,
-      m.kickoff_at,
-      COALESCE(home.name, m.home_slot) AS home_team,
-      COALESCE(away.name, m.away_slot) AS away_team,
-      COALESCE(r.raw_provider_status, r.status, 'SCHEDULED') AS provider_state,
-      r.provisional_status,
-      r.confirmation_confidence,
-      r.next_confirmation_check_at,
-      r.needs_review_reason
-    FROM matches m
-    LEFT JOIN match_results r ON r.match_id = m.id
-    LEFT JOIN teams home ON home.id = m.home_team_id
-    LEFT JOIN teams away ON away.id = m.away_team_id
-    WHERE NOT COALESCE((${CONFIRMED_FINAL_RESULT_SQL}), false)
-    ORDER BY m.kickoff_at, m.id
-  `);
-  return rows.flatMap((row) => {
-    const kickoffAt = stringOrUndefined(row.kickoff_at);
-    if (!kickoffAt) return [];
-    const kickoffMs = Date.parse(kickoffAt);
+  const matches = await listCanonicalRuntimeMatches(db, now);
+  return matches.flatMap((match) => {
+    if (match.isFinal) return [];
+    const kickoffMs = Date.parse(match.kickoffAt);
     if (Number.isNaN(kickoffMs)) return [];
     const minutesSinceKickoff = Math.floor((now.getTime() - kickoffMs) / 60_000);
     if (minutesSinceKickoff <= 120) return [];
     return [{
-      matchId: Number(row.id),
-      match: `${String(row.home_team)} vs ${String(row.away_team)}`,
-      kickoffAt,
+      matchId: match.id,
+      match: `${match.homeTeam} vs ${match.awayTeam}`,
+      kickoffAt: match.kickoffAt,
       minutesSinceKickoff,
-      currentProviderState: String(derivePublicResultStatus(row)),
+      currentProviderState: String(match.publicStatus),
       severity: minutesSinceKickoff > 180 ? 'critical' as const : 'delayed' as const
     }];
   });

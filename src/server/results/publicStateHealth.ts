@@ -17,6 +17,7 @@ import { classifyPublicMatchState } from './publicMatchState.js';
 import { derivePublicResultStatus } from './publicResultStatus.js';
 import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
 import { buildCanonicalPlayoffState } from './playoffState.js';
+import { listCanonicalRuntimeMatches } from './canonicalMatchCatalog.js';
 
 const METADATA_ID = 'public-state';
 const REPAIR_ACTIONS = new Set(['catch-up', 'rebuild-public-dashboard', 'rebuild-group-standings', 'rebuild-leaderboard', 'rebuild-top-scorers', 'resync-scorers-from-confirmed-results']);
@@ -722,25 +723,11 @@ async function countConfirmedGroupStageMatches(db: QueryableDatabase): Promise<n
 }
 
 async function countLiveMatches(db: QueryableDatabase, now: Date): Promise<number> {
-  const rows = await db.all(`
-    SELECT
-      m.kickoff_at,
-      r.status,
-      r.provisional_status,
-      r.confirmation_confidence,
-      r.next_confirmation_check_at,
-      r.needs_review_reason,
-      r.is_final,
-      r.confirmed_home_score,
-      r.confirmed_away_score
-    FROM matches m
-    LEFT JOIN match_results r ON r.match_id = m.id
-    ORDER BY m.kickoff_at, m.id
-  `);
-  return rows.filter((row) => classifyPublicMatchState({
-    kickoffAt: String(row.kickoff_at),
-    publicStatus: derivePublicResultStatus(row),
-    isConfirmedFinal: isConfirmedFinalResult(row),
+  const matches = await listCanonicalRuntimeMatches(db, now);
+  return matches.filter((match) => classifyPublicMatchState({
+    kickoffAt: match.kickoffAt,
+    publicStatus: match.publicStatus,
+    isConfirmedFinal: match.isFinal,
     now
   }) === 'live').length;
 }

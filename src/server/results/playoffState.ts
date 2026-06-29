@@ -10,6 +10,7 @@ import { loadResultProviderConfig } from './resultProviderConfig.js';
 export interface CanonicalPlayoffFixture {
   matchId: number;
   stage: Match['stage'];
+  providerFixtureId?: string;
   kickoffAt?: string;
   venue?: string;
   homeTeam: string;
@@ -76,13 +77,16 @@ const internalMatches = matchesJson as Array<Match & { venue?: string }>;
 const seededTeams = teamsJson as Team[];
 const candidateFilePath = join(process.cwd(), 'imports', 'open-worldcup-fixtures-2026.candidate.json');
 const canonicalTeamById = new Map(seededTeams.map((team) => [team.id, team]));
+const PLAYOFF_FIXTURES_CACHE_TTL_MS = 30_000;
+let cachedPlayoffFixturesPromise: Promise<CanonicalPlayoffFixture[]> | undefined;
+let cachedPlayoffFixturesExpiresAt = 0;
 
 export async function buildCanonicalPlayoffState(options: BuildCanonicalPlayoffStateOptions = {}): Promise<CanonicalPlayoffState> {
   const now = options.now ?? new Date();
   const confirmedGroupStageMatches = Math.max(0, Math.min(options.confirmedGroupStageMatches ?? 0, 72));
   const groupStageComplete = confirmedGroupStageMatches >= 72;
   const fixtures = groupStageComplete
-    ? await fetchCanonicalPlayoffFixtures(now).catch(() => [])
+    ? await buildCanonicalPlayoffFixtures(now).catch(() => [])
     : [];
   const bracketFixturesByMatchId = new Map(fixtures.map((fixture) => [fixture.matchId, fixture]));
   return {
@@ -96,7 +100,19 @@ export async function buildCanonicalPlayoffState(options: BuildCanonicalPlayoffS
   };
 }
 
-async function fetchCanonicalPlayoffFixtures(now: Date): Promise<CanonicalPlayoffFixture[]> {
+export async function buildCanonicalPlayoffFixtures(now = new Date()): Promise<CanonicalPlayoffFixture[]> {
+  if (!cachedPlayoffFixturesPromise || now.getTime() >= cachedPlayoffFixturesExpiresAt) {
+    cachedPlayoffFixturesExpiresAt = now.getTime() + PLAYOFF_FIXTURES_CACHE_TTL_MS;
+    cachedPlayoffFixturesPromise = fetchCanonicalPlayoffFixturesOnce(now).catch((error) => {
+      cachedPlayoffFixturesPromise = undefined;
+      cachedPlayoffFixturesExpiresAt = 0;
+      throw error;
+    });
+  }
+  return cachedPlayoffFixturesPromise;
+}
+
+async function fetchCanonicalPlayoffFixturesOnce(now: Date): Promise<CanonicalPlayoffFixture[]> {
   const candidateFile = readCandidateFixtureFile();
   const config = loadResultProviderConfig();
   const apiBaseUrl = config.openWorldCup.apiBaseUrl ?? candidateFile.apiBaseUrl ?? 'https://worldcup26.ir';
@@ -140,6 +156,7 @@ function toCanonicalPlayoffFixture(
   return {
     matchId: match.id,
     stage: match.stage,
+    providerFixtureId: candidate?.providerFixtureId,
     kickoffAt,
     venue: game?.venue ?? game?.stadium_name ?? candidate?.venue ?? match.venue,
     homeTeam: homeTeam.displayName,

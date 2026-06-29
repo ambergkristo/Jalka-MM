@@ -17,6 +17,7 @@ import { getPredictionLeagueInsights } from './predictionLeagueInsights.js';
 import type { PredictionLeagueInsights } from '../../domain/predictionLeagueInsights.js';
 import { getOfficialGroupStageResult, useOfficialGroupStageResults } from './officialGroupStageResults.js';
 import { buildCanonicalPlayoffState } from './playoffState.js';
+import { listCanonicalRuntimeMatches } from './canonicalMatchCatalog.js';
 
 export interface PublicDashboardSnapshot {
   generatedAt: string;
@@ -113,7 +114,7 @@ export async function getPublicTournamentSnapshot(db: QueryableDatabase, now = n
     now,
     confirmedGroupStageMatches
   });
-  const latestResults = await getConfirmedLatestResults(db, shouldUseOfficialGroupResults);
+  const latestResults = await getConfirmedLatestResults(db, shouldUseOfficialGroupResults, now);
   const resultSummary = await getConfirmedResultSummary(db, shouldUseOfficialGroupResults);
   const groupStandings = await getPublicGroupStandings(db, shouldUseOfficialGroupResults);
   const topScorers = await getPublicTopScorers(db);
@@ -294,7 +295,11 @@ export async function resetPublicTournamentRuntimeState(db: QueryableDatabase): 
   `);
 }
 
-async function getConfirmedLatestResults(db: QueryableDatabase, shouldUseOfficialGroupResults = false): Promise<PublicResultCard[]> {
+async function getConfirmedLatestResults(
+  db: QueryableDatabase,
+  shouldUseOfficialGroupResults = false,
+  now = new Date()
+): Promise<PublicResultCard[]> {
   const rows = await db.all(`
     SELECT
       m.id,
@@ -314,7 +319,9 @@ async function getConfirmedLatestResults(db: QueryableDatabase, shouldUseOfficia
     ORDER BY COALESCE(r.confirmed_at, r.last_checked_at) DESC, m.id DESC
     LIMIT 8
   `);
+  const runtimeMatchById = new Map((await listCanonicalRuntimeMatches(db, now)).map((match) => [match.id, match]));
   return rows.map((row) => {
+    const runtimeMatch = runtimeMatchById.get(Number(row.id));
     const resolvedScore = resolveConfirmedScore(
       Number(row.id),
       Number(row.confirmed_home_score),
@@ -323,8 +330,8 @@ async function getConfirmedLatestResults(db: QueryableDatabase, shouldUseOfficia
     );
     const homeScore = resolvedScore.homeScore;
     const awayScore = resolvedScore.awayScore;
-    const homeTeam = String(row.home_team);
-    const awayTeam = String(row.away_team);
+    const homeTeam = runtimeMatch?.homeTeam ?? String(row.home_team);
+    const awayTeam = runtimeMatch?.awayTeam ?? String(row.away_team);
     return {
       id: String(row.id),
       homeTeam,
@@ -333,7 +340,7 @@ async function getConfirmedLatestResults(db: QueryableDatabase, shouldUseOfficia
       awayScore,
       stage: row.group_id ? `Alagrupp ${row.group_id}` : stageLabel(row.stage as Match['stage']),
       winner: homeScore === awayScore ? 'Draw' : homeScore > awayScore ? homeTeam : awayTeam,
-      finishedAt: formatTallinnDateTime(String(row.confirmed_at ?? row.kickoff_at))
+      finishedAt: formatTallinnDateTime(String(row.confirmed_at ?? runtimeMatch?.kickoffAt ?? row.kickoff_at))
     };
   });
 }
